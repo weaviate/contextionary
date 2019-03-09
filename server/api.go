@@ -4,6 +4,7 @@ import (
 	"context"
 
 	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
+	schema "github.com/creativesoftwarefdn/contextionary/contextionary/schema"
 )
 
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {
@@ -13,5 +14,11 @@ func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPres
 
 func (s *server) SchemaSearch(ctx context.Context, params *pb.SchemaSearchParams) (*pb.SchemaSearchResults, error) {
 
-	return nil, nil
+	s.logger.WithField("params", params).Info()
+	c := schema.New(s.combinedContextionary)
+	res, err := c.SchemaSearch(params)
+	s.logger.
+		WithField("res", res).
+		WithField("err", err).Info()
+	return res, err
 }

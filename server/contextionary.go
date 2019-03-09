@@ -58,6 +58,23 @@ func (s *server) buildContextionary() error {
 func emptySchema() schema.Schema {
 	return schema.Schema{
 		Actions: &models.SemanticSchema{},
-		Things:  &models.SemanticSchema{},
+		Things: &models.SemanticSchema{
+			Classes: []*models.SemanticSchemaClass{
+				{
+					Class: "City",
+					Properties: []*models.SemanticSchemaClassProperty{{
+						Name:       "name",
+						AtDataType: []string{"string"},
+					}},
+				},
+				{
+					Class: "Village",
+					Properties: []*models.SemanticSchemaClassProperty{{
+						Name:       "name",
+						AtDataType: []string{"string"},
+					}},
+				},
+			},
+		},
 	}
 }

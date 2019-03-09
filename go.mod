@@ -2,6 +2,7 @@ module github.com/creativesoftwarefdn/contextionary
 
 require (
 	github.com/creativesoftwarefdn/weaviate v0.0.0-20190307151110-8832f83a8423
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/camelcase v1.0.0
 	github.com/golang/protobuf v1.3.0
 	github.com/jessevdk/go-flags v1.4.0
