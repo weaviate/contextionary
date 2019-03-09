@@ -4,9 +4,18 @@ package contextionary;
 
 service Contextionary {
   rpc GetHello(Void) returns (Message) {}
+  rpc IsWordPresent(Word) returns (WordPresent) {}
 }
 
 message Void {}
+
+message Word {
+ string word = 1;
+}
+
+message WordPresent {
+ bool present = 1;
+}
 
 message Message {
   string message = 1;
