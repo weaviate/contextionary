@@ -22,36 +22,55 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type Void struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+type SearchType int32
+
+const (
+	SearchType_CLASS    SearchType = 0
+	SearchType_PROPERTY SearchType = 1
+)
+
+var SearchType_name = map[int32]string{
+	0: "CLASS",
+	1: "PROPERTY",
 }
 
-func (m *Void) Reset()         { *m = Void{} }
-func (m *Void) String() string { return proto.CompactTextString(m) }
-func (*Void) ProtoMessage()    {}
-func (*Void) Descriptor() ([]byte, []int) {
+var SearchType_value = map[string]int32{
+	"CLASS":    0,
+	"PROPERTY": 1,
+}
+
+func (x SearchType) String() string {
+	return proto.EnumName(SearchType_name, int32(x))
+}
+
+func (SearchType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_e6af9fd695f521f0, []int{0}
 }
 
-func (m *Void) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Void.Unmarshal(m, b)
-}
-func (m *Void) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Void.Marshal(b, m, deterministic)
-}
-func (m *Void) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Void.Merge(m, src)
-}
-func (m *Void) XXX_Size() int {
-	return xxx_messageInfo_Void.Size(m)
-}
-func (m *Void) XXX_DiscardUnknown() {
-	xxx_messageInfo_Void.DiscardUnknown(m)
+type Kind int32
+
+const (
+	Kind_THING  Kind = 0
+	Kind_ACTION Kind = 1
+)
+
+var Kind_name = map[int32]string{
+	0: "THING",
+	1: "ACTION",
 }
 
-var xxx_messageInfo_Void proto.InternalMessageInfo
+var Kind_value = map[string]int32{
+	"THING":  0,
+	"ACTION": 1,
+}
+
+func (x Kind) String() string {
+	return proto.EnumName(Kind_name, int32(x))
+}
+
+func (Kind) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e6af9fd695f521f0, []int{1}
+}
 
 type Word struct {
 	Word                 string   `protobuf:"bytes,1,opt,name=word,proto3" json:"word,omitempty"`
@@ -64,7 +83,7 @@ func (m *Word) Reset()         { *m = Word{} }
 func (m *Word) String() string { return proto.CompactTextString(m) }
 func (*Word) ProtoMessage()    {}
 func (*Word) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6af9fd695f521f0, []int{1}
+	return fileDescriptor_e6af9fd695f521f0, []int{0}
 }
 
 func (m *Word) XXX_Unmarshal(b []byte) error {
@@ -103,7 +122,7 @@ func (m *WordPresent) Reset()         { *m = WordPresent{} }
 func (m *WordPresent) String() string { return proto.CompactTextString(m) }
 func (*WordPresent) ProtoMessage()    {}
 func (*WordPresent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6af9fd695f521f0, []int{2}
+	return fileDescriptor_e6af9fd695f521f0, []int{1}
 }
 
 func (m *WordPresent) XXX_Unmarshal(b []byte) error {
@@ -131,68 +150,268 @@ func (m *WordPresent) GetPresent() bool {
 	return false
 }
 
-type Message struct {
-	Message              string   `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+type Keyword struct {
+	Keyword              string   `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	Weight               float32  `protobuf:"fixed32,2,opt,name=weight,proto3" json:"weight,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Message) Reset()         { *m = Message{} }
-func (m *Message) String() string { return proto.CompactTextString(m) }
-func (*Message) ProtoMessage()    {}
-func (*Message) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6af9fd695f521f0, []int{3}
+func (m *Keyword) Reset()         { *m = Keyword{} }
+func (m *Keyword) String() string { return proto.CompactTextString(m) }
+func (*Keyword) ProtoMessage()    {}
+func (*Keyword) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6af9fd695f521f0, []int{2}
 }
 
-func (m *Message) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Message.Unmarshal(m, b)
+func (m *Keyword) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Keyword.Unmarshal(m, b)
 }
-func (m *Message) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Message.Marshal(b, m, deterministic)
+func (m *Keyword) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Keyword.Marshal(b, m, deterministic)
 }
-func (m *Message) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Message.Merge(m, src)
+func (m *Keyword) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Keyword.Merge(m, src)
 }
-func (m *Message) XXX_Size() int {
-	return xxx_messageInfo_Message.Size(m)
+func (m *Keyword) XXX_Size() int {
+	return xxx_messageInfo_Keyword.Size(m)
 }
-func (m *Message) XXX_DiscardUnknown() {
-	xxx_messageInfo_Message.DiscardUnknown(m)
+func (m *Keyword) XXX_DiscardUnknown() {
+	xxx_messageInfo_Keyword.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Message proto.InternalMessageInfo
+var xxx_messageInfo_Keyword proto.InternalMessageInfo
 
-func (m *Message) GetMessage() string {
+func (m *Keyword) GetKeyword() string {
 	if m != nil {
-		return m.Message
+		return m.Keyword
 	}
 	return ""
 }
 
+func (m *Keyword) GetWeight() float32 {
+	if m != nil {
+		return m.Weight
+	}
+	return 0
+}
+
+type SchemaSearchParams struct {
+	SearchType           SearchType `protobuf:"varint,1,opt,name=searchType,proto3,enum=contextionary.SearchType" json:"searchType,omitempty"`
+	Name                 string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Keywords             []*Keyword `protobuf:"bytes,3,rep,name=keywords,proto3" json:"keywords,omitempty"`
+	Kind                 Kind       `protobuf:"varint,4,opt,name=kind,proto3,enum=contextionary.Kind" json:"kind,omitempty"`
+	Certainty            float32    `protobuf:"fixed32,5,opt,name=certainty,proto3" json:"certainty,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *SchemaSearchParams) Reset()         { *m = SchemaSearchParams{} }
+func (m *SchemaSearchParams) String() string { return proto.CompactTextString(m) }
+func (*SchemaSearchParams) ProtoMessage()    {}
+func (*SchemaSearchParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6af9fd695f521f0, []int{3}
+}
+
+func (m *SchemaSearchParams) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SchemaSearchParams.Unmarshal(m, b)
+}
+func (m *SchemaSearchParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SchemaSearchParams.Marshal(b, m, deterministic)
+}
+func (m *SchemaSearchParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SchemaSearchParams.Merge(m, src)
+}
+func (m *SchemaSearchParams) XXX_Size() int {
+	return xxx_messageInfo_SchemaSearchParams.Size(m)
+}
+func (m *SchemaSearchParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_SchemaSearchParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SchemaSearchParams proto.InternalMessageInfo
+
+func (m *SchemaSearchParams) GetSearchType() SearchType {
+	if m != nil {
+		return m.SearchType
+	}
+	return SearchType_CLASS
+}
+
+func (m *SchemaSearchParams) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *SchemaSearchParams) GetKeywords() []*Keyword {
+	if m != nil {
+		return m.Keywords
+	}
+	return nil
+}
+
+func (m *SchemaSearchParams) GetKind() Kind {
+	if m != nil {
+		return m.Kind
+	}
+	return Kind_THING
+}
+
+func (m *SchemaSearchParams) GetCertainty() float32 {
+	if m != nil {
+		return m.Certainty
+	}
+	return 0
+}
+
+type SchemaSearchResults struct {
+	Type                 SearchType            `protobuf:"varint,1,opt,name=type,proto3,enum=contextionary.SearchType" json:"type,omitempty"`
+	Results              []*SchemaSearchResult `protobuf:"bytes,2,rep,name=results,proto3" json:"results,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
+}
+
+func (m *SchemaSearchResults) Reset()         { *m = SchemaSearchResults{} }
+func (m *SchemaSearchResults) String() string { return proto.CompactTextString(m) }
+func (*SchemaSearchResults) ProtoMessage()    {}
+func (*SchemaSearchResults) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6af9fd695f521f0, []int{4}
+}
+
+func (m *SchemaSearchResults) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SchemaSearchResults.Unmarshal(m, b)
+}
+func (m *SchemaSearchResults) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SchemaSearchResults.Marshal(b, m, deterministic)
+}
+func (m *SchemaSearchResults) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SchemaSearchResults.Merge(m, src)
+}
+func (m *SchemaSearchResults) XXX_Size() int {
+	return xxx_messageInfo_SchemaSearchResults.Size(m)
+}
+func (m *SchemaSearchResults) XXX_DiscardUnknown() {
+	xxx_messageInfo_SchemaSearchResults.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SchemaSearchResults proto.InternalMessageInfo
+
+func (m *SchemaSearchResults) GetType() SearchType {
+	if m != nil {
+		return m.Type
+	}
+	return SearchType_CLASS
+}
+
+func (m *SchemaSearchResults) GetResults() []*SchemaSearchResult {
+	if m != nil {
+		return m.Results
+	}
+	return nil
+}
+
+type SchemaSearchResult struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Kind                 Kind     `protobuf:"varint,2,opt,name=kind,proto3,enum=contextionary.Kind" json:"kind,omitempty"`
+	Certainty            float32  `protobuf:"fixed32,3,opt,name=certainty,proto3" json:"certainty,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SchemaSearchResult) Reset()         { *m = SchemaSearchResult{} }
+func (m *SchemaSearchResult) String() string { return proto.CompactTextString(m) }
+func (*SchemaSearchResult) ProtoMessage()    {}
+func (*SchemaSearchResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6af9fd695f521f0, []int{5}
+}
+
+func (m *SchemaSearchResult) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SchemaSearchResult.Unmarshal(m, b)
+}
+func (m *SchemaSearchResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SchemaSearchResult.Marshal(b, m, deterministic)
+}
+func (m *SchemaSearchResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SchemaSearchResult.Merge(m, src)
+}
+func (m *SchemaSearchResult) XXX_Size() int {
+	return xxx_messageInfo_SchemaSearchResult.Size(m)
+}
+func (m *SchemaSearchResult) XXX_DiscardUnknown() {
+	xxx_messageInfo_SchemaSearchResult.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SchemaSearchResult proto.InternalMessageInfo
+
+func (m *SchemaSearchResult) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *SchemaSearchResult) GetKind() Kind {
+	if m != nil {
+		return m.Kind
+	}
+	return Kind_THING
+}
+
+func (m *SchemaSearchResult) GetCertainty() float32 {
+	if m != nil {
+		return m.Certainty
+	}
+	return 0
+}
+
 func init() {
-	proto.RegisterType((*Void)(nil), "contextionary.Void")
+	proto.RegisterEnum("contextionary.SearchType", SearchType_name, SearchType_value)
+	proto.RegisterEnum("contextionary.Kind", Kind_name, Kind_value)
 	proto.RegisterType((*Word)(nil), "contextionary.Word")
 	proto.RegisterType((*WordPresent)(nil), "contextionary.WordPresent")
-	proto.RegisterType((*Message)(nil), "contextionary.Message")
+	proto.RegisterType((*Keyword)(nil), "contextionary.Keyword")
+	proto.RegisterType((*SchemaSearchParams)(nil), "contextionary.SchemaSearchParams")
+	proto.RegisterType((*SchemaSearchResults)(nil), "contextionary.SchemaSearchResults")
+	proto.RegisterType((*SchemaSearchResult)(nil), "contextionary.SchemaSearchResult")
 }
 
 func init() { proto.RegisterFile("contextionary.proto", fileDescriptor_e6af9fd695f521f0) }
 
 var fileDescriptor_e6af9fd695f521f0 = []byte{
-	// 189 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0xce, 0xcf, 0x2b,
-	0x49, 0xad, 0x28, 0xc9, 0xcc, 0xcf, 0x4b, 0x2c, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0xe2, 0x45, 0x11, 0x54, 0x62, 0xe3, 0x62, 0x09, 0xcb, 0xcf, 0x4c, 0x51, 0x92, 0xe2, 0x62, 0x09,
-	0xcf, 0x2f, 0x4a, 0x11, 0x12, 0xe2, 0x62, 0x29, 0xcf, 0x2f, 0x4a, 0x91, 0x60, 0x54, 0x60, 0xd4,
-	0xe0, 0x0c, 0x02, 0xb3, 0x95, 0xd4, 0xb9, 0xb8, 0x41, 0x72, 0x01, 0x45, 0xa9, 0xc5, 0xa9, 0x79,
-	0x25, 0x42, 0x12, 0x5c, 0xec, 0x05, 0x10, 0x26, 0x58, 0x15, 0x47, 0x10, 0x8c, 0xab, 0xa4, 0xcc,
-	0xc5, 0xee, 0x9b, 0x5a, 0x5c, 0x9c, 0x98, 0x9e, 0x0a, 0x52, 0x94, 0x0b, 0x61, 0x42, 0x8d, 0x82,
-	0x71, 0x8d, 0xfa, 0x18, 0xb9, 0x78, 0x9d, 0x91, 0xdd, 0x20, 0x64, 0xc9, 0xc5, 0xe1, 0x9e, 0x5a,
-	0xe2, 0x91, 0x9a, 0x93, 0x93, 0x2f, 0x24, 0xac, 0x87, 0xea, 0x68, 0x90, 0xe3, 0xa4, 0xc4, 0xd0,
-	0x04, 0xa1, 0x96, 0x28, 0x31, 0x08, 0x39, 0x71, 0xf1, 0x7a, 0x16, 0x23, 0x3b, 0x0e, 0x5d, 0x3f,
-	0x48, 0x4e, 0x4a, 0x0a, 0x8b, 0x20, 0x54, 0x83, 0x12, 0x43, 0x12, 0x1b, 0x38, 0x60, 0x8c, 0x01,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0x58, 0x1f, 0x51, 0x2d, 0x2f, 0x01, 0x00, 0x00,
+	// 419 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0xdf, 0x8a, 0xd3, 0x40,
+	0x14, 0xc6, 0x33, 0x69, 0xb6, 0x6d, 0xce, 0x6e, 0x25, 0x9c, 0xc2, 0x12, 0x83, 0x42, 0x1d, 0x90,
+	0x2d, 0x0b, 0xee, 0x45, 0xbc, 0x92, 0xbd, 0x5a, 0x8b, 0x68, 0x51, 0x76, 0xc3, 0x24, 0xb0, 0x78,
+	0x19, 0x93, 0xc1, 0x86, 0xda, 0xa4, 0xcc, 0x8c, 0xd4, 0x5c, 0xfa, 0x3e, 0x3e, 0x93, 0xcf, 0x22,
+	0x99, 0x24, 0x6d, 0x1a, 0x45, 0xdd, 0xbb, 0x73, 0xe6, 0x7c, 0xe7, 0xcf, 0xef, 0x23, 0x81, 0x69,
+	0x52, 0xe4, 0x8a, 0x7f, 0x53, 0x59, 0x91, 0xc7, 0xa2, 0xbc, 0xda, 0x8a, 0x42, 0x15, 0x38, 0x39,
+	0x7a, 0xa4, 0x1e, 0x58, 0xf7, 0x85, 0x48, 0x11, 0xc1, 0xda, 0x15, 0x22, 0x75, 0xc9, 0x8c, 0xcc,
+	0x6d, 0xa6, 0x63, 0x7a, 0x01, 0xa7, 0x55, 0x2d, 0x10, 0x5c, 0xf2, 0x5c, 0xa1, 0x0b, 0xa3, 0x6d,
+	0x1d, 0x6a, 0xd5, 0x98, 0xb5, 0x29, 0xbd, 0x86, 0xd1, 0x7b, 0x5e, 0x56, 0x3d, 0x95, 0x68, 0x5d,
+	0x87, 0xcd, 0xa8, 0x36, 0xc5, 0x73, 0x18, 0xee, 0x78, 0xf6, 0x79, 0xa5, 0x5c, 0x73, 0x46, 0xe6,
+	0x26, 0x6b, 0x32, 0xfa, 0x93, 0x00, 0x86, 0xc9, 0x8a, 0x6f, 0xe2, 0x90, 0xc7, 0x22, 0x59, 0x05,
+	0xb1, 0x88, 0x37, 0x12, 0x5f, 0x01, 0x48, 0x9d, 0x47, 0xe5, 0x96, 0xeb, 0x59, 0x8f, 0xfc, 0xc7,
+	0x57, 0xc7, 0x44, 0xe1, 0x5e, 0xc0, 0x3a, 0xe2, 0x8a, 0x25, 0x8f, 0x37, 0x5c, 0xef, 0xb1, 0x99,
+	0x8e, 0xd1, 0x87, 0x71, 0x73, 0x88, 0x74, 0x07, 0xb3, 0xc1, 0xfc, 0xd4, 0x3f, 0xef, 0x0d, 0x6b,
+	0x08, 0xd8, 0x5e, 0x87, 0x17, 0x60, 0xad, 0xb3, 0x3c, 0x75, 0x2d, 0xbd, 0x7c, 0xda, 0xd7, 0x67,
+	0x79, 0xca, 0xb4, 0x00, 0x9f, 0x80, 0x9d, 0x70, 0xa1, 0xe2, 0x2c, 0x57, 0xa5, 0x7b, 0xa2, 0xe9,
+	0x0e, 0x0f, 0xf4, 0x3b, 0x81, 0x69, 0x17, 0x90, 0x71, 0xf9, 0xf5, 0x8b, 0x92, 0xf8, 0x02, 0x2c,
+	0xf5, 0x5f, 0x6c, 0x5a, 0x86, 0xd7, 0x30, 0x12, 0x75, 0xa7, 0x6b, 0x6a, 0x80, 0x67, 0xfd, 0x8e,
+	0xdf, 0x76, 0xb0, 0xb6, 0x83, 0x16, 0xc7, 0x1e, 0xd7, 0xe5, 0xbd, 0x51, 0xa4, 0x63, 0x54, 0x0b,
+	0x6d, 0x3e, 0x08, 0x7a, 0xd0, 0x83, 0xbe, 0x7c, 0x0e, 0x70, 0x20, 0x40, 0x1b, 0x4e, 0x16, 0x1f,
+	0x6e, 0xc2, 0xd0, 0x31, 0xf0, 0x0c, 0xc6, 0x01, 0xbb, 0x0b, 0xde, 0xb0, 0xe8, 0xa3, 0x43, 0x2e,
+	0x9f, 0x82, 0x55, 0x8d, 0xac, 0x04, 0xd1, 0xbb, 0xe5, 0xed, 0x5b, 0xc7, 0x40, 0x80, 0xe1, 0xcd,
+	0x22, 0x5a, 0xde, 0xdd, 0x3a, 0xc4, 0xff, 0x41, 0x60, 0xb2, 0xe8, 0x1e, 0x80, 0xaf, 0x61, 0xb2,
+	0x94, 0xdd, 0xaf, 0xb2, 0x7f, 0x61, 0x55, 0xf3, 0xbc, 0x3f, 0x3c, 0x36, 0x0d, 0xd4, 0xc0, 0x7b,
+	0x38, 0xeb, 0x9a, 0x81, 0x7f, 0x33, 0xb2, 0xfe, 0x1a, 0x3d, 0xfa, 0x4f, 0xaf, 0x25, 0x35, 0x3e,
+	0x0d, 0xf5, 0x2f, 0xf6, 0xf2, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0x9c, 0xe8, 0xa2, 0x29, 0x79,
+	0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -207,8 +426,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ContextionaryClient interface {
-	GetHello(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Message, error)
 	IsWordPresent(ctx context.Context, in *Word, opts ...grpc.CallOption) (*WordPresent, error)
+	SchemaSearch(ctx context.Context, in *SchemaSearchParams, opts ...grpc.CallOption) (*SchemaSearchResults, error)
 }
 
 type contextionaryClient struct {
@@ -217,15 +436,6 @@ type contextionaryClient struct {
 
 func NewContextionaryClient(cc *grpc.ClientConn) ContextionaryClient {
 	return &contextionaryClient{cc}
-}
-
-func (c *contextionaryClient) GetHello(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Message, error) {
-	out := new(Message)
-	err := c.cc.Invoke(ctx, "/contextionary.Contextionary/GetHello", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *contextionaryClient) IsWordPresent(ctx context.Context, in *Word, opts ...grpc.CallOption) (*WordPresent, error) {
@@ -237,32 +447,23 @@ func (c *contextionaryClient) IsWordPresent(ctx context.Context, in *Word, opts 
 	return out, nil
 }
 
+func (c *contextionaryClient) SchemaSearch(ctx context.Context, in *SchemaSearchParams, opts ...grpc.CallOption) (*SchemaSearchResults, error) {
+	out := new(SchemaSearchResults)
+	err := c.cc.Invoke(ctx, "/contextionary.Contextionary/SchemaSearch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContextionaryServer is the server API for Contextionary service.
 type ContextionaryServer interface {
-	GetHello(context.Context, *Void) (*Message, error)
 	IsWordPresent(context.Context, *Word) (*WordPresent, error)
+	SchemaSearch(context.Context, *SchemaSearchParams) (*SchemaSearchResults, error)
 }
 
 func RegisterContextionaryServer(s *grpc.Server, srv ContextionaryServer) {
 	s.RegisterService(&_Contextionary_serviceDesc, srv)
-}
-
-func _Contextionary_GetHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContextionaryServer).GetHello(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contextionary.Contextionary/GetHello",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContextionaryServer).GetHello(ctx, req.(*Void))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Contextionary_IsWordPresent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -283,17 +484,35 @@ func _Contextionary_IsWordPresent_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Contextionary_SchemaSearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SchemaSearchParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextionaryServer).SchemaSearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contextionary.Contextionary/SchemaSearch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextionaryServer).SchemaSearch(ctx, req.(*SchemaSearchParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Contextionary_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "contextionary.Contextionary",
 	HandlerType: (*ContextionaryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetHello",
-			Handler:    _Contextionary_GetHello_Handler,
-		},
-		{
 			MethodName: "IsWordPresent",
 			Handler:    _Contextionary_IsWordPresent_Handler,
+		},
+		{
+			MethodName: "SchemaSearch",
+			Handler:    _Contextionary_SchemaSearch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

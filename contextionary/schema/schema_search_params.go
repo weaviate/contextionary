@@ -13,8 +13,7 @@
 import (
 	"fmt"
 
-	"github.com/creativesoftwarefdn/weaviate/database/schema/kind"
-	"github.com/creativesoftwarefdn/weaviate/models"
+	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
 	"github.com/fatih/camelcase"
 )
 
@@ -31,22 +30,7 @@ const (
 // SearchParams to be used for a SchemaSearch. See individual properties for
 // additional documentation on what they do
 type SearchParams struct {
-	// SearchType can be SearchTypeClass or SearchTypeProperty
-	SearchType SearchType
-
-	// Name is the string-representation of the class or property name
-	Name string
-
-	// Keywords (optional). If no keywords are specified, only the class name
-	// will be used as a search query.
-	Keywords models.SemanticSchemaKeywords
-
-	// Kind as in Thing or Class, not required if SearchType == SearchTypeProperty
-	Kind kind.Kind
-
-	// Certaintiy must be a value between 0 and 1. The higher it is the narrower
-	// is the search, the lower it is, the wider the search is
-	Certainty float32
+	*pb.SchemaSearchParams
 }
 
 // Validate the feasibility of the specified arguments
@@ -59,13 +43,9 @@ func (p SearchParams) Validate() error {
 		return fmt.Errorf("invalid Certainty: %s", err)
 	}
 
-	if p.SearchType != SearchTypeClass && p.SearchType != SearchTypeProperty {
+	if p.SearchType != pb.SearchType_CLASS && p.SearchType != pb.SearchType_PROPERTY {
 		return fmt.Errorf(
-			"SearchType must be SearchTypeClass or SearchTypeProperty, but got '%s'", p.SearchType)
-	}
-
-	if p.Kind == "" {
-		return fmt.Errorf("Kind cannot be empty")
+			"SearchType must be SearchType_CLASS or SearchType_PROPERTY, but got '%s'", p.SearchType)
 	}
 
 	for i, keyword := range p.Keywords {
@@ -77,7 +57,7 @@ func (p SearchParams) Validate() error {
 	return nil
 }
 
-func (p SearchParams) validateKeyword(kw *models.SemanticSchemaKeywordsItems0) error {
+func (p SearchParams) validateKeyword(kw *pb.Keyword) error {
 	if kw.Keyword == "" {
 		return fmt.Errorf("Keyword cannot be empty")
 	}

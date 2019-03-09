@@ -3,11 +3,9 @@ syntax = "proto3";
 package contextionary;
 
 service Contextionary {
-  rpc GetHello(Void) returns (Message) {}
   rpc IsWordPresent(Word) returns (WordPresent) {}
+  rpc SchemaSearch(SchemaSearchParams) returns (SchemaSearchResults) {}
 }
-
-message Void {}
 
 message Word {
  string word = 1;
@@ -17,6 +15,36 @@ message WordPresent {
  bool present = 1;
 }
 
-message Message {
-  string message = 1;
+message Keyword {
+  string keyword = 1;
+  float weight = 2;
+}
+
+enum SearchType {
+  CLASS=0;
+  PROPERTY=1;
+};
+
+enum Kind {
+  THING=0;
+  ACTION=1;
+}
+
+message SchemaSearchParams {
+  SearchType searchType = 1;
+  string name = 2;
+  repeated Keyword keywords = 3;
+  Kind kind = 4;
+  float certainty = 5;
+}
+
+message SchemaSearchResults {
+  SearchType type = 1;
+  repeated SchemaSearchResult results = 2;
+}
+
+message SchemaSearchResult {
+  string name = 1;
+  Kind kind = 2;
+  float certainty = 3;
 }

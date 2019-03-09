@@ -11,12 +11,11 @@
  */package schema
 
 import (
-	"errors"
 	"testing"
+	"errors"
 
+	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
 	"github.com/creativesoftwarefdn/contextionary/contextionary/core"
-	"github.com/creativesoftwarefdn/weaviate/database/schema/kind"
-	"github.com/creativesoftwarefdn/weaviate/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,19 +27,19 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"$THING[Car]": {5, 5, 5},
 				"car":         {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "Car",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeClass,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_CLASS,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "Car",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9699532,
 					},
 				},
@@ -53,19 +52,19 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"car":            {4.7, 5.2, 5},
 				"driver":         {3, 3, 3},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "CarDriver",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.5,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeClass,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_CLASS,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "Driver",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.8572954,
 					},
 				},
@@ -78,19 +77,19 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"$THING[Train]": {2, 2, 2},
 				"car":           {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "Car",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeClass,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_CLASS,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "Car",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9699532,
 					},
 				},
@@ -102,19 +101,19 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"$ACTION[Drive]": {5, 5, 5},
 				"drive":          {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "Drive",
-				Kind:       kind.ACTION_KIND,
+				Kind:       pb.Kind_ACTION,
 				Certainty:  0.9,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeClass,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_CLASS,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "Drive",
-						Kind:      kind.ACTION_KIND,
+						Kind:      pb.Kind_ACTION,
 						Certainty: 0.9699532,
 					},
 				},
@@ -126,10 +125,10 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"$THING[Car]": {5, 5, 5},
 				"car":         {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "Spaceship",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: errors.New("could not build centroid from name and keywords: " +
@@ -144,12 +143,12 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"transportation": {5, 3, 3},
 				"automobile":     {5.2, 5.0, 4},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "Car",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
-				Keywords: models.SemanticSchemaKeywords{
+				Keywords: []*pb.Keyword{
 					{
 						Keyword: "automobile",
 						Weight:  0.8,
@@ -161,12 +160,12 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				},
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeClass,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_CLASS,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "Car",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9284513,
 					},
 				},
@@ -178,12 +177,12 @@ func Test__SchemaSearch_Classes(t *testing.T) {
 				"$THING[Car]": {5, 5, 5},
 				"car":         {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeClass,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_CLASS,
 				Name:       "Car",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
-				Keywords: models.SemanticSchemaKeywords{
+				Keywords: []*pb.Keyword{
 					{
 						Keyword: "bicycle",
 						Weight:  0.8,
@@ -207,19 +206,19 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				"$THING[Car][horsepower]": {5, 5, 5},
 				"horsepower":              {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeProperty,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_PROPERTY,
 				Name:       "horsepower",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeProperty,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_PROPERTY,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "horsepower",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9699532,
 					},
 				},
@@ -233,19 +232,19 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				"$THING[Powerdrill][power]": {2, 2, 2},
 				"horsepower":                {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeProperty,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_PROPERTY,
 				Name:       "horsepower",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeProperty,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_PROPERTY,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "horsepower",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9699532,
 					},
 				},
@@ -258,19 +257,19 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				"$THING[Automobile][horsepower]": {5.1, 5.1, 5.1},
 				"horsepower":                     {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeProperty,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_PROPERTY,
 				Name:       "horsepower",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeProperty,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_PROPERTY,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "horsepower",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9672985, // note: this is the mean certainty of Car.horsepower and Autombile.horsepower
 					},
 				},
@@ -282,10 +281,10 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				"$THING[Car][horsepower]": {5, 5, 5},
 				"horsepower":              {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeProperty,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_PROPERTY,
 				Name:       "Spaceship",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
 			},
 			expectedError: errors.New("could not build centroid from name and keywords: " +
@@ -300,12 +299,12 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				"transportation":          {5, 3, 3},
 				"automobile":              {5.2, 5.0, 4},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeProperty,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_PROPERTY,
 				Name:       "horsepower",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
-				Keywords: models.SemanticSchemaKeywords{
+				Keywords: []*pb.Keyword{
 					{
 						Keyword: "automobile",
 						Weight:  0.8,
@@ -317,12 +316,12 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				},
 			},
 			expectedError: nil,
-			expectedResult: SearchResults{
-				Type: SearchTypeProperty,
-				Results: []SearchResult{
-					SearchResult{
+			expectedResult: &pb.SchemaSearchResults{
+				Type: pb.SearchType_PROPERTY,
+				Results: []*pb.SchemaSearchResult{
+				&pb.SchemaSearchResult{
 						Name:      "horsepower",
-						Kind:      kind.THING_KIND,
+						Kind:      pb.Kind_THING,
 						Certainty: 0.9284513,
 					},
 				},
@@ -334,12 +333,12 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 				"$THING[Car][horsepower]": {5, 5, 5},
 				"horsepower":              {4.7, 5.2, 5},
 			},
-			searchParams: SearchParams{
-				SearchType: SearchTypeProperty,
+			searchParams: &pb.SchemaSearchParams{
+				SearchType: pb.SearchType_PROPERTY,
 				Name:       "horsepower",
-				Kind:       kind.THING_KIND,
+				Kind:       pb.Kind_THING,
 				Certainty:  0.9,
-				Keywords: models.SemanticSchemaKeywords{
+				Keywords: []*pb.Keyword{
 					{
 						Keyword: "bicycle",
 						Weight:  0.8,
@@ -358,8 +357,8 @@ func Test__SchemaSearch_Properties(t *testing.T) {
 type schemaSearchTest struct {
 	name           string
 	words          map[string][]float32
-	searchParams   SearchParams
-	expectedResult SearchResults
+	searchParams   *pb.SchemaSearchParams
+	expectedResult *pb.SchemaSearchResults
 	expectedError  error
 }
 

@@ -16,49 +16,33 @@ import (
 	"strings"
 
 	"github.com/creativesoftwarefdn/contextionary/contextionary/core"
-	"github.com/creativesoftwarefdn/weaviate/database/schema/kind"
+	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
 	"github.com/fatih/camelcase"
 )
 
-// SearchResult is a single search result. See wrapping Search Results for the Type
-type SearchResult struct {
-	Name      string
-	Kind      kind.Kind
-	Certainty float32
-}
 
-// SearchResults is grouping of SearchResults for a SchemaSearch
-type SearchResults struct {
-	Type    SearchType
-	Results []SearchResult
-}
-
-// Len of the result set
-func (r SearchResults) Len() int {
-	return len(r.Results)
-}
 
 // SchemaSearch can be used to search for related classes and properties, see
 // documentation of SearchParams for more details on how to use it and
-// documentation on SearchResults for more details on how to use the return
+// documentation on *pb.SchemaSearchResults for more details on how to use the return
 // value
-func (con *Contextionary) SchemaSearch(p SearchParams) (SearchResults, error) {
-	result := SearchResults{}
+func (con *Contextionary) SchemaSearch(params *pb.SchemaSearchParams) (*pb.SchemaSearchResults, error) {
+	p := SearchParams{params}
 	if err := p.Validate(); err != nil {
-		return result, fmt.Errorf("invalid search params: %s", err)
+		return nil, fmt.Errorf("invalid search params: %s", err)
 	}
 
 	centroid, err := con.centroidFromNameAndKeywords(p)
 	if err != nil {
-		return result, fmt.Errorf("could not build centroid from name and keywords: %s", err)
+		return nil, fmt.Errorf("could not build centroid from name and keywords: %s", err)
 	}
 
 	rawResults, err := con.knnSearch(*centroid)
 	if err != nil {
-		return result, fmt.Errorf("could not perform knn search: %s", err)
+		return nil, fmt.Errorf("could not perform knn search: %s", err)
 	}
 
-	if p.SearchType == SearchTypeClass {
+	if p.SearchType == pb.SearchType_CLASS {
 		return con.handleClassSearch(p, rawResults)
 	}
 
@@ -134,15 +118,15 @@ func (con *Contextionary) wordToVector(w string) (*contextionary.Vector, error) 
 	return vector, nil
 }
 
-func (con *Contextionary) handleClassSearch(p SearchParams, search rawResults) (SearchResults, error) {
-	return SearchResults{
+func (con *Contextionary) handleClassSearch(p SearchParams, search rawResults) (*pb.SchemaSearchResults, error) {
+	return &pb.SchemaSearchResults{
 		Type:    p.SearchType,
 		Results: search.extractClassNames(p),
 	}, nil
 }
 
-func (con *Contextionary) handlePropertySearch(p SearchParams, search rawResults) (SearchResults, error) {
-	return SearchResults{
+func (con *Contextionary) handlePropertySearch(p SearchParams, search rawResults) (*pb.SchemaSearchResults, error) {
+	return &pb.SchemaSearchResults{
 		Type:    p.SearchType,
 		Results: search.extractPropertyNames(p),
 	}, nil
@@ -181,9 +165,9 @@ type rawResult struct {
 
 type rawResults []rawResult
 
-func (r rawResults) extractClassNames(p SearchParams) []SearchResult {
-	var results []SearchResult
-	regex := regexp.MustCompile(fmt.Sprintf("^\\$%s\\[([A-Za-z]+)\\]$", p.Kind.AllCapsName()))
+func (r rawResults) extractClassNames(p SearchParams) []*pb.SchemaSearchResult {
+	var results []*pb.SchemaSearchResult
+	regex := regexp.MustCompile(fmt.Sprintf("^\\$%s\\[([A-Za-z]+)\\]$", kindAllCaps(p.Kind)))
 
 	for _, rawRes := range r {
 		if regex.MatchString(rawRes.name) {
@@ -192,7 +176,7 @@ func (r rawResults) extractClassNames(p SearchParams) []SearchResult {
 				continue
 			}
 
-			results = append(results, SearchResult{
+			results = append(results, &pb.SchemaSearchResult{
 				Name:      regex.FindStringSubmatch(rawRes.name)[1], //safe because we ran .MatchString before
 				Certainty: certainty,
 				Kind:      p.Kind,
@@ -203,11 +187,11 @@ func (r rawResults) extractClassNames(p SearchParams) []SearchResult {
 	return results
 }
 
-func (r rawResults) extractPropertyNames(p SearchParams) []SearchResult {
-	var results []SearchResult
+func (r rawResults) extractPropertyNames(p SearchParams) []*pb.SchemaSearchResult {
+	var results []*pb.SchemaSearchResult
 	regex := regexp.MustCompile("^\\$[A-Za-z]+\\[[A-Za-z]+\\]\\[([A-Za-z]+)\\]$")
 
-	propsMap := map[string][]SearchResult{}
+	propsMap := map[string][]*pb.SchemaSearchResult{}
 
 	for _, rawRes := range r {
 		if regex.MatchString(rawRes.name) {
@@ -217,13 +201,13 @@ func (r rawResults) extractPropertyNames(p SearchParams) []SearchResult {
 				continue
 			}
 
-			res := SearchResult{
+			res := &pb.SchemaSearchResult{
 				Name:      name,
 				Certainty: certainty,
 				Kind:      p.Kind,
 			}
 			if _, ok := propsMap[name]; !ok {
-				propsMap[name] = []SearchResult{res}
+				propsMap[name] = []*pb.SchemaSearchResult{res}
 			} else {
 				propsMap[name] = append(propsMap[name], res)
 			}
@@ -232,7 +216,7 @@ func (r rawResults) extractPropertyNames(p SearchParams) []SearchResult {
 
 	// now calculate mean of duplicate results
 	for _, resultsPerName := range propsMap {
-		results = append(results, SearchResult{
+		results = append(results, &pb.SchemaSearchResult{
 			Name:      resultsPerName[0].Name,
 			Kind:      resultsPerName[0].Kind,
 			Certainty: meanCertainty(resultsPerName),
@@ -242,7 +226,7 @@ func (r rawResults) extractPropertyNames(p SearchParams) []SearchResult {
 	return results
 }
 
-func meanCertainty(rs []SearchResult) float32 {
+func meanCertainty(rs []*pb.SchemaSearchResult) float32 {
 	var compound float32
 	for _, r := range rs {
 		compound += r.Certainty
@@ -253,4 +237,14 @@ func meanCertainty(rs []SearchResult) float32 {
 
 func distanceToCertainty(d float32) float32 {
 	return 1 - d/12
+}
+
+func kindAllCaps(k pb.Kind) string {
+	switch k {
+	case pb.Kind_THING:
+		return "THING"
+	case pb.Kind_ACTION:
+		return "ACTION"
+	}
+	panic("getting here should be impossible")
 }
