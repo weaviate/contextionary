@@ -45,6 +45,7 @@ type server struct {
 // new gRPC server to serve the contextionary
 func new() *server {
 	logger := logrus.New()
+	logger.SetFormatter(&logrus.JSONFormatter{})
 	cfg, err := config.New(logger)
 	if err != nil {
 		logger.
