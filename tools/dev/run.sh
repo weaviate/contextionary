@@ -1,2 +1,2 @@
 export GO111MODULE=on
-go run ./server 2>&1 | jq
+KNN_FILE="./tools/dev/example.knn" IDX_FILE="./tools/dev/example.idx" go run ./server 2>&1 

@@ -38,7 +38,7 @@ func (c *Config) init() error {
 	if err != nil {
 		return err
 	}
-	c.KNNFile = idx
+	c.IDXFile = idx
 
 	port, err := c.optionalInt("SERVER_PORT", 9999)
 	if err != nil {

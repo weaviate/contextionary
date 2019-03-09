@@ -5,9 +5,14 @@ import (
 
 	core "github.com/creativesoftwarefdn/contextionary/contextionary/core"
 	schemac "github.com/creativesoftwarefdn/contextionary/contextionary/schema"
+	"github.com/creativesoftwarefdn/weaviate/database/schema"
+	"github.com/creativesoftwarefdn/weaviate/models"
 )
 
 func (s *server) init() error {
+	s.logger.WithField("config", s.config).Debugf("starting up with this config")
+
+	s.schema = emptySchema()
 	if err := s.loadRawContextionary(); err != nil {
 		return err
 	}
@@ -48,4 +53,11 @@ func (s *server) buildContextionary() error {
 	s.combinedContextionary = combined
 
 	return nil
+}
+
+func emptySchema() schema.Schema {
+	return schema.Schema{
+		Actions: &models.SemanticSchema{},
+		Things:  &models.SemanticSchema{},
+	}
 }
