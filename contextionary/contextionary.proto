@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package contextionary;
+
+service Contextionary {
+  rpc GetHello(Void) returns (Message) {}
+}
+
+message Void {}
+
+message Message {
+  string message = 1;
+}
