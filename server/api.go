@@ -13,5 +13,6 @@ func (s *server) GetHello(ctx context.Context, in *pb.Void) (*pb.Message, error)
 }
 
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {
-	return &pb.WordPresent{Present: false}, nil
+	i := s.combinedContextionary.WordToItemIndex(word.Word)
+	return &pb.WordPresent{Present: i.IsPresent()}, nil
 }
