@@ -27,3 +27,19 @@ func (s *server) SchemaSearch(ctx context.Context, params *pb.SchemaSearchParams
 		WithField("err", err).Info()
 	return res, err
 }
+
+func (s *server) SafeGetSimilarWordsWithCertainty(ctx context.Context, params *pb.SimilarWordsParams) (*pb.SimilarWordsResults, error) {
+	words := s.combinedContextionary.SafeGetSimilarWordsWithCertainty(params.Word, params.Certainty)
+	return &pb.SimilarWordsResults{
+		Words: pbWordsFromStrings(words),
+	}, nil
+}
+
+func pbWordsFromStrings(input []string) []*pb.Word {
+	output := make([]*pb.Word, len(input), len(input))
+	for i, word := range input {
+		output[i] = &pb.Word{Word: word}
+	}
+
+	return output
+}

@@ -6,6 +6,7 @@ service Contextionary {
   rpc IsWordStopword(Word) returns (WordStopword) {}
   rpc IsWordPresent(Word) returns (WordPresent) {}
   rpc SchemaSearch(SchemaSearchParams) returns (SchemaSearchResults) {}
+  rpc SafeGetSimilarWordsWithCertainty(SimilarWordsParams) returns (SimilarWordsResults) {}
 }
 
 message Word {
@@ -18,6 +19,15 @@ message WordPresent {
 
 message WordStopword {
  bool stopword = 1;
+}
+
+message SimilarWordsParams {
+  string word = 1;
+  float certainty = 2;
+}
+
+message SimilarWordsResults {
+  repeated Word words = 1;
 }
 
 message Keyword {

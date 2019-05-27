@@ -34,6 +34,8 @@ func main() {
 		wordStopword(client, args[1:])
 	case "search":
 		search(client, args[1:])
+	case "similar-words":
+		similarWords(client, args[1:])
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command '%s'\n", cmd)
 		os.Exit(1)
@@ -59,6 +61,42 @@ func wordPresent(client pb.ContextionaryClient, args []string) {
 		} else {
 			fmt.Printf("word '%s' is NOT present in the contextionary\n", word)
 		}
+	}
+}
+
+func similarWords(client pb.ContextionaryClient, args []string) {
+	var word string
+	var certainty float32
+
+	if len(args) == 0 {
+		fmt.Fprintf(os.Stderr, "need at least one other argument: the word you want to find similarities to\n")
+		os.Exit(1)
+	}
+	word = args[0]
+
+	if len(args) == 1 {
+		fmt.Fprintf(os.Stderr, "need at least one other argument: the minimum required certainty\n")
+		os.Exit(1)
+	}
+
+	c, err := strconv.ParseFloat(args[1], 32)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "couldnt parse certainty: %v\n", err)
+		os.Exit(1)
+	}
+	certainty = float32(c)
+
+	res, err := client.SafeGetSimilarWordsWithCertainty(context.Background(), &pb.SimilarWordsParams{
+		Certainty: certainty,
+		Word:      word,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: couldn't get similar words: %s", err)
+		os.Exit(1)
+	}
+
+	for _, word := range res.Words {
+		fmt.Printf("🥳  %s\n", word.Word)
 	}
 }
 
