@@ -1,6 +1,7 @@
 module github.com/semi-technologies/contextionary
 
 require (
+	github.com/coreos/etcd v3.3.11+incompatible
 	github.com/creativesoftwarefdn/contextionary v0.0.0-20190309180124-e8a88e310e3e
 	github.com/creativesoftwarefdn/weaviate v0.0.0-20190307151110-8832f83a8423
 	github.com/davecgh/go-spew v1.1.1

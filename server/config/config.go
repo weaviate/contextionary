@@ -15,6 +15,9 @@ type Config struct {
 	IDXFile       string
 	StopwordsFile string
 
+	SchemaProviderURL string
+	SchemaProviderKey string
+
 	ServerPort int
 }
 
@@ -46,6 +49,15 @@ func (c *Config) init() error {
 		return err
 	}
 	c.StopwordsFile = sw
+
+	sp, err := c.requiredString("SCHEMA_PROVIDER_URL")
+	if err != nil {
+		return err
+	}
+	c.SchemaProviderURL = sp
+
+	spk := c.optionalString("SCHEMA_PROVIDER_KEY", "/weaviate/schema/state")
+	c.SchemaProviderKey = spk
 
 	port, err := c.optionalInt("SERVER_PORT", 9999)
 	if err != nil {
@@ -80,4 +92,13 @@ func (c *Config) requiredString(varName string) (string, error) {
 	}
 
 	return value, nil
+}
+
+func (c *Config) optionalString(varName, defaultInput string) string {
+	value := os.Getenv(varName)
+	if value == "" {
+		return defaultInput
+	}
+
+	return value
 }
