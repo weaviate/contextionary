@@ -10,10 +10,6 @@ env:
 language: docker
 
 script:
+- set -e
 - TAG=test ./build.sh
-
-deploy:
-  provider: script
-  script: bash docker_push.sh
-  on:
-    branch: master
+- ./docker_push.sh
