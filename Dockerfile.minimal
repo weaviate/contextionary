@@ -1,0 +1,16 @@
+FROM golang:1.12
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN tools/dev/gen_simple_contextionary.sh
+RUN mkdir -p /data
+COPY tools/dev/example.idx tools/dev/example.knn tools/dev/stopwords.json ./data
+
+ENV KNN_FILE=data/example.knn
+ENV IDX_FILE=data/example.idx
+ENV STOPWORDS_FILE=data/stopwords.json
+
+RUN go build -o contextionary-server ./server
+CMD [ "./contextionary-server" ]
