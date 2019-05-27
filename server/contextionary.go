@@ -28,7 +28,7 @@ func (s *server) init() error {
 	}
 	s.stopwordDetector = swDetector
 
-	if err := s.buildContextionary(swDetector); err != nil {
+	if err := s.buildContextionary(); err != nil {
 		return err
 	}
 
@@ -52,8 +52,8 @@ type stopwordDetector interface {
 }
 
 // any time the schema changes the contextionary needs to be rebuilt.
-func (s *server) buildContextionary(swDetector stopwordDetector) error {
-	schemaContextionary, err := schemac.BuildInMemoryContextionaryFromSchema(s.schema, &s.rawContextionary, swDetector)
+func (s *server) buildContextionary() error {
+	schemaContextionary, err := schemac.BuildInMemoryContextionaryFromSchema(s.schema, &s.rawContextionary, s.stopwordDetector)
 	if err != nil {
 		return fmt.Errorf("could not build in-memory contextionary from schema; %v", err)
 	}
@@ -128,6 +128,13 @@ func (s *server) unmarshalAndUpdateSchema(bytes []byte) {
 	}
 
 	s.schema = *schema
+	err = s.buildContextionary()
+	if err != nil {
+		s.logger.WithField("action", "schema-update").WithError(err).
+			Error("could not rebuild contextionary")
+		return
+	}
+
 	s.logger.WithField("action", "schema-update").
 		WithField("schema", s.schema).
 		Info("succesfully updated schema")
