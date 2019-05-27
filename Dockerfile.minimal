@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 RUN tools/dev/gen_simple_contextionary.sh
-RUN mkdir -p /data
+RUN mkdir -p ./data
 RUN cp tools/dev/example.idx tools/dev/example.knn tools/dev/stopwords.json ./data/
 
 ENV KNN_FILE=data/example.knn
