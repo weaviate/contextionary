@@ -22,6 +22,7 @@ func (s *server) init() error {
 	if err != nil {
 		return err
 	}
+	s.stopwordDetector = swDetector
 
 	if err := s.buildContextionary(swDetector); err != nil {
 		return err

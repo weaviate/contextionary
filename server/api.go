@@ -12,6 +12,11 @@ func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPres
 	return &pb.WordPresent{Present: i.IsPresent()}, nil
 }
 
+func (s *server) IsWordStopword(ctx context.Context, word *pb.Word) (*pb.WordStopword, error) {
+	sw := s.stopwordDetector.IsStopWord(word.Word)
+	return &pb.WordStopword{Stopword: sw}, nil
+}
+
 func (s *server) SchemaSearch(ctx context.Context, params *pb.SchemaSearchParams) (*pb.SchemaSearchResults, error) {
 
 	s.logger.WithField("params", params).Info()

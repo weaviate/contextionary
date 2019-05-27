@@ -30,6 +30,8 @@ func main() {
 	switch cmd {
 	case "word-present":
 		wordPresent(client, args[1:])
+	case "word-stopword":
+		wordStopword(client, args[1:])
 	case "search":
 		search(client, args[1:])
 	default:
@@ -56,6 +58,28 @@ func wordPresent(client pb.ContextionaryClient, args []string) {
 			fmt.Printf("word '%s' is present in the contextionary\n", word)
 		} else {
 			fmt.Printf("word '%s' is NOT present in the contextionary\n", word)
+		}
+	}
+}
+
+func wordStopword(client pb.ContextionaryClient, args []string) {
+	if len(args) == 0 {
+		fmt.Fprintf(os.Stderr, "need at least one other argument: the word you want to check\n")
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+
+	for _, word := range args {
+		res, err := client.IsWordStopword(ctx, &pb.Word{Word: word})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: couldn't get word: %s", err)
+			os.Exit(1)
+		}
+		if res.Stopword {
+			fmt.Printf("word '%s' is a stopword\n", word)
+		} else {
+			fmt.Printf("word '%s' is not a stopword\n", word)
 		}
 	}
 }

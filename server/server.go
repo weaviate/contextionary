@@ -37,6 +37,8 @@ type server struct {
 	// schema contextionary
 	rawContextionary core.Contextionary
 
+	stopwordDetector stopwordDetector
+
 	config *config.Config
 
 	logger logrus.FieldLogger

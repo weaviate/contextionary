@@ -3,6 +3,7 @@ syntax = "proto3";
 package contextionary;
 
 service Contextionary {
+  rpc IsWordStopword(Word) returns (WordStopword) {}
   rpc IsWordPresent(Word) returns (WordPresent) {}
   rpc SchemaSearch(SchemaSearchParams) returns (SchemaSearchResults) {}
 }
@@ -13,6 +14,10 @@ message Word {
 
 message WordPresent {
  bool present = 1;
+}
+
+message WordStopword {
+ bool stopword = 1;
 }
 
 message Keyword {
