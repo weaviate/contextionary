@@ -5,10 +5,10 @@ import (
 	"net"
 	"os"
 
-	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
-	core "github.com/creativesoftwarefdn/contextionary/contextionary/core"
-	"github.com/creativesoftwarefdn/contextionary/server/config"
-	"github.com/creativesoftwarefdn/weaviate/database/schema"
+	pb "github.com/semi-technologies/contextionary/contextionary"
+	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/server/config"
+	"github.com/semi-technologies/weaviate/entities/schema"
 	"github.com/sirupsen/logrus"
 	grpc "google.golang.org/grpc"
 )

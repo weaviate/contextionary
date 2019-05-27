@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
-	schema "github.com/creativesoftwarefdn/contextionary/contextionary/schema"
+	pb "github.com/semi-technologies/contextionary/contextionary"
+	schema "github.com/semi-technologies/contextionary/contextionary/schema"
 )
 
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {

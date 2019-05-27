@@ -5,9 +5,9 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/creativesoftwarefdn/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
- * CONTACT: hello@creativesoftwarefdn.org
+ * CONTACT: hello@semi.technology
  */
 package contextionary
 
@@ -69,12 +69,23 @@ func (v *Vector) ToString() string {
 			str += ", "
 		}
 
-		str += fmt.Sprintf("%.3f", i)
+		str += fmt.Sprintf("%.6f", i)
 	}
 
 	str += "]"
 
 	return str
+}
+
+func (v *Vector) ToArray() []float32 {
+
+	var returner []float32
+
+	for _, i := range v.vector {
+		returner = append(returner, i)
+	}
+
+	return returner
 }
 
 func (v *Vector) Distance(other *Vector) (float32, error) {

@@ -5,16 +5,17 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/creativesoftwarefdn/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
- * CONTACT: hello@creativesoftwarefdn.org
+ * CONTACT: hello@semi.technology
  */package schema
 
 import (
 	"errors"
 	"testing"
 
-	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
+	"github.com/semi-technologies/weaviate/entities/models"
+	"github.com/semi-technologies/weaviate/entities/schema/kind"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,62 +23,71 @@ func Test__SchemaSearch_Validation(t *testing.T) {
 	tests := schemaSearchTests{
 		{
 			name: "valid params",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "foo",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  1.0,
 			},
 			expectedError: nil,
 		},
 		{
 			name: "missing search name",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  0.0,
 			},
 			expectedError: errors.New("Name cannot be empty"),
 		},
 		{
 			name: "certainty too low",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "bestName",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  -4,
 			},
 			expectedError: errors.New("invalid Certainty: must be between 0 and 1, but got '-4.000000'"),
 		},
 		{
 			name: "certainty too high",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "bestName",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  4,
 			},
 			expectedError: errors.New("invalid Certainty: must be between 0 and 1, but got '4.000000'"),
 		},
 		{
 			name: "inavlid search type",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType(99),
+			searchParams: SearchParams{
+				SearchType: SearchType("invalid"),
 				Name:       "bestName",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  0.5,
 			},
-			expectedError: errors.New("SearchType must be SearchType_CLASS or SearchType_PROPERTY, but got '99'"),
+			expectedError: errors.New("SearchType must be SearchTypeClass or SearchTypeProperty, but got 'invalid'"),
+		},
+		{
+			name: "missing kind on class search",
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
+				Name:       "bestName",
+				Certainty:  0.5,
+			},
+			expectedError: errors.New("Kind cannot be empty"),
 		},
 		{
 			name: "valid keywords",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "foo",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  1.0,
-				Keywords: []*pb.Keyword{{
+				Keywords: models.SemanticSchemaKeywords{{
 					Keyword: "foobar",
 					Weight:  1.0,
 				}},
@@ -86,12 +96,12 @@ func Test__SchemaSearch_Validation(t *testing.T) {
 		},
 		{
 			name: "keywords with empty names",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "foo",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  1.0,
-				Keywords: []*pb.Keyword{{
+				Keywords: models.SemanticSchemaKeywords{{
 					Keyword: "",
 					Weight:  1.0,
 				}},
@@ -100,12 +110,12 @@ func Test__SchemaSearch_Validation(t *testing.T) {
 		},
 		{
 			name: "keywords with invalid weights",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "foo",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  1.0,
-				Keywords: []*pb.Keyword{{
+				Keywords: models.SemanticSchemaKeywords{{
 					Keyword: "bestkeyword",
 					Weight:  1.3,
 				}},
@@ -115,12 +125,12 @@ func Test__SchemaSearch_Validation(t *testing.T) {
 		},
 		{
 			name: "CamelCased keywords",
-			searchParams: &pb.SchemaSearchParams{
-				SearchType: pb.SearchType_CLASS,
+			searchParams: SearchParams{
+				SearchType: SearchTypeClass,
 				Name:       "foo",
-				Kind:       pb.Kind_THING,
+				Kind:       kind.Thing,
 				Certainty:  1.0,
-				Keywords: []*pb.Keyword{{
+				Keywords: models.SemanticSchemaKeywords{{
 					Keyword: "worstKeyword",
 					Weight:  0.8,
 				}},
@@ -137,7 +147,7 @@ func Test__SchemaSearch_Validation(t *testing.T) {
 func (s schemaSearchTests) AssertValidation(t *testing.T) {
 	for _, test := range s {
 		t.Run(test.name, func(t *testing.T) {
-			err := (SearchParams{test.searchParams}).Validate()
+			err := test.searchParams.Validate()
 
 			// assert error
 			assert.Equal(t, test.expectedError, err, "should match the expected error")

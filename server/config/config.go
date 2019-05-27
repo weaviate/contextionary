@@ -10,9 +10,10 @@ import (
 
 // Config is used to load application wide config from the environment
 type Config struct {
-	logger  logrus.FieldLogger
-	KNNFile string
-	IDXFile string
+	logger        logrus.FieldLogger
+	KNNFile       string
+	IDXFile       string
+	StopwordsFile string
 
 	ServerPort int
 }
@@ -39,6 +40,12 @@ func (c *Config) init() error {
 		return err
 	}
 	c.IDXFile = idx
+
+	sw, err := c.requiredString("STOPWORDS_FILE")
+	if err != nil {
+		return err
+	}
+	c.StopwordsFile = sw
 
 	port, err := c.optionalInt("SERVER_PORT", 9999)
 	if err != nil {

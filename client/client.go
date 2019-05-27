@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
+	pb "github.com/semi-technologies/contextionary/contextionary"
 	grpc "google.golang.org/grpc"
 )
 

@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 
-	core "github.com/creativesoftwarefdn/contextionary/contextionary/core"
-	schemac "github.com/creativesoftwarefdn/contextionary/contextionary/schema"
-	"github.com/creativesoftwarefdn/weaviate/database/schema"
-	"github.com/creativesoftwarefdn/weaviate/models"
+	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/contextionary/core/stopwords"
+	schemac "github.com/semi-technologies/contextionary/contextionary/schema"
+	"github.com/semi-technologies/weaviate/entities/models"
+	"github.com/semi-technologies/weaviate/entities/schema"
 )
 
 func (s *server) init() error {
@@ -17,7 +18,12 @@ func (s *server) init() error {
 		return err
 	}
 
-	if err := s.buildContextionary(); err != nil {
+	swDetector, err := stopwords.NewFromFile(s.config.StopwordsFile)
+	if err != nil {
+		return err
+	}
+
+	if err := s.buildContextionary(swDetector); err != nil {
 		return err
 	}
 
@@ -34,9 +40,13 @@ func (s *server) loadRawContextionary() error {
 	return nil
 }
 
+type stopwordDetector interface {
+	IsStopWord(word string) bool
+}
+
 // any time the schema changes the contextionary needs to be rebuilt.
-func (s *server) buildContextionary() error {
-	schemaContextionary, err := schemac.BuildInMemoryContextionaryFromSchema(s.schema, &s.rawContextionary)
+func (s *server) buildContextionary(swDetector stopwordDetector) error {
+	schemaContextionary, err := schemac.BuildInMemoryContextionaryFromSchema(s.schema, &s.rawContextionary, swDetector)
 	if err != nil {
 		return fmt.Errorf("could not build in-memory contextionary from schema; %v", err)
 	}
@@ -63,15 +73,15 @@ func emptySchema() schema.Schema {
 				{
 					Class: "City",
 					Properties: []*models.SemanticSchemaClassProperty{{
-						Name:       "name",
-						AtDataType: []string{"string"},
+						Name:     "name",
+						DataType: []string{"string"},
 					}},
 				},
 				{
 					Class: "Village",
 					Properties: []*models.SemanticSchemaClassProperty{{
-						Name:       "name",
-						AtDataType: []string{"string"},
+						Name:     "name",
+						DataType: []string{"string"},
 					}},
 				},
 			},

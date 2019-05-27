@@ -5,9 +5,9 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/creativesoftwarefdn/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
- * CONTACT: hello@creativesoftwarefdn.org
+ * CONTACT: hello@semi.technology
  */
 
 // Package contextionary provides the toolset to add context to words.
@@ -26,6 +26,7 @@ func (i *ItemIndex) IsPresent() bool {
 // Contextionary is the API to decouple the K-nn interface that is needed for
 // Weaviate from a concrete implementation.
 type Contextionary interface {
+
 	// Return the number of items that is stored in the index.
 	GetNumberOfItems() int
 
@@ -39,6 +40,9 @@ type Contextionary interface {
 	// Based on an index, return the assosiated word.
 	ItemIndexToWord(item ItemIndex) (string, error)
 
+	// Based on an index, return the assosiated word.
+	ItemIndexToOccurrence(item ItemIndex) (uint64, error)
+
 	// Get the vector of an item index.
 	GetVectorForItemIndex(item ItemIndex) (*Vector, error)
 
@@ -47,9 +51,24 @@ type Contextionary interface {
 
 	// Get the n nearest neighbours of item, examining k trees.
 	// Returns an array of indices, and of distances between item and the n-nearest neighbors.
-	GetNnsByItem(item ItemIndex, n int, k int) ([]ItemIndex, []float32, error)
+	GetNnsByItem(item ItemIndex, n, k int) ([]ItemIndex, []float32, error)
 
 	// Get the n nearest neighbours of item, examining k trees.
 	// Returns an array of indices, and of distances between item and the n-nearest neighbors.
-	GetNnsByVector(vector Vector, n int, k int) ([]ItemIndex, []float32, error)
+	GetNnsByVector(vector Vector, n, k int) ([]ItemIndex, []float32, error)
+
+	// SafeGetSimilarWords returns n similar words in the contextionary,
+	// examining k trees. It is guaratueed to have results, even if the word is
+	// not in the contextionary. In this case the list only contains the word
+	// itself. It can then still be used for exact match or levensthein-based
+	// searches against db backends.
+	SafeGetSimilarWords(word string, n, k int) ([]string, []float32)
+
+	// SafeGetSimilarWordsWithCertainty returns  similar words in the
+	// contextionary, if they are close enough to match the required certainty.
+	// It is guaratueed to have results, even if the word is not in the
+	// contextionary. In this case the list only contains the word itself. It can
+	// then still be used for exact match or levensthein-based searches against
+	// db backends.
+	SafeGetSimilarWordsWithCertainty(word string, certainty float32) []string
 }

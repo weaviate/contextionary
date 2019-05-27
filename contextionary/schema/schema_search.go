@@ -5,9 +5,9 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/creativesoftwarefdn/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
- * CONTACT: hello@creativesoftwarefdn.org
+ * CONTACT: hello@semi.technology
  */package schema
 
 import (
@@ -15,12 +15,29 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/creativesoftwarefdn/contextionary/contextionary/core"
-	pb "github.com/creativesoftwarefdn/contextionary/contextionary"
 	"github.com/fatih/camelcase"
+	pb "github.com/semi-technologies/contextionary/contextionary"
+	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/weaviate/entities/schema/kind"
 )
 
+// SearchResult is a single search result. See wrapping Search Results for the Type
+type SearchResult struct {
+	Name      string
+	Kind      kind.Kind
+	Certainty float32
+}
 
+// SearchResults is grouping of SearchResults for a SchemaSearch
+type SearchResults struct {
+	Type    SearchType
+	Results []SearchResult
+}
+
+// Len of the result set
+func (r SearchResults) Len() int {
+	return len(r.Results)
+}
 
 // SchemaSearch can be used to search for related classes and properties, see
 // documentation of SearchParams for more details on how to use it and

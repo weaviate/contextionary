@@ -5,16 +5,17 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/creativesoftwarefdn/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
- * CONTACT: hello@creativesoftwarefdn.org
+ * CONTACT: hello@semi.technology
  */
 package contextionary
 
 import (
 	"fmt"
-	annoy "github.com/creativesoftwarefdn/contextionary/contextionary/core/annoyindex"
 	"sort"
+
+	annoy "github.com/semi-technologies/contextionary/contextionary/core/annoyindex"
 )
 
 type MemoryIndex struct {
@@ -43,6 +44,10 @@ func (mi *MemoryIndex) WordToItemIndex(word string) ItemIndex {
 	}
 
 	return -1
+}
+
+func (mi *MemoryIndex) ItemIndexToOccurrence(item ItemIndex) (uint64, error) {
+	panic("not implemented in memory index")
 }
 
 // Based on an index, return the assosiated word.
@@ -113,6 +118,25 @@ func (mi *MemoryIndex) GetNnsByVector(vector Vector, n int, k int) ([]ItemIndex,
 	} else {
 		return nil, nil, fmt.Errorf("Wrong vector length provided")
 	}
+}
+
+// SafeGetSimilarWords returns n similar words in the contextionary,
+// examining k trees. It is guaratueed to have results, even if the word is
+// not in the contextionary. In this case the list only contains the word
+// itself. It can then still be used for exact match or levensthein-based
+// searches against db backends.
+func (mi *MemoryIndex) SafeGetSimilarWords(word string, n, k int) ([]string, []float32) {
+	return safeGetSimilarWordsFromAny(mi, word, n, k)
+}
+
+// SafeGetSimilarWordsWithCertainty returns  similar words in the
+// contextionary, if they are close enough to match the required certainty.
+// It is guaratueed to have results, even if the word is not in the
+// contextionary. In this case the list only contains the word itself. It can
+// then still be used for exact match or levensthein-based searches against
+// db backends.
+func (mi *MemoryIndex) SafeGetSimilarWordsWithCertainty(word string, certainty float32) []string {
+	return safeGetSimilarWordsWithCertaintyFromAny(mi, word, certainty)
 }
 
 // The rest of this file concerns itself with building the Memory Index.
