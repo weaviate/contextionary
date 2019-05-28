@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/semi-technologies/contextionary/contextionary"
+	core "github.com/semi-technologies/contextionary/contextionary/core"
 	schema "github.com/semi-technologies/contextionary/contextionary/schema"
 )
 
@@ -42,4 +44,68 @@ func pbWordsFromStrings(input []string) []*pb.Word {
 	}
 
 	return output
+}
+
+func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector, error) {
+	i := s.combinedContextionary.WordToItemIndex(params.Word)
+	if !i.IsPresent() {
+		return nil, fmt.Errorf("word %s is not in the contextionary", params.Word)
+	}
+
+	v, err := s.combinedContextionary.GetVectorForItemIndex(i)
+	if err != nil {
+		return nil, err
+	}
+
+	return vectorToProto(v), nil
+}
+
+func vectorToProto(in *core.Vector) *pb.Vector {
+	a := in.ToArray()
+	output := make([]*pb.VectorEntry, len(a), len(a))
+	for i, entry := range a {
+		output[i] = &pb.VectorEntry{Entry: entry}
+	}
+
+	return &pb.Vector{Entries: output}
+}
+
+func vectorFromProto(in *pb.Vector) core.Vector {
+	asFloats := make([]float32, len(in.Entries), len(in.Entries))
+	for i, entry := range in.Entries {
+		asFloats[i] = entry.Entry
+	}
+
+	return core.NewVector(asFloats)
+}
+
+func (s *server) NearestWordsByVector(ctx context.Context, params *pb.VectorNNParams) (*pb.NearestWords, error) {
+
+	ii, dist, err := s.combinedContextionary.GetNnsByVector(vectorFromProto(params.Vector), int(params.N), int(params.K))
+	if err != nil {
+		return nil, err
+	}
+	words, err := s.itemIndexesToWords(ii)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NearestWords{
+		Distances: dist,
+		Words:     words,
+	}, nil
+}
+
+func (s *server) itemIndexesToWords(in []core.ItemIndex) ([]string, error) {
+	output := make([]string, len(in), len(in))
+	for i, itemIndex := range in {
+		w, err := s.combinedContextionary.ItemIndexToWord(itemIndex)
+		if err != nil {
+			return nil, err
+		}
+
+		output[i] = w
+	}
+
+	return output, nil
 }

@@ -7,6 +7,8 @@ service Contextionary {
   rpc IsWordPresent(Word) returns (WordPresent) {}
   rpc SchemaSearch(SchemaSearchParams) returns (SchemaSearchResults) {}
   rpc SafeGetSimilarWordsWithCertainty(SimilarWordsParams) returns (SimilarWordsResults) {}
+  rpc VectorForWord(Word) returns (Vector) {}
+  rpc NearestWordsByVector(VectorNNParams) returns (NearestWords) {}
 }
 
 message Word {
@@ -15,6 +17,20 @@ message Word {
 
 message WordPresent {
  bool present = 1;
+}
+
+message Vector {
+  repeated VectorEntry entries = 1;
+}
+
+message VectorEntry {
+  float Entry = 1;
+}
+
+message VectorNNParams {
+  Vector vector = 1;
+  int32 k = 2;
+  int32 n = 3;
 }
 
 message WordStopword {
@@ -28,6 +44,11 @@ message SimilarWordsParams {
 
 message SimilarWordsResults {
   repeated Word words = 1;
+}
+
+message NearestWords {
+  repeated string words = 1;
+  repeated float distances = 2;
 }
 
 message Keyword {
