@@ -1,3 +1,5 @@
+# vi: ft=Dockerfile
+
 FROM golang:1.12 as builder
 WORKDIR /app
 
