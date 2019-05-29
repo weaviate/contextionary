@@ -2,7 +2,16 @@
 
 > The contextionary powers the semantic, context-based searches in weaviate.
 
-**WIP: The contextionary is currently still part of
-[weaviate](https://github.com/creativesoftwarefdn/weaviate) itself, but in the
-process of being extracted into its own microservice. For details, see [this
-issue](https://github.com/creativesoftwarefdn/weaviate/issues/730#issuecomment-471159177).**
+Not intended for stand-alone use, use through [weaviate - the decentralized
+knowledge graph](https://github.com/semi-technologies/weaviate).
+
+## Versioning
+
+The version tag is `<semver-of-db>-v<semver-of-app>`. So for example the app
+version `0.1.0` deployed with the [contextionary vector db
+version](https://c11y.semi.technology/contextionary.json) `0.6.0` will have the
+version `0.6.0-v0.1.0`. This also corresponds to the docker tag.
+
+## Different types
+
+Types such as minimal, small, full, etc. coming soon.
