@@ -34,7 +34,7 @@ services:
       - "new"
   test-env:
     build: 
-      context: .
+      context: . # paths are relative to the docker-compose file, so they point to ./test/journey/
       dockerfile: ./Dockerfile
     volumes:
       - ./:/testfiles
