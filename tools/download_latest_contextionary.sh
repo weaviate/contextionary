@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VECTORDB_VERSION=0.6.0
+VECTORDB_VERSION=0.8.0
 
 rm -rf ./data && mkdir ./data
 
