@@ -8,6 +8,7 @@ service Contextionary {
   rpc SchemaSearch(SchemaSearchParams) returns (SchemaSearchResults) {}
   rpc SafeGetSimilarWordsWithCertainty(SimilarWordsParams) returns (SimilarWordsResults) {}
   rpc VectorForWord(Word) returns (Vector) {}
+  rpc VectorForCorpi(Corpi) returns (Vector) {}
   rpc NearestWordsByVector(VectorNNParams) returns (NearestWords) {}
 }
 
@@ -31,6 +32,10 @@ message VectorNNParams {
   Vector vector = 1;
   int32 k = 2;
   int32 n = 3;
+}
+
+message Corpi {
+  repeated string corpi = 1;
 }
 
 message WordStopword {

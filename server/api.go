@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
@@ -58,6 +59,80 @@ func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector
 	}
 
 	return vectorToProto(v), nil
+}
+
+func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vector, error) {
+	var corpusVectors []core.Vector
+
+	for i, corpus := range params.Corpi {
+		parts := strings.Split(corpus, " ")
+		if len(parts) == 0 {
+			continue
+		}
+
+		var vector *core.Vector
+		var err error
+
+		if len(parts) > 1 {
+			vector, err = s.vectorForWords(parts)
+		} else {
+			vector, err = s.vectorForWord(parts[0])
+		}
+		if err != nil {
+			return nil, fmt.Errorf("at corpus %d: %v", i, err)
+		}
+
+		if vector != nil {
+			corpusVectors = append(corpusVectors, *vector)
+		}
+	}
+
+	if len(corpusVectors) == 0 {
+		return nil, fmt.Errorf("all words in corpus were either stopwords" +
+			" or not present in the contextionary, cannot build vector")
+	}
+
+	vector, err := core.ComputeCentroid(corpusVectors)
+	if err != nil {
+		return nil, err
+	}
+
+	return vectorToProto(vector), nil
+}
+
+func (s *server) vectorForWords(words []string) (*core.Vector, error) {
+	var vectors []core.Vector
+	for _, word := range words {
+		vector, err := s.vectorForWord(word)
+		if err != nil {
+			return nil, err
+		}
+
+		if vector == nil {
+			continue
+		}
+
+		vectors = append(vectors, *vector)
+	}
+
+	if len(vectors) == 0 {
+		return nil, nil
+	}
+
+	return core.ComputeCentroid(vectors)
+}
+
+func (s *server) vectorForWord(word string) (*core.Vector, error) {
+	wi := s.combinedContextionary.WordToItemIndex(word)
+	if s.stopwordDetector.IsStopWord(word) {
+		return nil, nil
+	}
+
+	if !wi.IsPresent() {
+		return nil, nil
+	}
+
+	return s.combinedContextionary.GetVectorForItemIndex(wi)
 }
 
 func vectorToProto(in *core.Vector) *pb.Vector {
