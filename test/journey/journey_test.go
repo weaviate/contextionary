@@ -53,6 +53,22 @@ func Test_Contextionary_Journey(t *testing.T) {
 				})
 			}
 		})
+
+		t.Run("corpi to vector", func(t *testing.T) {
+			t.Run("only stopwords", func(t *testing.T) {
+				corpi := []string{"of", "the of"}
+				_, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
+				assert.NotNil(t, err)
+			})
+
+			t.Run("only stopwords", func(t *testing.T) {
+				corpi := []string{"car", "car of brand mercedes", "color blue"}
+				res, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
+				assert.Nil(t, err)
+				// TODO: also upgrade minimal one to 600 vectors
+				assert.Len(t, res.Entries, 300)
+			})
+		})
 	})
 
 	t.Run("the full contextionary", func(t *testing.T) {
@@ -80,6 +96,21 @@ func Test_Contextionary_Journey(t *testing.T) {
 					assert.Equal(t, true, res.Stopword)
 				})
 			}
+		})
+
+		t.Run("corpi to vector", func(t *testing.T) {
+			t.Run("only stopwords", func(t *testing.T) {
+				corpi := []string{"of", "the of"}
+				_, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
+				assert.NotNil(t, err)
+			})
+
+			t.Run("only stopwords", func(t *testing.T) {
+				corpi := []string{"car", "car of brand mercedes", "color blue"}
+				res, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
+				assert.Nil(t, err)
+				assert.Len(t, res.Entries, 600)
+			})
 		})
 	})
 }

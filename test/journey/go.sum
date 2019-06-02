@@ -128,6 +128,8 @@ github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rs/cors v1.5.0/go.mod h1:gFx+x8UowdsKA9AchylcLynDq+nNFfI8FkUZdN/jGCU=
 github.com/satori/go.uuid v0.0.0-20180103174451-36e9d2ebbde5/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
+github.com/semi-technologies/contextionary v0.0.0-20190529072917-5791db3de20f79fca2dc96e72e18e5e9eb5e7954 h1:e3V1HWL9NqQksplWqFVFycXnE9t2n4fsj4kwfCzY33c=
+github.com/semi-technologies/contextionary v0.0.0-20190529072917-5791db3de20f79fca2dc96e72e18e5e9eb5e7954/go.mod h1:BTxMOKlpVWytb7TYDfHEP77GsmPtVEKa6BjnW5IbaUU=
 github.com/semi-technologies/contextionary v0.0.0-20190529072917-998b87112585 h1:Hg3UY7ph2McEcykQyZ+G1kx26Epc1+1bbOJUboA18fY=
 github.com/semi-technologies/contextionary v0.0.0-20190529072917-998b87112585/go.mod h1:BTxMOKlpVWytb7TYDfHEP77GsmPtVEKa6BjnW5IbaUU=
 github.com/semi-technologies/weaviate v0.0.0-20190527083700-4be55acd5dbc/go.mod h1:za0ck338GCTM/egbjy6trbU7qFNn4y3l7TX8LUgaUTc=
