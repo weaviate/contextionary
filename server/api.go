@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
@@ -62,37 +61,8 @@ func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector
 }
 
 func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vector, error) {
-	var corpusVectors []core.Vector
-
-	for i, corpus := range params.Corpi {
-		parts := strings.Split(corpus, " ")
-		if len(parts) == 0 {
-			continue
-		}
-
-		var vector *core.Vector
-		var err error
-
-		if len(parts) > 1 {
-			vector, err = s.vectorForWords(parts)
-		} else {
-			vector, err = s.vectorForWord(parts[0])
-		}
-		if err != nil {
-			return nil, fmt.Errorf("at corpus %d: %v", i, err)
-		}
-
-		if vector != nil {
-			corpusVectors = append(corpusVectors, *vector)
-		}
-	}
-
-	if len(corpusVectors) == 0 {
-		return nil, fmt.Errorf("all words in corpus were either stopwords" +
-			" or not present in the contextionary, cannot build vector")
-	}
-
-	vector, err := core.ComputeCentroid(corpusVectors)
+	v := NewVectorizer(s.combinedContextionary, s.stopwordDetector, s.config, s.logger)
+	vector, err := v.Corpi(params.Corpi)
 	if err != nil {
 		return nil, err
 	}

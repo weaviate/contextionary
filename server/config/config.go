@@ -19,6 +19,8 @@ type Config struct {
 	SchemaProviderKey string
 
 	ServerPort int
+
+	OccurenceWeightLinearFactor float32
 }
 
 // New Config from the environment. Errors if required env vars can't be found
@@ -65,6 +67,12 @@ func (c *Config) init() error {
 	}
 	c.ServerPort = port
 
+	factor, err := c.optionalFloat32("OCCURRENCE_WEIGHT_LINEAR_FACTOR", 0.5)
+	if err != nil {
+		return err
+	}
+	c.OccurenceWeightLinearFactor = factor
+
 	return nil
 }
 
@@ -83,6 +91,23 @@ func (c *Config) optionalInt(varName string, defaultValue int) (int, error) {
 	}
 
 	return asInt, nil
+}
+
+func (c *Config) optionalFloat32(varName string, defaultValue float32) (float32, error) {
+	value := os.Getenv(varName)
+	if value == "" {
+		c.logger.Infof("optional var '%s' is not set, defaulting to '%v'",
+			varName, defaultValue)
+		return defaultValue, nil
+	}
+
+	asFloat, err := strconv.ParseFloat(value, 32)
+	if err != nil {
+		return 0, fmt.Errorf("cannot convert value of var '%s' ('%v') to int: %s",
+			varName, value, err)
+	}
+
+	return float32(asFloat), nil
 }
 
 func (c *Config) requiredString(varName string) (string, error) {
