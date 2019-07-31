@@ -17,7 +17,7 @@ message MetaParams {}
 
 message MetaOverview {
   string version = 1;
-  string wordCount = 2;
+  int64 wordCount = 2;
 }
 
 message Word {

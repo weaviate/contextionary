@@ -11,7 +11,8 @@ import (
 
 func (s *server) Meta(ctx context.Context, params *pb.MetaParams) (*pb.MetaOverview, error) {
 	return &pb.MetaOverview{
-		Version: Version,
+		Version:   Version,
+		WordCount: int64(s.combinedContextionary.GetNumberOfItems()),
 	}, nil
 }
 
