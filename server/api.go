@@ -9,6 +9,12 @@ import (
 	schema "github.com/semi-technologies/contextionary/contextionary/schema"
 )
 
+func (s *server) Meta(ctx context.Context, params *pb.MetaParams) (*pb.MetaOverview, error) {
+	return &pb.MetaOverview{
+		Version: Version,
+	}, nil
+}
+
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {
 	i := s.combinedContextionary.WordToItemIndex(word.Word)
 	return &pb.WordPresent{Present: i.IsPresent()}, nil

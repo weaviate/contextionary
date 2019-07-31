@@ -10,6 +10,14 @@ service Contextionary {
   rpc VectorForWord(Word) returns (Vector) {}
   rpc VectorForCorpi(Corpi) returns (Vector) {}
   rpc NearestWordsByVector(VectorNNParams) returns (NearestWords) {}
+  rpc Meta(MetaParams) returns (MetaOverview) {}
+}
+
+message MetaParams {}
+
+message MetaOverview {
+  string version = 1;
+  string wordCount = 2;
 }
 
 message Word {

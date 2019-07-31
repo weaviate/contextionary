@@ -8,6 +8,8 @@ services:
     image: c11y-local-journeytest-full
     environment:
       SCHEMA_PROVIDER_URL: etcd:2379
+    ports:
+      - "9999:9999"
   etcd:
     image: gcr.io/etcd-development/etcd:v3.3.8
     ports:

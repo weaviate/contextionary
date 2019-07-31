@@ -28,6 +28,8 @@ func main() {
 
 	cmd := args[0]
 	switch cmd {
+	case "meta", "version":
+		meta(client, args[1:])
 	case "word-present":
 		wordPresent(client, args[1:])
 	case "word-stopword":
@@ -40,6 +42,17 @@ func main() {
 		fmt.Fprintf(os.Stderr, "unknown command '%s'\n", cmd)
 		os.Exit(1)
 	}
+}
+func meta(client pb.ContextionaryClient, args []string) {
+	ctx := context.Background()
+
+	res, err := client.Meta(ctx, &pb.MetaParams{})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: couldn't display meta: %s", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("%#v\n", res)
 }
 
 func wordPresent(client pb.ContextionaryClient, args []string) {

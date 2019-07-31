@@ -13,8 +13,12 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// Version is filled through a build arg
+var Version string
+
 func main() {
 	server := new()
+	server.logger.WithField("version", Version).Info()
 	grpcServer := grpc.NewServer()
 	pb.RegisterContextionaryServer(grpcServer, server)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", server.config.ServerPort))

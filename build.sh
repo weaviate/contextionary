@@ -18,5 +18,5 @@ then
   VERSION=local
 fi
 
-docker build -f Dockerfile.minimal -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION-minimal" .
-docker build -f Dockerfile.full -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION" .
+docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION-minimal" .
+docker build -f Dockerfile.full --build-arg VERSION="$VERSION" -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION" .
