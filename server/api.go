@@ -68,7 +68,7 @@ func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector
 }
 
 func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vector, error) {
-	v := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger)
+	v := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter())
 	vector, err := v.Corpi(params.Corpi)
 	if err != nil {
 		return nil, err

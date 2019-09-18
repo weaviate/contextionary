@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/server/config"
@@ -14,14 +13,20 @@ type Vectorizer struct {
 	stopwordDetector stopwordDetector
 	config           *config.Config
 	logger           logrus.FieldLogger
+	splitter         splitter
+}
+
+type splitter interface {
+	Split(corpus string) []string
 }
 
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
-	config *config.Config, logger logrus.FieldLogger) *Vectorizer {
+	config *config.Config, logger logrus.FieldLogger, splitter splitter) *Vectorizer {
 	return &Vectorizer{
 		c11y:             c11y,
 		stopwordDetector: sw,
 		config:           config,
+		splitter:         splitter,
 		logger:           logger,
 	}
 }
@@ -29,7 +34,7 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
 	var corpusVectors []core.Vector
 	for i, corpus := range corpi {
-		parts := strings.Split(corpus, " ")
+		parts := cv.splitter.Split(corpus)
 		if len(parts) == 0 {
 			continue
 		}

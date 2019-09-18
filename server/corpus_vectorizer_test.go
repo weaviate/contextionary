@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
@@ -18,8 +19,9 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 0,
 		}
+		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger)
+		v := NewVectorizer(c11y, swd, config, logger, split)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -32,8 +34,9 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 1,
 		}
+		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger)
+		v := NewVectorizer(c11y, swd, config, logger, split)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -46,8 +49,9 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 0.5,
 		}
+		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger)
+		v := NewVectorizer(c11y, swd, config, logger, split)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -128,4 +132,10 @@ type fakeStopwordDetector struct{}
 
 func (f *fakeStopwordDetector) IsStopWord(word string) bool {
 	return word == "is"
+}
+
+type primitiveSplitter struct{}
+
+func (s *primitiveSplitter) Split(corpus string) []string {
+	return strings.Split(corpus, " ")
 }
