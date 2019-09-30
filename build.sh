@@ -19,7 +19,7 @@ then
 fi
 
 echo "Build minimal version (english only)"
-docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION-minimal" .
+docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal" .
 
 echo "Build full versions"
 for lang in $LANGUAGES; do
