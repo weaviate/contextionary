@@ -21,8 +21,8 @@ then
   VERSION=local
 fi
 
-docker tag "$DOCKER_ORG/$DOCKER_REPO:$VERSION-minimal" c11y-local-journeytest-minimal
-docker tag "$DOCKER_ORG/$DOCKER_REPO:$VERSION" c11y-local-journeytest-full
+docker tag "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal" c11y-local-journeytest-minimal
+docker tag "$DOCKER_ORG/$DOCKER_REPO:en$VERSION" c11y-local-journeytest-full
 
 echo "Cleaning up from previous runs"
 docker-compose -f ./test/journey/docker-compose.yml down

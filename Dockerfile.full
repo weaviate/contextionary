@@ -7,7 +7,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y bzip2 jq
 
 COPY ./tools/download_latest_contextionary.sh ./
-RUN ./download_latest_contextionary.sh
+ARG LANGUAGE
+RUN ./download_latest_contextionary.sh "$LANGUAGE"
 
 COPY go.mod go.sum ./
 RUN go mod download

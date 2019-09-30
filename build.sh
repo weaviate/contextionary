@@ -18,5 +18,15 @@ then
   VERSION=local
 fi
 
+echo "Build minimal version (english only)"
 docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION-minimal" .
-docker build -f Dockerfile.full --build-arg VERSION="$VERSION" -t "$DOCKER_ORG/$DOCKER_REPO:$VERSION" .
+
+echo "Build full versions"
+for lang in $LANGUAGES; do
+  echo "Build $lang:"
+  full_version="${lang}${VERSION}" 
+  docker build -f Dockerfile.full \
+    --build-arg VERSION="$full_version" \
+    --build-arg LANGUAGE="$lang" \
+    -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .
+done
