@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/server/config"
@@ -76,21 +77,9 @@ type vectorWithOccurrence struct {
 }
 
 func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, error) {
-	var vectors []core.Vector
-	var occurrences []uint64
-
-	for _, word := range words {
-		vector, err := cv.vectorForWord(word)
-		if err != nil {
-			return nil, err
-		}
-
-		if vector == nil {
-			continue
-		}
-
-		vectors = append(vectors, *vector.vector)
-		occurrences = append(occurrences, vector.occurrence)
+	vectors, occurrences, err := cv.vectorsAndOccurrences(words)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(vectors) == 0 {
@@ -106,6 +95,53 @@ func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, err
 	return &vectorWithOccurrence{
 		vector: centroid,
 	}, nil
+}
+
+func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []uint64, error) {
+	var vectors []core.Vector
+	var occurrences []uint64
+
+	for i := 0; i < len(words); i++ {
+		if (i + 1) < len(words) {
+			// there is another (following) word in the corpus, so this could be a compound word
+			compound := cv.compound(words[i], words[i+1])
+			vector, err := cv.vectorForWord(compound)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if vector != nil {
+				// this compound word exists, use it's vector and occurence
+				vectors = append(vectors, *vector.vector)
+				occurrences = append(occurrences, vector.occurrence)
+
+				// however, now we must make sure to skip the next word (right half)
+				i++
+
+				// and break the loop, so we don't index the left (half) again
+				continue
+			}
+
+		}
+
+		vector, err := cv.vectorForWord(words[i])
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if vector == nil {
+			continue
+		}
+
+		vectors = append(vectors, *vector.vector)
+		occurrences = append(occurrences, vector.occurrence)
+	}
+
+	return vectors, occurrences, nil
+}
+
+func (cv *Vectorizer) compound(words ...string) string {
+	return strings.Join(words, "_")
 }
 
 func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) {

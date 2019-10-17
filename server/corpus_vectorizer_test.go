@@ -70,6 +70,11 @@ func (f *fakeC11y) GetVectorLength() int {
 }
 
 func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
+	if strings.Contains(word, "_") {
+		// this is a compound word
+		return -1
+	}
+
 	switch word {
 	case "car":
 		return 5
