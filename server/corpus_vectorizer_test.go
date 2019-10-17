@@ -59,6 +59,28 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 	})
 }
 
+func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
+	// these tests use weight factor 0, this makes the vector position
+	// calculation a bit easier to understand, weighting itself is already
+	// tested separately
+
+	t.Run("with compound word 'fast car'", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurenceWeightLinearFactor: 0,
+		}
+		split := &primitiveSplitter{}
+		logger, _ := test.NewNullLogger()
+		v := NewVectorizer(c11y, swd, config, logger, split)
+
+		vector, err := v.Corpi([]string{"the mercedes is a fast car"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{0.5, 1, 1, 2.25}, vector.ToArray(),
+			"vector position is the centroid of 'mercedes' and 'fast_car'")
+	})
+}
+
 type fakeC11y struct{}
 
 func (f *fakeC11y) GetNumberOfItems() int {
@@ -72,6 +94,9 @@ func (f *fakeC11y) GetVectorLength() int {
 func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
 	if strings.Contains(word, "_") {
 		// this is a compound word
+		if word == "fast_car" {
+			return 7
+		}
 		return -1
 	}
 
@@ -95,6 +120,8 @@ func (f *fakeC11y) ItemIndexToOccurrence(item contextionary.ItemIndex) (uint64, 
 		return 20000, nil
 	case 6:
 		return 100, nil
+	case 7:
+		return 300, nil
 	default:
 		return 0, fmt.Errorf("no behavior for item %v in fake", item)
 	}
@@ -107,6 +134,9 @@ func (f *fakeC11y) GetVectorForItemIndex(item contextionary.ItemIndex) (*context
 		return &v, nil
 	case 6:
 		v := contextionary.NewVector([]float32{1, 0, 0, 4})
+		return &v, nil
+	case 7:
+		v := contextionary.NewVector([]float32{0, 2, 2, 0.5})
 		return &v, nil
 	default:
 		return nil, fmt.Errorf("no vector for item %v in fake", item)
@@ -136,7 +166,7 @@ func (f *fakeC11y) SafeGetSimilarWordsWithCertainty(word string, certainty float
 type fakeStopwordDetector struct{}
 
 func (f *fakeStopwordDetector) IsStopWord(word string) bool {
-	return word == "is"
+	return word == "is" || word == "the" || word == "a"
 }
 
 type primitiveSplitter struct{}
