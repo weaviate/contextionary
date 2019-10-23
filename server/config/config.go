@@ -21,6 +21,8 @@ type Config struct {
 	ServerPort int
 
 	OccurenceWeightLinearFactor float32
+
+	LogLevel string
 }
 
 // New Config from the environment. Errors if required env vars can't be found
@@ -72,6 +74,9 @@ func (c *Config) init() error {
 		return err
 	}
 	c.OccurenceWeightLinearFactor = factor
+
+	loglevel := c.optionalString("LOG_LEVEL", "info")
+	c.LogLevel = loglevel
 
 	return nil
 }

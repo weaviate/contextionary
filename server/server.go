@@ -60,6 +60,16 @@ func new() *server {
 		os.Exit(1)
 	}
 
+	loglevel, err := logrus.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		logger.
+			WithError(err).
+			Errorf("cannot start up")
+		os.Exit(1)
+	}
+	logger.SetLevel(loglevel)
+	logger.WithField("log_level", loglevel.String()).Info()
+
 	s := &server{
 		config: cfg,
 		logger: logger,

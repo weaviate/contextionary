@@ -100,6 +100,7 @@ func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, err
 func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []uint64, error) {
 	var vectors []core.Vector
 	var occurrences []uint64
+	var debugOutput []string
 
 	for i := 0; i < len(words); i++ {
 		if (i + 1) < len(words) {
@@ -114,6 +115,7 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 				// this compound word exists, use it's vector and occurence
 				vectors = append(vectors, *vector.vector)
 				occurrences = append(occurrences, vector.occurrence)
+				debugOutput = append(debugOutput, compound)
 
 				// however, now we must make sure to skip the next word (right half)
 				i++
@@ -135,7 +137,13 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 
 		vectors = append(vectors, *vector.vector)
 		occurrences = append(occurrences, vector.occurrence)
+		debugOutput = append(debugOutput, words[i])
 	}
+
+	cv.logger.WithField("action", "vectorize_corpus").
+		WithField("input", strings.Join(words, " ")).
+		WithField("interpreted_as", strings.Join(debugOutput, " ")).
+		Debug()
 
 	return vectors, occurrences, nil
 }
