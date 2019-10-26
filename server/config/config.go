@@ -21,6 +21,7 @@ type Config struct {
 	ServerPort int
 
 	OccurenceWeightLinearFactor float32
+	MaxCompoundWordLength       int
 
 	LogLevel string
 }
@@ -74,6 +75,16 @@ func (c *Config) init() error {
 		return err
 	}
 	c.OccurenceWeightLinearFactor = factor
+
+	// this should match the underlying vector db file, a smaller value than in
+	// the vector file will lead to missing out on compound words, whereas a
+	// larger value will lead to unnecessary lookups slowing down the
+	// vectorization process
+	compoundLength, err := c.optionalInt("MAX_COMPOUND_WORD_LENGTH", 4)
+	if err != nil {
+		return err
+	}
+	c.MaxCompoundWordLength = compoundLength
 
 	loglevel := c.optionalString("LOG_LEVEL", "info")
 	c.LogLevel = loglevel

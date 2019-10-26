@@ -18,6 +18,7 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 0,
+			MaxCompoundWordLength:       1,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
@@ -33,6 +34,7 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 1,
+			MaxCompoundWordLength:       1,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
@@ -48,6 +50,7 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 0.5,
+			MaxCompoundWordLength:       1,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
@@ -64,17 +67,52 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 	// calculation a bit easier to understand, weighting itself is already
 	// tested separately
 
-	t.Run("with compound word 'fast car'", func(t *testing.T) {
+	t.Run("with 2-word compound word 'fast car'", func(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
 			OccurenceWeightLinearFactor: 0,
+			MaxCompoundWordLength:       4,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		v := NewVectorizer(c11y, swd, config, logger, split)
 
 		vector, err := v.Corpi([]string{"the mercedes is a fast car"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{0.5, 1, 1, 2.25}, vector.ToArray(),
+			"vector position is the centroid of 'mercedes' and 'fast_car'")
+	})
+
+	t.Run("with multi-word compound word", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurenceWeightLinearFactor: 0,
+			MaxCompoundWordLength:       4,
+		}
+		split := &primitiveSplitter{}
+		logger, _ := test.NewNullLogger()
+		v := NewVectorizer(c11y, swd, config, logger, split)
+
+		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{-1, 0, -1.5, 2}, vector.ToArray(),
+			"vector position is the centroid of 'mercedes' and 'formula_1_racing_car'")
+	})
+
+	t.Run("with a single word right after a compound word", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurenceWeightLinearFactor: 0,
+			MaxCompoundWordLength:       4,
+		}
+		split := &primitiveSplitter{}
+		logger, _ := test.NewNullLogger()
+		v := NewVectorizer(c11y, swd, config, logger, split)
+
+		vector, err := v.Corpi([]string{"fast car mercedes"})
 		require.Nil(t, err)
 		assert.Equal(t, []float32{0.5, 1, 1, 2.25}, vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'fast_car'")
@@ -96,6 +134,9 @@ func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
 		// this is a compound word
 		if word == "fast_car" {
 			return 7
+		}
+		if word == "formula_1_racing_car" {
+			return 8
 		}
 		return -1
 	}
@@ -122,6 +163,8 @@ func (f *fakeC11y) ItemIndexToOccurrence(item contextionary.ItemIndex) (uint64, 
 		return 100, nil
 	case 7:
 		return 300, nil
+	case 8:
+		return 50, nil
 	default:
 		return 0, fmt.Errorf("no behavior for item %v in fake", item)
 	}
@@ -137,6 +180,9 @@ func (f *fakeC11y) GetVectorForItemIndex(item contextionary.ItemIndex) (*context
 		return &v, nil
 	case 7:
 		v := contextionary.NewVector([]float32{0, 2, 2, 0.5})
+		return &v, nil
+	case 8:
+		v := contextionary.NewVector([]float32{-3, 0, -3, 0})
 		return &v, nil
 	default:
 		return nil, fmt.Errorf("no vector for item %v in fake", item)
@@ -166,7 +212,7 @@ func (f *fakeC11y) SafeGetSimilarWordsWithCertainty(word string, certainty float
 type fakeStopwordDetector struct{}
 
 func (f *fakeStopwordDetector) IsStopWord(word string) bool {
-	return word == "is" || word == "the" || word == "a"
+	return word == "is" || word == "the" || word == "a" || word == "like"
 }
 
 type primitiveSplitter struct{}

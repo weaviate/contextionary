@@ -22,7 +22,8 @@ type splitter interface {
 }
 
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
-	config *config.Config, logger logrus.FieldLogger, splitter splitter) *Vectorizer {
+	config *config.Config, logger logrus.FieldLogger,
+	splitter splitter) *Vectorizer {
 	return &Vectorizer{
 		c11y:             c11y,
 		stopwordDetector: sw,
@@ -102,43 +103,34 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 	var occurrences []uint64
 	var debugOutput []string
 
-	for i := 0; i < len(words); i++ {
-		if (i + 1) < len(words) {
-			// there is another (following) word in the corpus, so this could be a compound word
-			compound := cv.compound(words[i], words[i+1])
-			vector, err := cv.vectorForWord(compound)
-			if err != nil {
-				return nil, nil, err
+	for wordPos := 0; wordPos < len(words); wordPos++ {
+		for additionalWords := cv.config.MaxCompoundWordLength - 1; additionalWords >= 0; additionalWords-- {
+			if (wordPos + additionalWords) < len(words) {
+				// we haven't reached the end of the corpus yet, so this words plus the
+				// next n additional words could still form a compound word, we need to
+				// check.
+				// Note that n goes all the way down to zero, so once we didn't find
+				// any compound words, we're checking the individual word.
+				compound := cv.compound(cv.nextWords(words, wordPos, additionalWords)...)
+				vector, err := cv.vectorForWord(compound)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				if vector != nil {
+					// this compound word exists, use its vector and occurence
+					vectors = append(vectors, *vector.vector)
+					occurrences = append(occurrences, vector.occurrence)
+					debugOutput = append(debugOutput, compound)
+
+					// however, now we must make sure to skip the additionalWords
+					wordPos += additionalWords + 1
+				}
 			}
-
-			if vector != nil {
-				// this compound word exists, use it's vector and occurence
-				vectors = append(vectors, *vector.vector)
-				occurrences = append(occurrences, vector.occurrence)
-				debugOutput = append(debugOutput, compound)
-
-				// however, now we must make sure to skip the next word (right half)
-				i++
-
-				// and break the loop, so we don't index the left (half) again
-				continue
-			}
-
 		}
-
-		vector, err := cv.vectorForWord(words[i])
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if vector == nil {
-			continue
-		}
-
-		vectors = append(vectors, *vector.vector)
-		occurrences = append(occurrences, vector.occurrence)
-		debugOutput = append(debugOutput, words[i])
 	}
+
+	fmt.Printf("\ndebug output:%v\n", debugOutput)
 
 	cv.logger.WithField("action", "vectorize_corpus").
 		WithField("input", strings.Join(words, " ")).
@@ -146,6 +138,11 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 		Debug()
 
 	return vectors, occurrences, nil
+}
+
+func (cv *Vectorizer) nextWords(words []string, startPos int, additional int) []string {
+	endPos := startPos + 1 + additional
+	return words[startPos:endPos]
 }
 
 func (cv *Vectorizer) compound(words ...string) string {
