@@ -2,6 +2,7 @@ module github.com/semi-technologies/contextionary
 
 require (
 	github.com/coreos/etcd v3.3.11+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/camelcase v1.0.0
 	github.com/golang/protobuf v1.3.0
 	github.com/jessevdk/go-flags v1.4.0

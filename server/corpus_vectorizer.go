@@ -130,8 +130,6 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 		}
 	}
 
-	fmt.Printf("\ndebug output:%v\n", debugOutput)
-
 	cv.logger.WithField("action", "vectorize_corpus").
 		WithField("input", strings.Join(words, " ")).
 		WithField("interpreted_as", strings.Join(debugOutput, " ")).
