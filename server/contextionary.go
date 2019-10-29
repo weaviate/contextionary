@@ -80,21 +80,14 @@ func emptySchema() schema.Schema {
 }
 
 func (s *server) watchForSchemaChanges() {
-	etcdClient, err := clientv3.New(clientv3.Config{Endpoints: []string{s.config.SchemaProviderURL}})
-	if err != nil {
-		s.logger.WithField("action", "startup").
-			WithError(err).Error("cannot construct etcd client")
-		os.Exit(1)
-	}
-
-	err = s.getInitialSchema(etcdClient)
+	err := s.getInitialSchema(s.etcdClient)
 	if err != nil {
 		s.logger.WithField("action", "startup").
 			WithError(err).Error("cannot retrieve initial schema")
 		os.Exit(1)
 	}
 
-	rch := etcdClient.Watch(context.Background(), s.config.SchemaProviderKey)
+	rch := s.etcdClient.Watch(context.Background(), s.config.SchemaProviderKey)
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			s.unmarshalAndUpdateSchema(ev.Kv.Value)

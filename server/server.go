@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/coreos/etcd/clientv3"
+	"github.com/semi-technologies/contextionary/adapters/repos"
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/server/config"
@@ -46,6 +48,8 @@ type server struct {
 	config *config.Config
 
 	logger logrus.FieldLogger
+
+	etcdClient *clientv3.Client
 }
 
 // new gRPC server to serve the contextionary
@@ -75,6 +79,15 @@ func new() *server {
 		logger: logger,
 	}
 
+	etcdClient, err := clientv3.New(clientv3.Config{Endpoints: []string{s.config.SchemaProviderURL}})
+	if err != nil {
+		s.logger.WithField("action", "startup").
+			WithError(err).Error("cannot construct etcd client")
+		os.Exit(1)
+	}
+
+	s.etcdClient = etcdClient
+
 	err = s.init()
 	if err != nil {
 		logger.
@@ -82,6 +95,9 @@ func new() *server {
 			Errorf("cannot start up")
 		os.Exit(1)
 	}
+
+	er := repos.NewEtcdExtensionRepo(etcdClient, logger, cfg)
+	_ = er // TODO: pass to extension looker upper
 
 	return s
 }

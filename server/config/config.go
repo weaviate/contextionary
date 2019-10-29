@@ -17,6 +17,7 @@ type Config struct {
 
 	SchemaProviderURL string
 	SchemaProviderKey string
+	ExtensionsPrefix  string
 
 	ServerPort int
 
@@ -63,6 +64,9 @@ func (c *Config) init() error {
 
 	spk := c.optionalString("SCHEMA_PROVIDER_KEY", "/weaviate/schema/state")
 	c.SchemaProviderKey = spk
+
+	ep := c.optionalString("EXTENSIONS_PREFIX", "/contextionary/")
+	c.ExtensionsPrefix = ep
 
 	port, err := c.optionalInt("SERVER_PORT", 9999)
 	if err != nil {
@@ -138,6 +142,8 @@ func (c *Config) requiredString(varName string) (string, error) {
 func (c *Config) optionalString(varName, defaultInput string) string {
 	value := os.Getenv(varName)
 	if value == "" {
+		c.logger.Infof("optional var '%s' is not set, defaulting to '%v'",
+			varName, defaultInput)
 		return defaultInput
 	}
 
