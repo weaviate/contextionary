@@ -1,10 +1,8 @@
 package extensions
 
-import core "github.com/semi-technologies/contextionary/contextionary/core"
-
 type Extension struct {
 	Concept    string         `json:"concept"`
-	Vector     core.Vector    `json:"vector"`
+	Vector     []float32      `json:"vector"`
 	Occurrence int            `json:"occurrence"`
 	Input      ExtensionInput `json:"input"`
 }

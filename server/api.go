@@ -7,7 +7,20 @@ import (
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	schema "github.com/semi-technologies/contextionary/contextionary/schema"
+	"github.com/semi-technologies/contextionary/extensions"
 )
+
+func (s *server) AddExtension(ctx context.Context, params *pb.ExtensionInput) (*pb.AddExtensionResult, error) {
+	err := s.extensionStorer.Put(ctx, params.Concept, extensions.ExtensionInput{
+		Definition: params.Definition,
+		Weight:     params.Weight,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.AddExtensionResult{}, nil
+}
 
 func (s *server) Meta(ctx context.Context, params *pb.MetaParams) (*pb.MetaOverview, error) {
 	return &pb.MetaOverview{

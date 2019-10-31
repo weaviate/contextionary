@@ -42,8 +42,8 @@ func (s *Storer) Put(ctx context.Context, concept string, input ExtensionInput) 
 	ext := Extension{
 		Concept:    concept,
 		Input:      input,
-		Vector:     *vector, // vector is safe to dereference as vectorizer will always return a non-nil vector if error is nil
-		Occurrence: 1000,    // TODO: Improve!
+		Vector:     vector.ToArray(), // nil-check can be omitted as vectorizer will return non-nil if err==nil
+		Occurrence: 1000,             // TODO: Improve!
 	}
 
 	err = s.repo.Put(ctx, ext)

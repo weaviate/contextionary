@@ -7,9 +7,11 @@ import (
 	"os"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/semi-technologies/contextionary/adapters/repos"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/contextionary/core/stopwords"
 	schemac "github.com/semi-technologies/contextionary/contextionary/schema"
+	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/weaviate/entities/models"
 	"github.com/semi-technologies/weaviate/entities/schema"
 )
@@ -33,6 +35,11 @@ func (s *server) init() error {
 	}
 
 	go s.watchForSchemaChanges()
+
+	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter())
+
+	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
+	s.extensionStorer = extensions.NewStorer(s.vectorizer, er)
 
 	return nil
 }

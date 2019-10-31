@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/semi-technologies/contextionary/contextionary/core"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +24,7 @@ func Test_LookerUpper(t *testing.T) {
 		t.Run("with an initial concept", func(t *testing.T) {
 			ext := Extension{
 				Concept:    "flux_capacitor",
-				Vector:     core.NewVector([]float32{0, 1, 2}),
+				Vector:     []float32{0, 1, 2},
 				Occurrence: 1000,
 			}
 			repo.add(ext)
@@ -39,7 +37,7 @@ func Test_LookerUpper(t *testing.T) {
 		t.Run("with second concept", func(t *testing.T) {
 			ext := Extension{
 				Concept:    "clux_fapacitor",
-				Vector:     core.NewVector([]float32{0, 1, 2}),
+				Vector:     []float32{0, 1, 2},
 				Occurrence: 1000,
 			}
 			repo.add(ext)

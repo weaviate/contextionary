@@ -79,7 +79,7 @@ func Test_Storer(t *testing.T) {
 		expectedExtension := Extension{
 			Input:      inp,
 			Concept:    concept,
-			Vector:     core.NewVector([]float32{1, 2, 3}),
+			Vector:     []float32{1, 2, 3},
 			Occurrence: 1000,
 		}
 		repo.On("Put", expectedExtension).Return(nil)
@@ -103,7 +103,7 @@ func Test_Storer(t *testing.T) {
 		expectedExtension := Extension{
 			Input:      inp,
 			Concept:    "flux_capacitor",
-			Vector:     core.NewVector([]float32{1, 2, 3}),
+			Vector:     []float32{1, 2, 3},
 			Occurrence: 1000,
 		}
 		repo.On("Put", expectedExtension).Return(nil)
