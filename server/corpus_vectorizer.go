@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus"
 )
@@ -15,21 +16,27 @@ type Vectorizer struct {
 	config           *config.Config
 	logger           logrus.FieldLogger
 	splitter         splitter
+	extensions       extensionLookerUpper
 }
 
 type splitter interface {
 	Split(corpus string) []string
 }
 
+type extensionLookerUpper interface {
+	Lookup(concept string) (*extensions.Extension, error)
+}
+
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	config *config.Config, logger logrus.FieldLogger,
-	splitter splitter) *Vectorizer {
+	splitter splitter, extensions extensionLookerUpper) *Vectorizer {
 	return &Vectorizer{
 		c11y:             c11y,
 		stopwordDetector: sw,
 		config:           config,
 		splitter:         splitter,
 		logger:           logger,
+		extensions:       extensions,
 	}
 }
 

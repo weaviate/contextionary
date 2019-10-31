@@ -36,9 +36,10 @@ func (s *server) init() error {
 
 	go s.watchForSchemaChanges()
 
-	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter())
-
 	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
+	extensionRetriever := extensions.NewLookerUpper(er)
+	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
+
 	s.extensionStorer = extensions.NewStorer(s.vectorizer, er)
 
 	return nil
