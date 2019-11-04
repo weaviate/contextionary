@@ -155,6 +155,19 @@ func (cv *Vectorizer) compound(words ...string) string {
 }
 
 func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) {
+	ext, err := cv.extensions.Lookup(word)
+	if err != nil {
+		return nil, fmt.Errorf("lookup custom word: %s", err)
+	}
+
+	if ext == nil {
+		return cv.vectorForLibraryWord(word)
+	}
+
+	return cv.vectorFromExtension(ext)
+}
+
+func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, error) {
 	if cv.stopwordDetector.IsStopWord(word) {
 		return nil, nil
 	}
@@ -177,6 +190,14 @@ func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) 
 	return &vectorWithOccurrence{
 		vector:     v,
 		occurrence: o,
+	}, nil
+}
+
+func (cv *Vectorizer) vectorFromExtension(ext *extensions.Extension) (*vectorWithOccurrence, error) {
+	v := core.NewVector(ext.Vector)
+	return &vectorWithOccurrence{
+		vector:     &v,
+		occurrence: uint64(ext.Occurrence),
 	}, nil
 }
 

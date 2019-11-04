@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,9 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 			MaxCompoundWordLength:       1,
 		}
 		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split)
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -38,7 +40,8 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split)
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -54,7 +57,8 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split)
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -76,7 +80,8 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split)
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"the mercedes is a fast car"})
 		require.Nil(t, err)
@@ -93,7 +98,8 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split)
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"})
 		require.Nil(t, err)
@@ -110,12 +116,55 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split)
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"fast car mercedes"})
 		require.Nil(t, err)
 		assert.Equal(t, []float32{0.5, 1, 1, 2.25}, vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'fast_car'")
+	})
+}
+
+func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
+	// these tests use weight factor 0, this makes the vector position
+	// calculation a bit easier to understand, weighting itself is already
+	// tested separately
+
+	t.Run("with single custom word 'zebra'", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurenceWeightLinearFactor: 0,
+			MaxCompoundWordLength:       4,
+		}
+		split := &primitiveSplitter{}
+		logger, _ := test.NewNullLogger()
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+
+		vector, err := v.Corpi([]string{"the mercedes is a zebra"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{0.5, 2, 0, 2}, vector.ToArray(),
+			"vector position is the centroid of 'mercedes' and custom word 'zebra'")
+	})
+
+	t.Run("with 2-word custom word 'zebra carrier'", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurenceWeightLinearFactor: 0,
+			MaxCompoundWordLength:       4,
+		}
+		split := &primitiveSplitter{}
+		logger, _ := test.NewNullLogger()
+		extensions := &fakeExtensionLookerUpper{}
+		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+
+		vector, err := v.Corpi([]string{"the mercedes is a zebra carrier"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{0.5, -2, 0, 2}, vector.ToArray(),
+			"vector position is the centroid of 'mercedes' and custom word 'zebra carrier'")
 	})
 }
 
@@ -219,4 +268,25 @@ type primitiveSplitter struct{}
 
 func (s *primitiveSplitter) Split(corpus string) []string {
 	return strings.Split(corpus, " ")
+}
+
+type fakeExtensionLookerUpper struct{}
+
+func (f *fakeExtensionLookerUpper) Lookup(word string) (*extensions.Extension, error) {
+	switch word {
+	case "zebra":
+		return &extensions.Extension{
+			Concept:    "zebra",
+			Occurrence: 1000,
+			Vector:     []float32{0, 4, 0, 0},
+		}, nil
+	case "zebra_carrier":
+		return &extensions.Extension{
+			Concept:    "zebra",
+			Occurrence: 1000,
+			Vector:     []float32{0, -4, 0, 0},
+		}, nil
+	default:
+		return nil, nil
+	}
 }
