@@ -38,6 +38,8 @@ func main() {
 		search(client, args[1:])
 	case "similar-words":
 		similarWords(client, args[1:])
+	case "extend":
+		extend(client, args[1:])
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command '%s'\n", cmd)
 		os.Exit(1)
@@ -110,6 +112,28 @@ func similarWords(client pb.ContextionaryClient, args []string) {
 
 	for _, word := range res.Words {
 		fmt.Printf("🥳  %s\n", word.Word)
+	}
+}
+
+func extend(client pb.ContextionaryClient, args []string) {
+	if len(args) != 2 {
+		fmt.Fprintf(os.Stderr, "need two arguments, the concept to add/extend and its definition\n")
+		os.Exit(1)
+	}
+	concept := args[0]
+	definition := args[1]
+
+	_, err := client.AddExtension(context.Background(), &pb.ExtensionInput{
+		Concept:    concept,
+		Definition: definition,
+		Weight:     1,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %s", err)
+		os.Exit(1)
+	} else {
+		fmt.Fprintf(os.Stdout, "Success!")
+		os.Exit(0)
 	}
 }
 

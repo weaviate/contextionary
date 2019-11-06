@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus"
 )
@@ -14,20 +16,27 @@ type Vectorizer struct {
 	config           *config.Config
 	logger           logrus.FieldLogger
 	splitter         splitter
+	extensions       extensionLookerUpper
 }
 
 type splitter interface {
 	Split(corpus string) []string
 }
 
+type extensionLookerUpper interface {
+	Lookup(concept string) (*extensions.Extension, error)
+}
+
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
-	config *config.Config, logger logrus.FieldLogger, splitter splitter) *Vectorizer {
+	config *config.Config, logger logrus.FieldLogger,
+	splitter splitter, extensions extensionLookerUpper) *Vectorizer {
 	return &Vectorizer{
 		c11y:             c11y,
 		stopwordDetector: sw,
 		config:           config,
 		splitter:         splitter,
 		logger:           logger,
+		extensions:       extensions,
 	}
 }
 
@@ -76,21 +85,9 @@ type vectorWithOccurrence struct {
 }
 
 func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, error) {
-	var vectors []core.Vector
-	var occurrences []uint64
-
-	for _, word := range words {
-		vector, err := cv.vectorForWord(word)
-		if err != nil {
-			return nil, err
-		}
-
-		if vector == nil {
-			continue
-		}
-
-		vectors = append(vectors, *vector.vector)
-		occurrences = append(occurrences, vector.occurrence)
+	vectors, occurrences, err := cv.vectorsAndOccurrences(words)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(vectors) == 0 {
@@ -108,7 +105,69 @@ func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, err
 	}, nil
 }
 
+func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []uint64, error) {
+	var vectors []core.Vector
+	var occurrences []uint64
+	var debugOutput []string
+
+	for wordPos := 0; wordPos < len(words); wordPos++ {
+		for additionalWords := cv.config.MaxCompoundWordLength - 1; additionalWords >= 0; additionalWords-- {
+			if (wordPos + additionalWords) < len(words) {
+				// we haven't reached the end of the corpus yet, so this words plus the
+				// next n additional words could still form a compound word, we need to
+				// check.
+				// Note that n goes all the way down to zero, so once we didn't find
+				// any compound words, we're checking the individual word.
+				compound := cv.compound(cv.nextWords(words, wordPos, additionalWords)...)
+				vector, err := cv.vectorForWord(compound)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				if vector != nil {
+					// this compound word exists, use its vector and occurence
+					vectors = append(vectors, *vector.vector)
+					occurrences = append(occurrences, vector.occurrence)
+					debugOutput = append(debugOutput, compound)
+
+					// however, now we must make sure to skip the additionalWords
+					wordPos += additionalWords + 1
+				}
+			}
+		}
+	}
+
+	cv.logger.WithField("action", "vectorize_corpus").
+		WithField("input", strings.Join(words, " ")).
+		WithField("interpreted_as", strings.Join(debugOutput, " ")).
+		Debug()
+
+	return vectors, occurrences, nil
+}
+
+func (cv *Vectorizer) nextWords(words []string, startPos int, additional int) []string {
+	endPos := startPos + 1 + additional
+	return words[startPos:endPos]
+}
+
+func (cv *Vectorizer) compound(words ...string) string {
+	return strings.Join(words, "_")
+}
+
 func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) {
+	ext, err := cv.extensions.Lookup(word)
+	if err != nil {
+		return nil, fmt.Errorf("lookup custom word: %s", err)
+	}
+
+	if ext == nil {
+		return cv.vectorForLibraryWord(word)
+	}
+
+	return cv.vectorFromExtension(ext)
+}
+
+func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, error) {
 	if cv.stopwordDetector.IsStopWord(word) {
 		return nil, nil
 	}
@@ -131,6 +190,14 @@ func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) 
 	return &vectorWithOccurrence{
 		vector:     v,
 		occurrence: o,
+	}, nil
+}
+
+func (cv *Vectorizer) vectorFromExtension(ext *extensions.Extension) (*vectorWithOccurrence, error) {
+	v := core.NewVector(ext.Vector)
+	return &vectorWithOccurrence{
+		vector:     &v,
+		occurrence: uint64(ext.Occurrence),
 	}, nil
 }
 

@@ -7,9 +7,11 @@ import (
 	"os"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/semi-technologies/contextionary/adapters/repos"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/contextionary/core/stopwords"
 	schemac "github.com/semi-technologies/contextionary/contextionary/schema"
+	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/weaviate/entities/models"
 	"github.com/semi-technologies/weaviate/entities/schema"
 )
@@ -33,6 +35,12 @@ func (s *server) init() error {
 	}
 
 	go s.watchForSchemaChanges()
+
+	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
+	extensionRetriever := extensions.NewLookerUpper(er)
+	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
+
+	s.extensionStorer = extensions.NewStorer(s.vectorizer, er)
 
 	return nil
 }
@@ -80,21 +88,14 @@ func emptySchema() schema.Schema {
 }
 
 func (s *server) watchForSchemaChanges() {
-	etcdClient, err := clientv3.New(clientv3.Config{Endpoints: []string{s.config.SchemaProviderURL}})
-	if err != nil {
-		s.logger.WithField("action", "startup").
-			WithError(err).Error("cannot construct etcd client")
-		os.Exit(1)
-	}
-
-	err = s.getInitialSchema(etcdClient)
+	err := s.getInitialSchema(s.etcdClient)
 	if err != nil {
 		s.logger.WithField("action", "startup").
 			WithError(err).Error("cannot retrieve initial schema")
 		os.Exit(1)
 	}
 
-	rch := etcdClient.Watch(context.Background(), s.config.SchemaProviderKey)
+	rch := s.etcdClient.Watch(context.Background(), s.config.SchemaProviderKey)
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			s.unmarshalAndUpdateSchema(ev.Kv.Value)

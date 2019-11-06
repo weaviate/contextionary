@@ -1,0 +1,29 @@
+# vi: ft=Dockerfile
+
+
+FROM golang:1.12 as builder
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y bzip2 jq
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+ARG VERSION
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ./contextionary-server -a -tags netgo -ldflags "-w -extldflags '-static' -X main.Version=$VERSION" ./server
+
+RUN tools/dev/gen_simple_contextionary.sh
+RUN mkdir -p ./data
+
+
+FROM alpine
+
+COPY local-vectordb/contextionary.idx local-vectordb/contextionary.knn local-vectordb/stopwords.json /
+COPY --from=builder /app/contextionary-server /
+
+ENV KNN_FILE=/contextionary.knn
+ENV IDX_FILE=/contextionary.idx
+ENV STOPWORDS_FILE=/stopwords.json
+
+ENTRYPOINT [ "/contextionary-server" ]

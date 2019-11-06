@@ -101,7 +101,7 @@ func Test_Contextionary_Journey(t *testing.T) {
 		})
 
 		t.Run("testing stopwords", func(t *testing.T) {
-			words := []string{"of", "the", "a", "ah", "almost", "always", "also", "as"}
+			words := []string{"the", "a"}
 
 			for _, word := range words {
 				t.Run(word, func(t *testing.T) {
@@ -114,7 +114,7 @@ func Test_Contextionary_Journey(t *testing.T) {
 
 		t.Run("corpi to vector", func(t *testing.T) {
 			t.Run("only stopwords", func(t *testing.T) {
-				corpi := []string{"of", "the of"}
+				corpi := []string{"a", "the a"}
 				_, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
 				assert.NotNil(t, err)
 			})

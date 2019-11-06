@@ -77,5 +77,5 @@ func wordHasIllegalCharacters(word string) bool {
 }
 
 func alphanumeric(word string) string {
-	return regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(word, "")
+	return regexp.MustCompile("[^a-zA-Z0-9_]+").ReplaceAllString(word, "")
 }

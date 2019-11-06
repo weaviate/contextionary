@@ -5,8 +5,10 @@ import (
 	"net"
 	"os"
 
+	"github.com/coreos/etcd/clientv3"
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/semi-technologies/weaviate/entities/schema"
 	"github.com/sirupsen/logrus"
@@ -41,11 +43,17 @@ type server struct {
 	// schema contextionary
 	rawContextionary core.Contextionary
 
-	stopwordDetector stopwordDetector
-
 	config *config.Config
 
 	logger logrus.FieldLogger
+
+	// clients and repos
+	etcdClient *clientv3.Client
+
+	// ucs
+	extensionStorer  *extensions.Storer
+	stopwordDetector stopwordDetector
+	vectorizer       *Vectorizer
 }
 
 // new gRPC server to serve the contextionary
@@ -60,9 +68,26 @@ func new() *server {
 		os.Exit(1)
 	}
 
+	loglevel, err := logrus.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		logger.
+			WithError(err).
+			Errorf("cannot start up")
+		os.Exit(1)
+	}
+	logger.SetLevel(loglevel)
+	logger.WithField("log_level", loglevel.String()).Info()
+	etcdClient, err := clientv3.New(clientv3.Config{Endpoints: []string{cfg.SchemaProviderURL}})
+	if err != nil {
+		logger.WithField("action", "startup").
+			WithError(err).Error("cannot construct etcd client")
+		os.Exit(1)
+	}
+
 	s := &server{
-		config: cfg,
-		logger: logger,
+		config:     cfg,
+		logger:     logger,
+		etcdClient: etcdClient,
 	}
 
 	err = s.init()

@@ -11,7 +11,16 @@ service Contextionary {
   rpc VectorForCorpi(Corpi) returns (Vector) {}
   rpc NearestWordsByVector(VectorNNParams) returns (NearestWords) {}
   rpc Meta(MetaParams) returns (MetaOverview) {}
+  rpc AddExtension(ExtensionInput) returns (AddExtensionResult) {}
 }
+
+message ExtensionInput {
+  string concept = 1;
+  string definition = 2;
+  float weight = 3;
+}
+
+message AddExtensionResult { }
 
 message MetaParams {}
 

@@ -17,10 +17,14 @@ type Config struct {
 
 	SchemaProviderURL string
 	SchemaProviderKey string
+	ExtensionsPrefix  string
 
 	ServerPort int
 
 	OccurenceWeightLinearFactor float32
+	MaxCompoundWordLength       int
+
+	LogLevel string
 }
 
 // New Config from the environment. Errors if required env vars can't be found
@@ -61,6 +65,9 @@ func (c *Config) init() error {
 	spk := c.optionalString("SCHEMA_PROVIDER_KEY", "/weaviate/schema/state")
 	c.SchemaProviderKey = spk
 
+	ep := c.optionalString("EXTENSIONS_PREFIX", "/contextionary/")
+	c.ExtensionsPrefix = ep
+
 	port, err := c.optionalInt("SERVER_PORT", 9999)
 	if err != nil {
 		return err
@@ -72,6 +79,19 @@ func (c *Config) init() error {
 		return err
 	}
 	c.OccurenceWeightLinearFactor = factor
+
+	// this should match the underlying vector db file, a smaller value than in
+	// the vector file will lead to missing out on compound words, whereas a
+	// larger value will lead to unnecessary lookups slowing down the
+	// vectorization process
+	compoundLength, err := c.optionalInt("MAX_COMPOUND_WORD_LENGTH", 4)
+	if err != nil {
+		return err
+	}
+	c.MaxCompoundWordLength = compoundLength
+
+	loglevel := c.optionalString("LOG_LEVEL", "info")
+	c.LogLevel = loglevel
 
 	return nil
 }
@@ -122,6 +142,8 @@ func (c *Config) requiredString(varName string) (string, error) {
 func (c *Config) optionalString(varName, defaultInput string) string {
 	value := os.Getenv(varName)
 	if value == "" {
+		c.logger.Infof("optional var '%s' is not set, defaulting to '%v'",
+			varName, defaultInput)
 		return defaultInput
 	}
 
