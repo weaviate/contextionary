@@ -20,7 +20,7 @@ fi
 
 if [ -z "$FULL_VERSION_DOCKERFILE" ]
 then
-  VERSION=Dockerfile.full
+  FULL_VERSION_DOCKERFILE=Dockerfile.full
 fi
 
 echo "Build minimal version (english only)"
