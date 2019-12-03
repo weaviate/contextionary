@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
@@ -85,7 +86,7 @@ type vectorWithOccurrence struct {
 }
 
 func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, error) {
-	vectors, occurrences, err := cv.vectorsAndOccurrences(words)
+	vectors, occurrences, words, err := cv.vectorsAndOccurrences(words)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +95,10 @@ func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, err
 		return nil, nil
 	}
 
-	weights := cv.occurencesToWeight(occurrences)
-	centroid, err := core.ComputeWeightedCentroid(vectors, weights)
+	weights, weightsDebug := cv.occurrencesToWeight(occurrences)
+	cv.debugOccurrenceWeighing(occurrences, weights, words, weightsDebug)
+	weights32 := float64SliceTofloat32(weights)
+	centroid, err := core.ComputeWeightedCentroid(vectors, weights32)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +108,15 @@ func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, err
 	}, nil
 }
 
-func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []uint64, error) {
+func float64SliceTofloat32(in []float64) []float32 {
+	out := make([]float32, len(in), len(in))
+	for i, v := range in {
+		out[i] = float32(v)
+	}
+	return out
+}
+
+func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []uint64, []string, error) {
 	var vectors []core.Vector
 	var occurrences []uint64
 	var debugOutput []string
@@ -121,11 +132,11 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 				compound := cv.compound(cv.nextWords(words, wordPos, additionalWords)...)
 				vector, err := cv.vectorForWord(compound)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, nil, err
 				}
 
 				if vector != nil {
-					// this compound word exists, use its vector and occurence
+					// this compound word exists, use its vector and occurrence
 					vectors = append(vectors, *vector.vector)
 					occurrences = append(occurrences, vector.occurrence)
 					debugOutput = append(debugOutput, compound)
@@ -142,7 +153,7 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 		WithField("interpreted_as", strings.Join(debugOutput, " ")).
 		Debug()
 
-	return vectors, occurrences, nil
+	return vectors, occurrences, debugOutput, nil
 }
 
 func (cv *Vectorizer) nextWords(words []string, startPos int, additional int) []string {
@@ -201,17 +212,24 @@ func (cv *Vectorizer) vectorFromExtension(ext *extensions.Extension) (*vectorWit
 	}, nil
 }
 
-func (cv *Vectorizer) occurencesToWeight(occs []uint64) []float32 {
-	factor := cv.config.OccurenceWeightLinearFactor
+type weighingDebugInfo struct {
+	Max uint64 `json:"max"`
+	Min uint64 `json:"min"`
+}
+
+func (cv *Vectorizer) occurrencesToWeight(occs []uint64) ([]float64, weighingDebugInfo) {
+	// factor := cv.config.OccurrenceWeightLinearFactor
 	max, min := maxMin(occs)
 
-	weights := make([]float32, len(occs), len(occs))
+	weigher := makeWeigher(min, max)
+	weights := make([]float64, len(occs), len(occs))
 	for i, occ := range occs {
-		// w = 1 - ( (O - Omin) / (Omax - Omin) * s )
-		weights[i] = 1 - ((float32(occ) - float32(min)) / float32(max-min) * factor)
+		// // w = 1 - ( (O - Omin) / (Omax - Omin) * s )
+		// weights[i] = 1 - ((float64(occ) - float64(min)) / float64(max-min) * factor)
+		weights[i] = weigher(occ)
 	}
 
-	return weights
+	return weights, weighingDebugInfo{max, min}
 }
 
 func maxMin(input []uint64) (max uint64, min uint64) {
@@ -224,4 +242,56 @@ func maxMin(input []uint64) (max uint64, min uint64) {
 	}
 
 	return
+}
+
+// func getParabolaParams(max, min uint64) (float64, float64, float64) {
+// 	peakPosition := 0.2
+// 	vertexX := float64(min) + peakPosition*float64(max-min)
+// 	vertexY := float64(2)
+// 	pointX := float64(max)
+// 	pointY := float64(0.25)
+
+// 	a := (pointY - vertexY) / (math.Pow((pointX - vertexX), 2))
+// 	b := -2 * a * vertexX
+// 	c := a*math.Pow(vertexX, 2) + vertexY
+
+// 	return a, b, c
+// }
+
+func makeWeigher(min, max uint64) func(uint64) float64 {
+	return func(occ uint64) float64 {
+		return 2 * (1 - (math.Log(float64(occ)) / math.Log(float64(max))))
+	}
+}
+
+func (cv *Vectorizer) debugOccurrenceWeighing(occurrences []uint64, weights []float64,
+	words []string, weightsDebug weighingDebugInfo) {
+	if !(len(occurrences) == len(weights) && len(weights) == len(words)) {
+		cv.logger.
+			WithField("action", "weigh_vectorized_occurrences").
+			WithFields(logrus.Fields{
+				"lenOccurrences": len(occurrences),
+				"lenWeights":     len(weights),
+				"lenWords":       len(words),
+			}).Debug("sizes don't match")
+	}
+
+	type word struct {
+		Occurrence uint64  `json:"occurrence"`
+		Weight     float64 `json:"weight"`
+		Word       string  `json:"word"`
+	}
+
+	out := make([]word, len(occurrences), len(occurrences))
+	for i := range words {
+		out[i] = word{
+			Word:       words[i],
+			Occurrence: occurrences[i],
+			Weight:     weights[i],
+		}
+	}
+
+	cv.logger.
+		WithField("action", "debug_vector_weights").
+		WithField("parameters", weightsDebug).WithField("words", out).Debug()
 }

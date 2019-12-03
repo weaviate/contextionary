@@ -8,6 +8,7 @@ import (
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
+	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,7 +57,8 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 			MaxCompoundWordLength:       1,
 		}
 		split := &primitiveSplitter{}
-		logger, _ := test.NewNullLogger()
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
 		extensions := &fakeExtensionLookerUpper{}
 		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
