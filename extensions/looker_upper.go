@@ -26,6 +26,9 @@ func NewLookerUpper(repo RetrieverRepo) *LookerUpper {
 }
 
 func (lu *LookerUpper) Lookup(concept string) (*Extension, error) {
+	lu.Lock()
+	defer lu.Unlock()
+
 	ext, ok := lu.db[concept]
 	if !ok {
 		return nil, nil
@@ -41,17 +44,16 @@ func (lu *LookerUpper) initWatcher() {
 
 	go func() {
 		for res := range updateCh {
-			// lu.Lock()
-			// defer lu.Unlock()
-
 			lu.updateDB(res)
 		}
 	}()
 }
 
 func (lu *LookerUpper) updateDB(list []Extension) {
+	lu.Lock()
+	defer lu.Unlock()
+
 	for _, ext := range list {
 		lu.db[ext.Concept] = ext
 	}
-
 }
