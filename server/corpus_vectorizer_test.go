@@ -8,6 +8,7 @@ import (
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
+	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,13 +80,14 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 			MaxCompoundWordLength:       4,
 		}
 		split := &primitiveSplitter{}
-		logger, _ := test.NewNullLogger()
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
 		extensions := &fakeExtensionLookerUpper{}
 		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
 
 		vector, err := v.Corpi([]string{"the mercedes is a fast car"})
 		require.Nil(t, err)
-		assert.Equal(t, []float32{0.5, 1, 1, 2.25}, vector.ToArray(),
+		assert.Equal(t, equalWeight(fastCarVector, mercedesVector), vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'fast_car'")
 	})
 
@@ -103,7 +105,7 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 
 		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"})
 		require.Nil(t, err)
-		assert.Equal(t, []float32{-1, 0, -1.5, 2}, vector.ToArray(),
+		assert.Equal(t, equalWeight(mercedesVector, formula1RacingCarVector), vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'formula_1_racing_car'")
 	})
 
@@ -121,7 +123,7 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 
 		vector, err := v.Corpi([]string{"fast car mercedes"})
 		require.Nil(t, err)
-		assert.Equal(t, []float32{0.5, 1, 1, 2.25}, vector.ToArray(),
+		assert.Equal(t, equalWeight(mercedesVector, fastCarVector), vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'fast_car'")
 	})
 }
@@ -178,14 +180,26 @@ func (f *fakeC11y) GetVectorLength() int {
 	panic("not implemented")
 }
 
+const (
+	formula1RacingCarIndex = 8
+	fastCarIndex           = 7
+	mercedesIndex          = 6
+)
+
+var (
+	fastCarVector           = []float32{0, 2, 2, 0.5}
+	mercedesVector          = []float32{1, 0, 0, 4}
+	formula1RacingCarVector = []float32{-3, 0, -3, 0}
+)
+
 func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
 	if strings.Contains(word, "_") {
 		// this is a compound word
 		if word == "fast_car" {
-			return 7
+			return fastCarIndex
 		}
 		if word == "formula_1_racing_car" {
-			return 8
+			return formula1RacingCarIndex
 		}
 		return -1
 	}
@@ -194,7 +208,7 @@ func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
 	case "car":
 		return 5
 	case "mercedes":
-		return 6
+		return mercedesIndex
 	default:
 		panic(fmt.Sprintf("no behavior for word '%s' in fake", word))
 	}
@@ -208,11 +222,11 @@ func (f *fakeC11y) ItemIndexToOccurrence(item contextionary.ItemIndex) (uint64, 
 	switch item {
 	case 5:
 		return 20000, nil
-	case 6:
+	case mercedesIndex:
 		return 100, nil
-	case 7:
+	case fastCarIndex:
 		return 300, nil
-	case 8:
+	case formula1RacingCarIndex:
 		return 50, nil
 	default:
 		return 0, fmt.Errorf("no behavior for item %v in fake", item)
@@ -224,14 +238,14 @@ func (f *fakeC11y) GetVectorForItemIndex(item contextionary.ItemIndex) (*context
 	case 5:
 		v := contextionary.NewVector([]float32{1, 2, 0, 0})
 		return &v, nil
-	case 6:
-		v := contextionary.NewVector([]float32{1, 0, 0, 4})
+	case mercedesIndex:
+		v := contextionary.NewVector(mercedesVector)
 		return &v, nil
-	case 7:
-		v := contextionary.NewVector([]float32{0, 2, 2, 0.5})
+	case fastCarIndex:
+		v := contextionary.NewVector(fastCarVector)
 		return &v, nil
-	case 8:
-		v := contextionary.NewVector([]float32{-3, 0, -3, 0})
+	case formula1RacingCarIndex:
+		v := contextionary.NewVector(formula1RacingCarVector)
 		return &v, nil
 	default:
 		return nil, fmt.Errorf("no vector for item %v in fake", item)
@@ -289,4 +303,22 @@ func (f *fakeExtensionLookerUpper) Lookup(word string) (*extensions.Extension, e
 	default:
 		return nil, nil
 	}
+}
+
+func equalWeight(vectors ...[]float32) []float32 {
+	// no sanity checks as this will only be used in tests, we'll notice panics
+	// then
+	sums := make([]float32, len(vectors[0]), len(vectors[0]))
+	for _, vector := range vectors {
+		for i, element := range vector {
+			sums[i] = sums[i] + element
+		}
+	}
+
+	mean := make([]float32, len(sums), len(sums))
+	for i := range sums {
+		mean[i] = sums[i] / float32(len(vectors))
+	}
+
+	return mean
 }

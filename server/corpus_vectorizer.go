@@ -111,6 +111,7 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 	var debugOutput []string
 
 	for wordPos := 0; wordPos < len(words); wordPos++ {
+	additionalWordLoop:
 		for additionalWords := cv.config.MaxCompoundWordLength - 1; additionalWords >= 0; additionalWords-- {
 			if (wordPos + additionalWords) < len(words) {
 				// we haven't reached the end of the corpus yet, so this words plus the
@@ -131,7 +132,8 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 					debugOutput = append(debugOutput, compound)
 
 					// however, now we must make sure to skip the additionalWords
-					wordPos += additionalWords + 1
+					wordPos += additionalWords
+					break additionalWordLoop
 				}
 			}
 		}
@@ -169,11 +171,21 @@ func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) 
 
 func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, error) {
 	if cv.stopwordDetector.IsStopWord(word) {
+		cv.logger.WithField("action", "vectorize_library_word").
+			WithField("word", word).
+			WithField("stopword", true).
+			Debug("is stopword - skipping")
+
 		return nil, nil
 	}
 
 	wi := cv.c11y.WordToItemIndex(word)
 	if !wi.IsPresent() {
+		cv.logger.WithField("action", "vectorize_library_word").
+			WithField("word", word).
+			WithField("stopword", false).
+			WithField("present", false).
+			Debug("not present - skipping")
 		return nil, nil
 	}
 
@@ -186,6 +198,13 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 	if err != nil {
 		return nil, err
 	}
+
+	cv.logger.WithField("action", "vectorize_library_word").
+		WithField("word", word).
+		WithField("stopword", false).
+		WithField("present", true).
+		WithField("occurence", o).
+		Debug("present including")
 
 	return &vectorWithOccurrence{
 		vector:     v,

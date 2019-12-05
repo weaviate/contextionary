@@ -40,6 +40,9 @@ func main() {
 		similarWords(client, args[1:])
 	case "extend":
 		extend(client, args[1:])
+	case "vectorize":
+		vectorize(client, args[1:])
+
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command '%s'\n", cmd)
 		os.Exit(1)
@@ -114,7 +117,6 @@ func similarWords(client pb.ContextionaryClient, args []string) {
 		fmt.Printf("🥳  %s\n", word.Word)
 	}
 }
-
 func extend(client pb.ContextionaryClient, args []string) {
 	if len(args) != 2 {
 		fmt.Fprintf(os.Stderr, "need two arguments, the concept to add/extend and its definition\n")
@@ -133,6 +135,25 @@ func extend(client pb.ContextionaryClient, args []string) {
 		os.Exit(1)
 	} else {
 		fmt.Fprintf(os.Stdout, "Success!")
+		os.Exit(0)
+	}
+}
+
+func vectorize(client pb.ContextionaryClient, args []string) {
+	if len(args) != 1 {
+		fmt.Fprintf(os.Stderr, "need one argument: the input string to vectorize")
+		os.Exit(1)
+	}
+	input := args[0]
+
+	res, err := client.VectorForCorpi(context.Background(), &pb.Corpi{
+		Corpi: []string{input},
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %s", err)
+		os.Exit(1)
+	} else {
+		fmt.Fprintf(os.Stdout, "Success: %v", res.Entries)
 		os.Exit(0)
 	}
 }
