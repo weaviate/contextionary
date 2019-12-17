@@ -82,8 +82,8 @@ func (s *server) buildContextionary() error {
 
 func emptySchema() schema.Schema {
 	return schema.Schema{
-		Actions: &models.SemanticSchema{},
-		Things:  &models.SemanticSchema{},
+		Actions: &models.Schema{},
+		Things:  &models.Schema{},
 	}
 }
 
@@ -104,8 +104,8 @@ func (s *server) watchForSchemaChanges() {
 }
 
 type schemaState struct {
-	ActionSchema *models.SemanticSchema `json:"action"`
-	ThingSchema  *models.SemanticSchema `json:"thing"`
+	ActionSchema *models.Schema `json:"action"`
+	ThingSchema  *models.Schema `json:"thing"`
 }
 
 func (s *server) unmarshalSchema(bytes []byte) (*schema.Schema, error) {

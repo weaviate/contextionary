@@ -50,7 +50,7 @@ func BuildInMemoryContextionaryFromSchema(schema schema.Schema, context *libcont
 
 // This function adds words in the form of $THING[Blurp]
 func add_names_from_schema_properties(context *libcontextionary.Contextionary, stopwordDetector stopwordDetector,
-	in_memory_builder *libcontextionary.MemoryIndexBuilder, kind string, schema *models.SemanticSchema) error {
+	in_memory_builder *libcontextionary.MemoryIndexBuilder, kind string, schema *models.Schema) error {
 	for _, class := range schema.Classes {
 		class_centroid_name := fmt.Sprintf("$%v[%v]", kind, class.Class)
 
