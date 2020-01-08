@@ -40,7 +40,7 @@ func (s *server) init() error {
 	extensionRetriever := extensions.NewLookerUpper(er)
 	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
 
-	s.extensionStorer = extensions.NewStorer(s.vectorizer, er)
+	s.extensionStorer = extensions.NewStorer(s.vectorizer, er, s.logger)
 
 	return nil
 }

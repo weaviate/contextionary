@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/sirupsen/logrus"
 )
 
 type Vectorizer interface {
@@ -20,13 +21,19 @@ type StorerRepo interface {
 type Storer struct {
 	vectorizer Vectorizer
 	repo       StorerRepo
+	logger     logrus.FieldLogger
 }
 
-func NewStorer(vectorizer Vectorizer, repo StorerRepo) *Storer {
-	return &Storer{vectorizer, repo}
+func NewStorer(vectorizer Vectorizer, repo StorerRepo, logger logrus.FieldLogger) *Storer {
+	return &Storer{vectorizer, repo, logger}
 }
 
 func (s *Storer) Put(ctx context.Context, concept string, input ExtensionInput) error {
+	s.logger.WithField("action", "extensions_put").
+		WithField("concept", concept).
+		WithField("extension", input).
+		Debug("received request to add/replace custom extension")
+
 	err := s.validate(concept, input)
 	if err != nil {
 		return fmt.Errorf("invalid extension: %v", err)
@@ -46,10 +53,22 @@ func (s *Storer) Put(ctx context.Context, concept string, input ExtensionInput) 
 		Occurrence: 1000,             // TODO: Improve!
 	}
 
+	s.logger.WithField("action", "extensions_put_prestore").
+		WithField("concept", ext.Concept).
+		WithField("extension", ext).
+		Debug("calculated vector, about to store in repo")
+
 	err = s.repo.Put(ctx, ext)
 	if err != nil {
+		s.logger.WithField("action", "extensions_store_error").
+			WithField("concept", ext.Concept).
+			Errorf("repo put: %v", err)
 		return fmt.Errorf("store extension: %v", err)
 	}
+
+	s.logger.WithField("action", "extensions_put_poststore").
+		WithField("concept", ext.Concept).
+		Debug("successfully stored extension in repo")
 
 	return nil
 }
