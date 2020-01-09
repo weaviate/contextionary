@@ -10,6 +10,31 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+func help() {
+	fmt.Println("the following commands are supported:")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "meta", "Display meta info, such as versions")
+	fmt.Printf("\t               %s\n", "Usage: client meta")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "word-present", "Check if the word is present in the db or as an extension")
+	fmt.Printf("\t               %s\n", "Usage: client word-present word")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "word-stopword", "Check if the word is considered a stopword")
+	fmt.Printf("\t               %s\n", "Usage: client word-stopword word")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "search", "Search for word or property")
+	fmt.Printf("\t               %s\n", "For usage run client search and see instructions from there")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "similar-words", "Search for similar words within the specified certainty")
+	fmt.Printf("\t               %s\n", "Usage: client similar-words word certainty")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "extend", "Extend the contextionary with custom concepts")
+	fmt.Printf("\t               %s\n", "Usage: client extend newconcept \"definition of the new concept\"")
+	fmt.Printf("\n")
+	fmt.Printf("\t%-15s%s\n", "vectorize", "Vectorize any string")
+	fmt.Printf("\t               %s\n", "Usage: client vectorize \"input string to vectorize\"")
+}
+
 func main() {
 	conn, err := grpc.Dial("localhost:9999", grpc.WithInsecure())
 	if err != nil {
@@ -28,6 +53,8 @@ func main() {
 
 	cmd := args[0]
 	switch cmd {
+	case "help":
+		help()
 	case "meta", "version":
 		meta(client, args[1:])
 	case "word-present":
