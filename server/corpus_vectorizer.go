@@ -76,7 +76,7 @@ func (cv *Vectorizer) vectorForWordOrWords(parts []string) (*vectorWithOccurrenc
 		return cv.vectorForWords(parts)
 	}
 
-	return cv.vectorForWord(parts[0])
+	return cv.VectorForWord(parts[0])
 }
 
 type vectorWithOccurrence struct {
@@ -120,7 +120,7 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 				// Note that n goes all the way down to zero, so once we didn't find
 				// any compound words, we're checking the individual word.
 				compound := cv.compound(cv.nextWords(words, wordPos, additionalWords)...)
-				vector, err := cv.vectorForWord(compound)
+				vector, err := cv.VectorForWord(compound)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -156,7 +156,7 @@ func (cv *Vectorizer) compound(words ...string) string {
 	return strings.Join(words, "_")
 }
 
-func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) {
+func (cv *Vectorizer) VectorForWord(word string) (*vectorWithOccurrence, error) {
 	ext, err := cv.extensions.Lookup(word)
 	if err != nil {
 		return nil, fmt.Errorf("lookup custom word: %s", err)

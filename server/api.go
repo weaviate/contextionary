@@ -76,17 +76,16 @@ func pbWordsFromStrings(input []string) []*pb.Word {
 }
 
 func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector, error) {
-	i := s.combinedContextionary.WordToItemIndex(params.Word)
-	if !i.IsPresent() {
-		return nil, fmt.Errorf("word %s is not in the contextionary", params.Word)
-	}
-
-	v, err := s.combinedContextionary.GetVectorForItemIndex(i)
+	wo, err := s.vectorizer.VectorForWord(params.Word)
 	if err != nil {
 		return nil, err
 	}
 
-	return vectorToProto(v), nil
+	if wo == nil {
+		return nil, fmt.Errorf("word %s is not in the contextionary", params.Word)
+	}
+
+	return vectorToProto(wo.vector), nil
 }
 
 func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vector, error) {
