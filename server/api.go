@@ -30,6 +30,15 @@ func (s *server) Meta(ctx context.Context, params *pb.MetaParams) (*pb.MetaOverv
 }
 
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {
+	asExtension, err := s.extensionLookerUpper.Lookup(word.Word)
+	if err != nil {
+		return nil, fmt.Errorf("check extensions: %v", err)
+	}
+
+	if asExtension != nil {
+		return &pb.WordPresent{Present: true}, nil // TODO: add note about extension
+	}
+
 	i := s.combinedContextionary.WordToItemIndex(word.Word)
 	return &pb.WordPresent{Present: i.IsPresent()}, nil
 }

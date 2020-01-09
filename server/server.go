@@ -51,9 +51,10 @@ type server struct {
 	etcdClient *clientv3.Client
 
 	// ucs
-	extensionStorer  *extensions.Storer
-	stopwordDetector stopwordDetector
-	vectorizer       *Vectorizer
+	extensionStorer      *extensions.Storer
+	extensionLookerUpper extensionLookerUpper
+	stopwordDetector     stopwordDetector
+	vectorizer           *Vectorizer
 }
 
 // new gRPC server to serve the contextionary
