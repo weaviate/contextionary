@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -40,6 +41,9 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	}
 }
 
+var ErrNoUsableWords = errors.New("all words in corpus were either stopwords" +
+	" or not present in the contextionary, cannot build vector")
+
 func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
 	var corpusVectors []core.Vector
 	for i, corpus := range corpi {
@@ -59,8 +63,7 @@ func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
 	}
 
 	if len(corpusVectors) == 0 {
-		return nil, fmt.Errorf("all words in corpus were either stopwords" +
-			" or not present in the contextionary, cannot build vector")
+		return nil, ErrNoUsableWords
 	}
 
 	vector, err := core.ComputeCentroid(corpusVectors)
