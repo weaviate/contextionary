@@ -14,6 +14,8 @@ package contextionary
 import (
 	"fmt"
 	"sort"
+
+	"github.com/semi-technologies/contextionary/errors"
 )
 
 type CombinedIndex struct {
@@ -139,13 +141,12 @@ func (ci *CombinedIndex) ItemIndexToOccurrence(item ItemIndex) (uint64, error) {
 
 func (ci *CombinedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
 	offsetted_index, vi, err := ci.find_vector_index_for_item_index(item)
-
 	if err != nil {
-		return nil, err
+		return nil, errors.NewInternalf(err.Error())
 	}
 
 	word, err := (*vi).GetVectorForItemIndex(offsetted_index)
-	return word, err
+	return word, errors.NewInternalf(err.Error())
 }
 
 // Compute the distance between two items.
@@ -244,7 +245,7 @@ func (ci *CombinedIndex) GetNnsByVector(vector Vector, n int, k int) ([]ItemInde
 	for _, item := range ci.indices {
 		indices, floats, err := (*item.index).GetNnsByVector(vector, n, k)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.NewInternalf(err.Error())
 		} else {
 			for i, item_idx := range indices {
 				results.items = append(results.items, combined_nn_search_result{item: item_idx + ItemIndex(item.offset), dist: floats[i]})

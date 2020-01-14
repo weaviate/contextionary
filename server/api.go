@@ -34,7 +34,7 @@ func (s *server) Meta(ctx context.Context, params *pb.MetaParams) (*pb.MetaOverv
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {
 	asExtension, err := s.extensionLookerUpper.Lookup(word.Word)
 	if err != nil {
-		return nil, GrpcErrFromTyped(fmt.Errorf("check extensions: %v", err))
+		return nil, GrpcErrFromTyped(err)
 	}
 
 	if asExtension != nil {
@@ -80,7 +80,7 @@ func pbWordsFromStrings(input []string) []*pb.Word {
 func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector, error) {
 	wo, err := s.vectorizer.VectorForWord(params.Word)
 	if err != nil {
-		return nil, err
+		return nil, GrpcErrFromTyped(err)
 	}
 
 	if wo == nil {

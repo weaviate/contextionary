@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,12 +37,12 @@ func (s *Storer) Put(ctx context.Context, concept string, input ExtensionInput) 
 
 	err := s.validate(concept, input)
 	if err != nil {
-		return fmt.Errorf("invalid extension: %v", err)
+		return errors.NewInvalidUserInputf("invalid extension: %v", err)
 	}
 
 	vector, err := s.vectorizer.Corpi([]string{input.Definition})
 	if err != nil {
-		return fmt.Errorf("vectorize definition: %v", err)
+		return errors.NewInternalf("vectorize definition: %v", err)
 	}
 
 	concept = s.compound(concept)
@@ -63,7 +64,7 @@ func (s *Storer) Put(ctx context.Context, concept string, input ExtensionInput) 
 		s.logger.WithField("action", "extensions_store_error").
 			WithField("concept", ext.Concept).
 			Errorf("repo put: %v", err)
-		return fmt.Errorf("store extension: %v", err)
+		return errors.NewInternalf("store extension: %v", err)
 	}
 
 	s.logger.WithField("action", "extensions_put_poststore").

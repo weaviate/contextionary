@@ -19,9 +19,6 @@ func GrpcErrFromTyped(err error) error {
 	case errors.NotFound:
 		return status.Error(codes.NotFound, err.Error())
 	default:
-		// assume an unkown error is an internal error until we can be sure that
-		// every component is returning correclty-typed errors
-		// return status.Error(codes.Unknown, err.Error())
-		return status.Error(codes.Internal, err.Error())
+		return status.Error(codes.Unknown, err.Error())
 	}
 }
