@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	errortypes "github.com/semi-technologies/contextionary/errors"
 	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus"
@@ -21,6 +22,11 @@ type Vectorizer struct {
 	extensions       extensionLookerUpper
 }
 
+const (
+	OccurrenceStrategyLog    = "log"
+	OccurrenceStrategyLinear = "linear"
+)
+
 type splitter interface {
 	Split(corpus string) []string
 }
@@ -31,8 +37,9 @@ type extensionLookerUpper interface {
 
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	config *config.Config, logger logrus.FieldLogger,
-	splitter splitter, extensions extensionLookerUpper) *Vectorizer {
-	return &Vectorizer{
+	splitter splitter, extensions extensionLookerUpper) (*Vectorizer, error) {
+
+	v := &Vectorizer{
 		c11y:             c11y,
 		stopwordDetector: sw,
 		config:           config,
@@ -40,6 +47,24 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 		logger:           logger,
 		extensions:       extensions,
 	}
+
+	if err := v.validateConfig(); err != nil {
+		return nil, errortypes.NewInvalidUserInputf(err.Error())
+	}
+
+	return v, nil
+}
+
+func (cv *Vectorizer) validateConfig() error {
+	s := cv.config.OccurrenceWeightStrategy
+	switch s {
+	case OccurrenceStrategyLinear, OccurrenceStrategyLog:
+		// valid
+	default:
+		return fmt.Errorf("invalid config option: occurrence weight strategy: uncrecoginzed strategy '%s'", s)
+	}
+
+	return nil
 }
 
 var ErrNoUsableWords = errors.New("all words in corpus were either stopwords" +
@@ -240,14 +265,23 @@ type weighingDebugInfo struct {
 }
 
 func (cv *Vectorizer) occurrencesToWeight(occs []uint64) ([]float64, weighingDebugInfo) {
-	// factor := cv.config.OccurrenceWeightLinearFactor
 	max, min := maxMin(occs)
 
-	weigher := makeWeigher(min, max)
+	var weigher func(uint64) float64
+
+	switch cv.config.OccurrenceWeightStrategy {
+	case OccurrenceStrategyLog:
+		weigher = makeLogWeigher(min, max)
+	case OccurrenceStrategyLinear:
+		linFactor := cv.config.OccurrenceWeightLinearFactor
+		weigher = makeLinWeigher(min, max, linFactor)
+	default:
+		panic(fmt.Sprintf("vectorizer config validation is broken, impossible option '%s'",
+			cv.config.OccurrenceWeightStrategy))
+	}
+
 	weights := make([]float64, len(occs), len(occs))
 	for i, occ := range occs {
-		// // w = 1 - ( (O - Omin) / (Omax - Omin) * s )
-		// weights[i] = 1 - ((float64(occ) - float64(min)) / float64(max-min) * factor)
 		weights[i] = weigher(occ)
 	}
 
@@ -255,6 +289,10 @@ func (cv *Vectorizer) occurrencesToWeight(occs []uint64) ([]float64, weighingDeb
 }
 
 func maxMin(input []uint64) (max uint64, min uint64) {
+	if len(input) >= 1 {
+		min = input[0]
+	}
+
 	for _, curr := range input {
 		if curr < min {
 			min = curr
@@ -266,23 +304,18 @@ func maxMin(input []uint64) (max uint64, min uint64) {
 	return
 }
 
-// func getParabolaParams(max, min uint64) (float64, float64, float64) {
-// 	peakPosition := 0.2
-// 	vertexX := float64(min) + peakPosition*float64(max-min)
-// 	vertexY := float64(2)
-// 	pointX := float64(max)
-// 	pointY := float64(0.25)
-
-// 	a := (pointY - vertexY) / (math.Pow((pointX - vertexX), 2))
-// 	b := -2 * a * vertexX
-// 	c := a*math.Pow(vertexX, 2) + vertexY
-
-// 	return a, b, c
-// }
-
-func makeWeigher(min, max uint64) func(uint64) float64 {
+func makeLinWeigher(min, max uint64, factor float32) func(uint64) float64 {
 	return func(occ uint64) float64 {
-		return 2 * (1 - (math.Log(float64(occ)) / math.Log(float64(max))))
+		// w = 1 - ( (O - Omin) / (Omax - Omin) * s )
+		return 1 - ((float64(occ) - float64(min)) / float64(max-min) * float64(factor))
+	}
+}
+
+func makeLogWeigher(min, max uint64) func(uint64) float64 {
+	return func(occ uint64) float64 {
+		// Note the 1.05 that's 1 + minimal weight of 0.05. This way, the most common
+		// word is not removed entirely, but still weighted somewhat
+		return 2 * (1.05 - (math.Log(float64(occ)) / math.Log(float64(max))))
 	}
 }
 

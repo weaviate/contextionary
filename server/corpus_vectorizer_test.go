@@ -14,18 +14,60 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
+	t.Run("with a phrase", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurrenceWeightStrategy: OccurrenceStrategyLog,
+			MaxCompoundWordLength:    1,
+		}
+		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
+
+		vector, err := v.Corpi([]string{"car is mercedes"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{1, 0.15748154, 0, 3.685037}, vector.ToArray())
+	})
+
+	t.Run("with a single word, no weighing should occurr", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurrenceWeightStrategy: OccurrenceStrategyLog,
+			MaxCompoundWordLength:    1,
+		}
+		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
+
+		vector, err := v.Corpi([]string{"mercedes"})
+		require.Nil(t, err)
+		assert.Equal(t, []float32{1, 0, 0, 4}, vector.ToArray())
+	})
+}
+
 func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 	t.Run("with factor set to 0 - same as if there was no weighing", func(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0,
-			MaxCompoundWordLength:       1,
+			OccurrenceWeightLinearFactor: 0,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        1,
 		}
 		split := &primitiveSplitter{}
 		extensions := &fakeExtensionLookerUpper{}
 		logger, _ := test.NewNullLogger()
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -36,13 +78,15 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 1,
-			MaxCompoundWordLength:       1,
+			OccurrenceWeightLinearFactor: 1,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        1,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
@@ -53,18 +97,20 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0.5,
-			MaxCompoundWordLength:       1,
+			OccurrenceWeightLinearFactor: 0.5,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        1,
 		}
 		split := &primitiveSplitter{}
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"})
 		require.Nil(t, err)
-		assert.Equal(t, []float32{1, 0.6677797, 0, 2.6644409}, vector.ToArray())
+		assert.Equal(t, []float32{1, 0.6666667, 0, 2.6666667}, vector.ToArray())
 	})
 }
 
@@ -77,14 +123,16 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0,
-			MaxCompoundWordLength:       4,
+			OccurrenceWeightLinearFactor: 0,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        4,
 		}
 		split := &primitiveSplitter{}
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is a fast car"})
 		require.Nil(t, err)
@@ -96,13 +144,15 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0,
-			MaxCompoundWordLength:       4,
+			OccurrenceWeightLinearFactor: 0,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        4,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"})
 		require.Nil(t, err)
@@ -114,13 +164,15 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0,
-			MaxCompoundWordLength:       4,
+			OccurrenceWeightLinearFactor: 0,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        4,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"fast car mercedes"})
 		require.Nil(t, err)
@@ -138,13 +190,15 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0,
-			MaxCompoundWordLength:       4,
+			OccurrenceWeightLinearFactor: 0,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        4,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is a zebra"})
 		require.Nil(t, err)
@@ -156,13 +210,15 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 		c11y := &fakeC11y{}
 		swd := &fakeStopwordDetector{}
 		config := &config.Config{
-			OccurenceWeightLinearFactor: 0,
-			MaxCompoundWordLength:       4,
+			OccurrenceWeightLinearFactor: 0,
+			OccurrenceWeightStrategy:     OccurrenceStrategyLinear,
+			MaxCompoundWordLength:        4,
 		}
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is a zebra carrier"})
 		require.Nil(t, err)

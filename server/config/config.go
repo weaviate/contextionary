@@ -21,8 +21,9 @@ type Config struct {
 
 	ServerPort int
 
-	OccurenceWeightLinearFactor float32
-	MaxCompoundWordLength       int
+	OccurrenceWeightStrategy     string
+	OccurrenceWeightLinearFactor float32
+	MaxCompoundWordLength        int
 
 	LogLevel string
 }
@@ -78,7 +79,10 @@ func (c *Config) init() error {
 	if err != nil {
 		return err
 	}
-	c.OccurenceWeightLinearFactor = factor
+	c.OccurrenceWeightLinearFactor = factor
+
+	strategy := c.optionalString("OCCURRENCE_WEIGHT_STRATEGY", "log")
+	c.OccurrenceWeightStrategy = strategy
 
 	// this should match the underlying vector db file, a smaller value than in
 	// the vector file will lead to missing out on compound words, whereas a

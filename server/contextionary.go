@@ -38,7 +38,11 @@ func (s *server) init() error {
 
 	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
 	extensionRetriever := extensions.NewLookerUpper(er)
-	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
+	vectorizer, err := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
+	if err != nil {
+		return err
+	}
+	s.vectorizer = vectorizer
 
 	s.extensionStorer = extensions.NewStorer(s.vectorizer, er, s.logger)
 	s.extensionLookerUpper = extensionRetriever
