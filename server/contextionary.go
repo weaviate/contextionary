@@ -40,7 +40,8 @@ func (s *server) init() error {
 	extensionRetriever := extensions.NewLookerUpper(er)
 	s.vectorizer = NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
 
-	s.extensionStorer = extensions.NewStorer(s.vectorizer, er)
+	s.extensionStorer = extensions.NewStorer(s.vectorizer, er, s.logger)
+	s.extensionLookerUpper = extensionRetriever
 
 	return nil
 }
@@ -82,8 +83,8 @@ func (s *server) buildContextionary() error {
 
 func emptySchema() schema.Schema {
 	return schema.Schema{
-		Actions: &models.SemanticSchema{},
-		Things:  &models.SemanticSchema{},
+		Actions: &models.Schema{},
+		Things:  &models.Schema{},
 	}
 }
 
@@ -104,8 +105,8 @@ func (s *server) watchForSchemaChanges() {
 }
 
 type schemaState struct {
-	ActionSchema *models.SemanticSchema `json:"action"`
-	ThingSchema  *models.SemanticSchema `json:"thing"`
+	ActionSchema *models.Schema `json:"action"`
+	ThingSchema  *models.Schema `json:"thing"`
 }
 
 func (s *server) unmarshalSchema(bytes []byte) (*schema.Schema, error) {

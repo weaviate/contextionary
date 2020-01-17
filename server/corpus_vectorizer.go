@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -41,6 +42,9 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	}
 }
 
+var ErrNoUsableWords = errors.New("all words in corpus were either stopwords" +
+	" or not present in the contextionary, cannot build vector")
+
 func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
 	var corpusVectors []core.Vector
 	for i, corpus := range corpi {
@@ -60,8 +64,7 @@ func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
 	}
 
 	if len(corpusVectors) == 0 {
-		return nil, fmt.Errorf("all words in corpus were either stopwords" +
-			" or not present in the contextionary, cannot build vector")
+		return nil, ErrNoUsableWords
 	}
 
 	vector, err := core.ComputeCentroid(corpusVectors)
@@ -77,7 +80,7 @@ func (cv *Vectorizer) vectorForWordOrWords(parts []string) (*vectorWithOccurrenc
 		return cv.vectorForWords(parts)
 	}
 
-	return cv.vectorForWord(parts[0])
+	return cv.VectorForWord(parts[0])
 }
 
 type vectorWithOccurrence struct {
@@ -122,6 +125,7 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 	var debugOutput []string
 
 	for wordPos := 0; wordPos < len(words); wordPos++ {
+	additionalWordLoop:
 		for additionalWords := cv.config.MaxCompoundWordLength - 1; additionalWords >= 0; additionalWords-- {
 			if (wordPos + additionalWords) < len(words) {
 				// we haven't reached the end of the corpus yet, so this words plus the
@@ -130,7 +134,7 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 				// Note that n goes all the way down to zero, so once we didn't find
 				// any compound words, we're checking the individual word.
 				compound := cv.compound(cv.nextWords(words, wordPos, additionalWords)...)
-				vector, err := cv.vectorForWord(compound)
+				vector, err := cv.VectorForWord(compound)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -142,7 +146,8 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 					debugOutput = append(debugOutput, compound)
 
 					// however, now we must make sure to skip the additionalWords
-					wordPos += additionalWords + 1
+					wordPos += additionalWords
+					break additionalWordLoop
 				}
 			}
 		}
@@ -165,7 +170,7 @@ func (cv *Vectorizer) compound(words ...string) string {
 	return strings.Join(words, "_")
 }
 
-func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) {
+func (cv *Vectorizer) VectorForWord(word string) (*vectorWithOccurrence, error) {
 	ext, err := cv.extensions.Lookup(word)
 	if err != nil {
 		return nil, fmt.Errorf("lookup custom word: %s", err)
@@ -180,11 +185,21 @@ func (cv *Vectorizer) vectorForWord(word string) (*vectorWithOccurrence, error) 
 
 func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, error) {
 	if cv.stopwordDetector.IsStopWord(word) {
+		cv.logger.WithField("action", "vectorize_library_word").
+			WithField("word", word).
+			WithField("stopword", true).
+			Debug("is stopword - skipping")
+
 		return nil, nil
 	}
 
 	wi := cv.c11y.WordToItemIndex(word)
 	if !wi.IsPresent() {
+		cv.logger.WithField("action", "vectorize_library_word").
+			WithField("word", word).
+			WithField("stopword", false).
+			WithField("present", false).
+			Debug("not present - skipping")
 		return nil, nil
 	}
 
@@ -197,6 +212,13 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 	if err != nil {
 		return nil, err
 	}
+
+	cv.logger.WithField("action", "vectorize_library_word").
+		WithField("word", word).
+		WithField("stopword", false).
+		WithField("present", true).
+		WithField("occurence", o).
+		Debug("present including")
 
 	return &vectorWithOccurrence{
 		vector:     v,

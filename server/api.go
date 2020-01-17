@@ -8,6 +8,8 @@ import (
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	schema "github.com/semi-technologies/contextionary/contextionary/schema"
 	"github.com/semi-technologies/contextionary/extensions"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *server) AddExtension(ctx context.Context, params *pb.ExtensionInput) (*pb.AddExtensionResult, error) {
@@ -16,7 +18,7 @@ func (s *server) AddExtension(ctx context.Context, params *pb.ExtensionInput) (*
 		Weight:     params.Weight,
 	})
 	if err != nil {
-		return nil, err
+		return nil, GrpcErrFromTyped(err)
 	}
 
 	return &pb.AddExtensionResult{}, nil
@@ -30,6 +32,15 @@ func (s *server) Meta(ctx context.Context, params *pb.MetaParams) (*pb.MetaOverv
 }
 
 func (s *server) IsWordPresent(ctx context.Context, word *pb.Word) (*pb.WordPresent, error) {
+	asExtension, err := s.extensionLookerUpper.Lookup(word.Word)
+	if err != nil {
+		return nil, GrpcErrFromTyped(err)
+	}
+
+	if asExtension != nil {
+		return &pb.WordPresent{Present: true}, nil // TODO: add note about extension
+	}
+
 	i := s.combinedContextionary.WordToItemIndex(word.Word)
 	return &pb.WordPresent{Present: i.IsPresent()}, nil
 }
@@ -47,7 +58,7 @@ func (s *server) SchemaSearch(ctx context.Context, params *pb.SchemaSearchParams
 	s.logger.
 		WithField("res", res).
 		WithField("err", err).Info()
-	return res, err
+	return res, GrpcErrFromTyped(err)
 }
 
 func (s *server) SafeGetSimilarWordsWithCertainty(ctx context.Context, params *pb.SimilarWordsParams) (*pb.SimilarWordsResults, error) {
@@ -67,23 +78,26 @@ func pbWordsFromStrings(input []string) []*pb.Word {
 }
 
 func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector, error) {
-	i := s.combinedContextionary.WordToItemIndex(params.Word)
-	if !i.IsPresent() {
-		return nil, fmt.Errorf("word %s is not in the contextionary", params.Word)
-	}
-
-	v, err := s.combinedContextionary.GetVectorForItemIndex(i)
+	wo, err := s.vectorizer.VectorForWord(params.Word)
 	if err != nil {
-		return nil, err
+		return nil, GrpcErrFromTyped(err)
 	}
 
-	return vectorToProto(v), nil
+	if wo == nil {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("word %s is not in the contextionary", params.Word))
+	}
+
+	return vectorToProto(wo.vector), nil
 }
 
 func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vector, error) {
 	vector, err := s.vectorizer.Corpi(params.Corpi)
 	if err != nil {
-		return nil, err
+		if err == ErrNoUsableWords {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return vectorToProto(vector), nil
@@ -94,7 +108,7 @@ func (s *server) vectorForWords(words []string) (*core.Vector, error) {
 	for _, word := range words {
 		vector, err := s.vectorForWord(word)
 		if err != nil {
-			return nil, err
+			return nil, GrpcErrFromTyped(err)
 		}
 
 		if vector == nil {
@@ -121,7 +135,8 @@ func (s *server) vectorForWord(word string) (*core.Vector, error) {
 		return nil, nil
 	}
 
-	return s.combinedContextionary.GetVectorForItemIndex(wi)
+	res, err := s.combinedContextionary.GetVectorForItemIndex(wi)
+	return res, GrpcErrFromTyped(err)
 }
 
 func vectorToProto(in *core.Vector) *pb.Vector {
@@ -147,11 +162,11 @@ func (s *server) NearestWordsByVector(ctx context.Context, params *pb.VectorNNPa
 
 	ii, dist, err := s.combinedContextionary.GetNnsByVector(vectorFromProto(params.Vector), int(params.N), int(params.K))
 	if err != nil {
-		return nil, err
+		return nil, GrpcErrFromTyped(err)
 	}
 	words, err := s.itemIndexesToWords(ii)
 	if err != nil {
-		return nil, err
+		return nil, GrpcErrFromTyped(err)
 	}
 
 	return &pb.NearestWords{
@@ -165,7 +180,7 @@ func (s *server) itemIndexesToWords(in []core.ItemIndex) ([]string, error) {
 	for i, itemIndex := range in {
 		w, err := s.combinedContextionary.ItemIndexToWord(itemIndex)
 		if err != nil {
-			return nil, err
+			return nil, GrpcErrFromTyped(err)
 		}
 
 		output[i] = w

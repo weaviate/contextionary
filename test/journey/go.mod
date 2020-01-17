@@ -1,9 +1,11 @@
 module github.com/semi-technologies/contextionary/test/journey
 
-go 1.12
+go 1.13
 
 require (
-	github.com/semi-technologies/contextionary v0.0.0-20190529072917-5791db3de20f79fca2dc96e72e18e5e9eb5e7954
-	github.com/stretchr/testify v1.3.0
-	google.golang.org/grpc v1.21.0
+	github.com/semi-technologies/contextionary v0.0.0-20200108103649-8f26e727d5ec
+	github.com/stretchr/testify v1.4.0
+	google.golang.org/grpc v1.24.0
 )
+
+replace github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0

@@ -8,6 +8,8 @@ services:
     image: c11y-local-journeytest-full
     environment:
       SCHEMA_PROVIDER_URL: etcd:2379
+      LOG_LEVEL: debug
+      MAX_COMPOUND_WORD_LENGTH: 4
     ports:
       - "9999:9999"
   etcd:

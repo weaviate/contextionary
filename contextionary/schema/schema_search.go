@@ -18,6 +18,7 @@ import (
 	"github.com/fatih/camelcase"
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/semi-technologies/contextionary/errors"
 	"github.com/semi-technologies/weaviate/entities/schema/kind"
 )
 
@@ -46,17 +47,17 @@ func (r SearchResults) Len() int {
 func (con *Contextionary) SchemaSearch(params *pb.SchemaSearchParams) (*pb.SchemaSearchResults, error) {
 	p := SearchParams{params}
 	if err := p.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid search params: %s", err)
+		return nil, errors.NewInvalidUserInputf("invalid search params: %s", err)
 	}
 
 	centroid, err := con.centroidFromNameAndKeywords(p)
 	if err != nil {
-		return nil, fmt.Errorf("could not build centroid from name and keywords: %s", err)
+		return nil, errors.NewInvalidUserInputf("could not build centroid from name and keywords: %s", err)
 	}
 
 	rawResults, err := con.knnSearch(*centroid)
 	if err != nil {
-		return nil, fmt.Errorf("could not perform knn search: %s", err)
+		return nil, errors.NewInternalf("could not perform knn search: %s", err)
 	}
 
 	if p.SearchType == pb.SearchType_CLASS {

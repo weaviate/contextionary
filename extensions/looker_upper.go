@@ -44,7 +44,6 @@ func (lu *LookerUpper) initWatcher() {
 
 	go func() {
 		for res := range updateCh {
-
 			lu.updateDB(res)
 		}
 	}()
@@ -57,5 +56,4 @@ func (lu *LookerUpper) updateDB(list []Extension) {
 	for _, ext := range list {
 		lu.db[ext.Concept] = ext
 	}
-
 }

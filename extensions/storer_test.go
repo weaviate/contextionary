@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,8 @@ import (
 func Test_Storer(t *testing.T) {
 	t.Run("with invalid inputs", func(t *testing.T) {
 		repo := &fakeStorerRepo{}
-		s := NewStorer(&fakeVectorizer{}, repo)
+		logger, _ := test.NewNullLogger()
+		s := NewStorer(&fakeVectorizer{}, repo, logger)
 		inp := ExtensionInput{
 			Definition: "an electrical device to store energy in the short term",
 			Weight:     1,
@@ -69,7 +71,8 @@ func Test_Storer(t *testing.T) {
 
 	t.Run("with valid input (single word)", func(t *testing.T) {
 		repo := &fakeStorerRepo{}
-		s := NewStorer(&fakeVectorizer{}, repo)
+		logger, _ := test.NewNullLogger()
+		s := NewStorer(&fakeVectorizer{}, repo, logger)
 		concept := "capacitor"
 		inp := ExtensionInput{
 			Definition: "an electrical device to store energy in the short term",
@@ -93,7 +96,8 @@ func Test_Storer(t *testing.T) {
 		// this is a special case because users will input their words using
 		// spaces, but we store them using snake_case
 		repo := &fakeStorerRepo{}
-		s := NewStorer(&fakeVectorizer{}, repo)
+		logger, _ := test.NewNullLogger()
+		s := NewStorer(&fakeVectorizer{}, repo, logger)
 		concept := "flux capacitor"
 		inp := ExtensionInput{
 			Definition: "an energy source for cars to travel through time",
