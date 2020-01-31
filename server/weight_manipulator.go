@@ -7,16 +7,22 @@ import (
 	"unicode"
 )
 
+// Evaluator of mathematical expression, use with NewEvaluator constructor fn
 type Evaluator struct {
 	expression     string
 	originalWeight float32
 	parsedStack    []string
 }
 
+// NewEvaluator with original expression and existing weight
 func NewEvaluator(expr string, weight float32) *Evaluator {
 	return &Evaluator{expression: expr, originalWeight: weight}
 }
 
+// Do parses the input expression (inflow notation) and translates it to
+// postfix notation using the
+// https://en.wikipedia.org/wiki/Shunting-yard_algorithm. Once converted, the
+// expression is evaluated and the result returned
 func (e *Evaluator) Do() (float32, error) {
 	if err := e.parseExpression(); err != nil {
 		return 0, err
