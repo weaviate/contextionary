@@ -113,7 +113,7 @@ func TestWeightManipulator(t *testing.T) {
 		test{
 			originalWeight: 7.0,
 			expression:     "a + b * c",
-			expectedError:  fmt.Errorf("unrecognized variable 'a', use 'w' to represend original weight"),
+			expectedError:  fmt.Errorf("unrecognized variable 'a', use 'w' to represent original weight"),
 			name:           "using a variable other than w",
 		},
 	}

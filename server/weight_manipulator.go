@@ -183,7 +183,7 @@ func (e *Evaluator) parseNumberOrVariable(in string) (float32, error) {
 		if in == "w" {
 			return e.originalWeight, nil
 		}
-		return 0, fmt.Errorf("unrecognized variable '%s', use 'w' to represend original weight", in)
+		return 0, fmt.Errorf("unrecognized variable '%s', use 'w' to represent original weight", in)
 	}
 }
 
