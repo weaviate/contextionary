@@ -37,7 +37,7 @@ func (e *Evaluator) parseExpression() error {
 			continue
 		}
 
-		if unicode.IsLetter(r) || unicode.IsNumber(r) {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || string(r) == "." {
 			// dont' direclty append to stack, append to OperandDigitsStack first, as
 			// this might be just a single digit of a multi-digit number
 			currOperandDigits = append(currOperandDigits, string(r))
@@ -69,7 +69,7 @@ func (e *Evaluator) parseExpression() error {
 			continue
 		}
 
-		return fmt.Errorf("uncrecognized operator: %s", string(r))
+		return e.unrecognizedOperator(string(r))
 	}
 
 	// in case the number ends with an operand, we need to check again if the
@@ -81,6 +81,14 @@ func (e *Evaluator) parseExpression() error {
 
 	e.parsedStack = append(e.parsedStack, reverseSlice(operatorStack)...)
 	return nil
+}
+
+func (e *Evaluator) unrecognizedOperator(op string) error {
+	if op == "(" || op == ")" {
+		return fmt.Errorf("using parantheses in the expression is not supported")
+	}
+
+	return fmt.Errorf("unrecognized operator: %s", string(op))
 }
 
 func (e Evaluator) evaluate() (float32, error) {
@@ -150,7 +158,7 @@ func (e *Evaluator) parseNumberOrVariable(in string) (float32, error) {
 		if in == "w" {
 			return e.originalWeight, nil
 		}
-		return 0, fmt.Errorf("unrecoginzed variable '%s', use 'w' to represend original weight", in)
+		return 0, fmt.Errorf("unrecognized variable '%s', use 'w' to represend original weight", in)
 	}
 }
 

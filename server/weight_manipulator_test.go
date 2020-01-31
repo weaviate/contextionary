@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,13 @@ func TestWeightManipulator(t *testing.T) {
 			expectedResult: 17.0,
 			expectedError:  nil,
 			name:           "single operand, more than one digit",
+		},
+		test{
+			originalWeight: 2.0,
+			expression:     "15.662",
+			expectedResult: 15.662,
+			expectedError:  nil,
+			name:           "single operand, floating point using . as decimal",
 		},
 		test{
 			originalWeight: 2.0,
@@ -84,8 +92,8 @@ func TestWeightManipulator(t *testing.T) {
 		},
 		test{
 			originalWeight: 7.0,
-			expression:     "1+ 2/7 * w -4/2",
-			expectedResult: 1,
+			expression:     "1+ 2.5/7 * w -4/2",
+			expectedResult: 1.5,
 			expectedError:  nil,
 			name:           "long expression including all operators",
 		},
@@ -94,7 +102,19 @@ func TestWeightManipulator(t *testing.T) {
 			expression:     "w * w",
 			expectedResult: 49,
 			expectedError:  nil,
-			name:           "including the operator multiple times",
+			name:           "including the weight variable multiple times",
+		},
+		test{
+			originalWeight: 7.0,
+			expression:     "2 * (1+3)",
+			expectedError:  fmt.Errorf("using parantheses in the expression is not supported"),
+			name:           "using parantheses",
+		},
+		test{
+			originalWeight: 7.0,
+			expression:     "a + b * c",
+			expectedError:  fmt.Errorf("unrecognized variable 'a', use 'w' to represend original weight"),
+			name:           "using a variable other than w",
 		},
 	}
 
