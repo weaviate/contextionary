@@ -37,39 +37,40 @@ func (e *Evaluator) parseExpression() error {
 			continue
 		}
 
-		if unicode.IsLetter(r) || unicode.IsNumber(r) || string(r) == "." {
+		if isOperand(r) {
 			// dont' direclty append to stack, append to OperandDigitsStack first, as
 			// this might be just a single digit of a multi-digit number
 			currOperandDigits = append(currOperandDigits, string(r))
 			continue
 		}
 
-		if isOperator(string(r)) {
-			// check if the operandStack contains elements, if so we need to append
-			// and clear that first
+		if !isOperator(string(r)) {
+			return e.unrecognizedOperator(string(r))
 
-			if len(currOperandDigits) > 0 {
-				e.parsedStack = append(e.parsedStack, strings.Join(currOperandDigits, ""))
-				currOperandDigits = nil
-			}
-
-			if len(operatorStack) == 0 {
-				operatorStack = append(operatorStack, string(r))
-			} else {
-				for len(operatorStack) > 0 {
-					topStack := operatorStack[len(operatorStack)-1]
-					if operatorPrecedence(topStack) < operatorPrecedence(string(r)) {
-						break
-					}
-					e.parsedStack = append(e.parsedStack, topStack)
-					operatorStack = operatorStack[:len(operatorStack)-1]
-				}
-				operatorStack = append(operatorStack, string(r))
-			}
-			continue
+		}
+		// check if the operandStack contains elements, if so we need to append
+		// and clear that first
+		if len(currOperandDigits) > 0 {
+			e.parsedStack = append(e.parsedStack, strings.Join(currOperandDigits, ""))
+			currOperandDigits = nil
 		}
 
-		return e.unrecognizedOperator(string(r))
+		// we will eventually append our current operator to the operator stack.
+		// However, first it must be compared against current operators, if th
+		// top of the stack has a higher or equal precedence to the current one,
+		// we will pop that first. We continus this pattern until either the
+		// stakc is empty or the topmost element of the stack is of lower
+		// precedence than the current
+		for len(operatorStack) > 0 {
+			topStack := operatorStack[len(operatorStack)-1]
+			if operatorPrecedence(topStack) < operatorPrecedence(string(r)) {
+				break
+			}
+
+			e.parsedStack = append(e.parsedStack, topStack)
+			operatorStack = operatorStack[:len(operatorStack)-1]
+		}
+		operatorStack = append(operatorStack, string(r))
 	}
 
 	// in case the number ends with an operand, we need to check again if the
@@ -79,6 +80,8 @@ func (e *Evaluator) parseExpression() error {
 		currOperandDigits = nil
 	}
 
+	// append the remainder of the operatorStack (if any) to the parsed output in
+	// reverse order
 	e.parsedStack = append(e.parsedStack, reverseSlice(operatorStack)...)
 	return nil
 }
@@ -110,23 +113,15 @@ func (e Evaluator) evaluate() (float32, error) {
 			return 0, fmt.Errorf("invalid or unsupported math expression")
 		}
 
-		op1 := operandStack[len(operandStack)-2]
-		op2 := operandStack[len(operandStack)-1]
+		// note that the topStack is the right operator, whereas topStack-1 is the left!
+		op1, op2 := operandStack[len(operandStack)-2], operandStack[len(operandStack)-1]
 		operandStack = operandStack[:len(operandStack)-2]
 
-		switch item {
-		case "+":
-			operandStack = append(operandStack, op1+op2)
-		case "-":
-			operandStack = append(operandStack, op1-op2)
-		case "*":
-			operandStack = append(operandStack, op1*op2)
-		case "/":
-			operandStack = append(operandStack, op1/op2)
-		default:
-			return 0, fmt.Errorf("this should be unreachable")
+		res, err := evaluteOperator(item, op1, op2)
+		if err != nil {
+			return 0, err
 		}
-
+		operandStack = append(operandStack, res)
 	}
 
 	if len(operandStack) != 1 {
@@ -136,6 +131,21 @@ func (e Evaluator) evaluate() (float32, error) {
 	return operandStack[0], nil
 }
 
+func evaluteOperator(op string, left, right float32) (float32, error) {
+	switch op {
+	case "+":
+		return left + right, nil
+	case "-":
+		return left - right, nil
+	case "*":
+		return left * right, nil
+	case "/":
+		return left / right, nil
+	default:
+		return 0, fmt.Errorf("this should be unreachable - or the implentation of an operator is missing")
+	}
+}
+
 func isOperator(in string) bool {
 	switch in {
 	case "*", "+", "-", "/":
@@ -143,6 +153,15 @@ func isOperator(in string) bool {
 	default:
 		return false
 	}
+}
+
+// we allow numbers, the dot as a floating point symbol, as well as letters to
+// represent variables
+func isOperand(r rune) bool {
+	if unicode.IsLetter(r) || unicode.IsNumber(r) || string(r) == "." {
+		return true
+	}
+	return false
 }
 
 func (e *Evaluator) parseNumberOrVariable(in string) (float32, error) {
@@ -163,7 +182,6 @@ func (e *Evaluator) parseNumberOrVariable(in string) (float32, error) {
 }
 
 func operatorPrecedence(op string) int {
-
 	switch op {
 	case "+", "-":
 		return 1
