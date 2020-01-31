@@ -132,7 +132,7 @@ func (cv *Vectorizer) vectorForWords(words []string, overrides map[string]string
 	if err != nil {
 		return nil, err
 	}
-	cv.debugOccurrenceWeighing(occurrences, weights, words, weightsDebug)
+	cv.debugOccurrenceWeighing(occurrences, weights, words, weightsDebug, overrides)
 	weights32 := float64SliceTofloat32(weights)
 	centroid, err := core.ComputeWeightedCentroid(vectors, weights32)
 	if err != nil {
@@ -337,7 +337,7 @@ func makeLogWeigher(min, max uint64) func(uint64) float64 {
 }
 
 func (cv *Vectorizer) debugOccurrenceWeighing(occurrences []uint64, weights []float64,
-	words []string, weightsDebug weighingDebugInfo) {
+	words []string, weightsDebug weighingDebugInfo, overrides map[string]string) {
 	if !(len(occurrences) == len(weights) && len(weights) == len(words)) {
 		cv.logger.
 			WithField("action", "weigh_vectorized_occurrences").
@@ -349,17 +349,22 @@ func (cv *Vectorizer) debugOccurrenceWeighing(occurrences []uint64, weights []fl
 	}
 
 	type word struct {
-		Occurrence uint64  `json:"occurrence"`
-		Weight     float64 `json:"weight"`
-		Word       string  `json:"word"`
+		Occurrence         uint64  `json:"occurrence"`
+		Weight             float64 `json:"weight"`
+		Word               string  `json:"word"`
+		Overriden          bool    `json:"overriden"`
+		OverrideExpression string  `json:"overrideExpression"`
 	}
 
 	out := make([]word, len(occurrences), len(occurrences))
 	for i := range words {
+		expr, overr := overrides[words[i]]
 		out[i] = word{
-			Word:       words[i],
-			Occurrence: occurrences[i],
-			Weight:     weights[i],
+			Word:               words[i],
+			Occurrence:         occurrences[i],
+			Weight:             weights[i],
+			Overriden:          overr,
+			OverrideExpression: expr,
 		}
 	}
 
