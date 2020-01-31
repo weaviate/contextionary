@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Evaluator struct {
@@ -55,7 +53,19 @@ func (e *Evaluator) parseExpression() error {
 				currOperandDigits = nil
 			}
 
-			operatorStack = append(operatorStack, string(r))
+			if len(operatorStack) == 0 {
+				operatorStack = append(operatorStack, string(r))
+			} else {
+				for len(operatorStack) > 0 {
+					topStack := operatorStack[len(operatorStack)-1]
+					if operatorPrecedence(topStack) < operatorPrecedence(string(r)) {
+						break
+					}
+					e.parsedStack = append(e.parsedStack, topStack)
+					operatorStack = operatorStack[:len(operatorStack)-1]
+				}
+				operatorStack = append(operatorStack, string(r))
+			}
 			continue
 		}
 
@@ -69,8 +79,7 @@ func (e *Evaluator) parseExpression() error {
 		currOperandDigits = nil
 	}
 
-	e.parsedStack = append(e.parsedStack, operatorStack...)
-	spew.Dump(e.parsedStack)
+	e.parsedStack = append(e.parsedStack, reverseSlice(operatorStack)...)
 	return nil
 }
 
@@ -93,15 +102,19 @@ func (e Evaluator) evaluate() (float32, error) {
 			return 0, fmt.Errorf("invalid or unsupported math expression")
 		}
 
-		op1 := operandStack[len(operandStack)-1]
-		op2 := operandStack[len(operandStack)-2]
+		op1 := operandStack[len(operandStack)-2]
+		op2 := operandStack[len(operandStack)-1]
 		operandStack = operandStack[:len(operandStack)-2]
 
 		switch item {
 		case "+":
 			operandStack = append(operandStack, op1+op2)
+		case "-":
+			operandStack = append(operandStack, op1-op2)
 		case "*":
 			operandStack = append(operandStack, op1*op2)
+		case "/":
+			operandStack = append(operandStack, op1/op2)
 		default:
 			return 0, fmt.Errorf("this should be unreachable")
 		}
@@ -117,7 +130,7 @@ func (e Evaluator) evaluate() (float32, error) {
 
 func isOperator(in string) bool {
 	switch in {
-	case "*", "+":
+	case "*", "+", "-", "/":
 		return true
 	default:
 		return false
@@ -139,4 +152,26 @@ func (e *Evaluator) parseNumberOrVariable(in string) (float32, error) {
 		}
 		return 0, fmt.Errorf("unrecoginzed variable '%s', use 'w' to represend original weight", in)
 	}
+}
+
+func operatorPrecedence(op string) int {
+
+	switch op {
+	case "+", "-":
+		return 1
+	case "*", "/":
+		return 2
+	default:
+		return -1
+	}
+}
+
+// from https://github.com/golang/go/wiki/SliceTricks
+func reverseSlice(a []string) []string {
+	for i := len(a)/2 - 1; i >= 0; i-- {
+		opp := len(a) - 1 - i
+		a[i], a[opp] = a[opp], a[i]
+	}
+
+	return a
 }

@@ -61,6 +61,41 @@ func TestWeightManipulator(t *testing.T) {
 			expectedError:  nil,
 			name:           "additional with several operands",
 		},
+		test{
+			originalWeight: 2.0,
+			expression:     "1+2*3+4",
+			expectedResult: 11.0,
+			expectedError:  nil,
+			name:           "mixing operators with different precedence",
+		},
+		test{
+			originalWeight: 2.0,
+			expression:     "1+2*3-4",
+			expectedResult: 3.0,
+			expectedError:  nil,
+			name:           "mixing operators with different precedence, including -",
+		},
+		test{
+			originalWeight: 2.0,
+			expression:     "1+2/4-4",
+			expectedResult: -2.5,
+			expectedError:  nil,
+			name:           "mixing operators with different precedence, including /",
+		},
+		test{
+			originalWeight: 7.0,
+			expression:     "1+ 2/7 * w -4/2",
+			expectedResult: 1,
+			expectedError:  nil,
+			name:           "long expression including all operators",
+		},
+		test{
+			originalWeight: 7.0,
+			expression:     "w * w",
+			expectedResult: 49,
+			expectedError:  nil,
+			name:           "including the operator multiple times",
+		},
 	}
 
 	for _, test := range tests {
