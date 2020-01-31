@@ -12,7 +12,7 @@ import (
 )
 
 type Vectorizer interface {
-	Corpi(corpi []string) (*core.Vector, error)
+	Corpi(corpi []string, overrides map[string]string) (*core.Vector, error)
 }
 
 type StorerRepo interface {
@@ -40,7 +40,7 @@ func (s *Storer) Put(ctx context.Context, concept string, input ExtensionInput) 
 		return errors.NewInvalidUserInputf("invalid extension: %v", err)
 	}
 
-	vector, err := s.vectorizer.Corpi([]string{input.Definition})
+	vector, err := s.vectorizer.Corpi([]string{input.Definition}, nil)
 	if err != nil {
 		return errors.NewInternalf("vectorize definition: %v", err)
 	}

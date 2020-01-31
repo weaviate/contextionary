@@ -91,7 +91,8 @@ func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector
 }
 
 func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vector, error) {
-	vector, err := s.vectorizer.Corpi(params.Corpi, nil) // TODO: accept actual overrides
+	overrides := assembleOverrideMap(params.Overrides)
+	vector, err := s.vectorizer.Corpi(params.Corpi, overrides)
 	if err != nil {
 		if err == ErrNoUsableWords {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -101,6 +102,19 @@ func (s *server) VectorForCorpi(ctx context.Context, params *pb.Corpi) (*pb.Vect
 	}
 
 	return vectorToProto(vector), nil
+}
+
+func assembleOverrideMap(in []*pb.Override) map[string]string {
+	if in == nil || len(in) == 0 {
+		return nil
+	}
+
+	out := map[string]string{}
+	for _, or := range in {
+		out[or.Word] = or.Expression
+	}
+
+	return out
 }
 
 func (s *server) vectorForWords(words []string) (*core.Vector, error) {

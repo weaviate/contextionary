@@ -53,6 +53,12 @@ message VectorNNParams {
 
 message Corpi {
   repeated string corpi = 1;
+  repeated Override overrides = 2;
+}
+
+message Override {
+  string word = 1;
+  string expression = 2;
 }
 
 message WordStopword {
