@@ -29,9 +29,33 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"car is mercedes"})
+		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{1, 0.15748154, 0, 3.685037}, vector.ToArray())
+	})
+
+	t.Run("with a and a weight override for all words", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurrenceWeightStrategy: OccurrenceStrategyLog,
+			MaxCompoundWordLength:    1,
+		}
+		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		require.Nil(t, err)
+
+		overrides := map[string]string{
+			"car":      "1",
+			"mercedes": "3",
+		}
+
+		vector, err := v.Corpi([]string{"car is mercedes"}, overrides)
+		require.Nil(t, err)
+		assert.Equal(t, []float32{1, 0.5, 0, 3}, vector.ToArray())
 	})
 
 	t.Run("with a single word, no weighing should occurr", func(t *testing.T) {
@@ -48,7 +72,7 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"mercedes"})
+		vector, err := v.Corpi([]string{"mercedes"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{1, 0, 0, 4}, vector.ToArray())
 	})
@@ -69,7 +93,7 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"car is mercedes"})
+		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{1, 1, 0, 2}, vector.ToArray())
 	})
@@ -88,7 +112,7 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"car is mercedes"})
+		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{1, 0, 0, 4}, vector.ToArray())
 	})
@@ -108,7 +132,7 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"car is mercedes"})
+		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{1, 0.6666667, 0, 2.6666667}, vector.ToArray())
 	})
@@ -134,7 +158,7 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"the mercedes is a fast car"})
+		vector, err := v.Corpi([]string{"the mercedes is a fast car"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, equalWeight(fastCarVector, mercedesVector), vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'fast_car'")
@@ -154,7 +178,7 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"})
+		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, equalWeight(mercedesVector, formula1RacingCarVector), vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'formula_1_racing_car'")
@@ -174,7 +198,7 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"fast car mercedes"})
+		vector, err := v.Corpi([]string{"fast car mercedes"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, equalWeight(mercedesVector, fastCarVector), vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and 'fast_car'")
@@ -200,7 +224,7 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"the mercedes is a zebra"})
+		vector, err := v.Corpi([]string{"the mercedes is a zebra"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{0.5, 2, 0, 2}, vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and custom word 'zebra'")
@@ -220,7 +244,7 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
 		require.Nil(t, err)
 
-		vector, err := v.Corpi([]string{"the mercedes is a zebra carrier"})
+		vector, err := v.Corpi([]string{"the mercedes is a zebra carrier"}, nil)
 		require.Nil(t, err)
 		assert.Equal(t, []float32{0.5, -2, 0, 2}, vector.ToArray(),
 			"vector position is the centroid of 'mercedes' and custom word 'zebra carrier'")

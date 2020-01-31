@@ -70,15 +70,20 @@ func (cv *Vectorizer) validateConfig() error {
 var ErrNoUsableWords = errors.New("all words in corpus were either stopwords" +
 	" or not present in the contextionary, cannot build vector")
 
-func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
+func (cv *Vectorizer) Corpi(corpi []string, weightOverrides map[string]string) (*core.Vector, error) {
 	var corpusVectors []core.Vector
+	if weightOverrides == nil {
+		// so we don't have to do no nil checks down the line
+		weightOverrides = map[string]string{}
+	}
+
 	for i, corpus := range corpi {
 		parts := cv.splitter.Split(corpus)
 		if len(parts) == 0 {
 			continue
 		}
 
-		v, err := cv.vectorForWordOrWords(parts)
+		v, err := cv.vectorForWordOrWords(parts, weightOverrides)
 		if err != nil {
 			return nil, fmt.Errorf("at corpus %d: %v", i, err)
 		}
@@ -100,9 +105,9 @@ func (cv *Vectorizer) Corpi(corpi []string) (*core.Vector, error) {
 	return vector, nil
 }
 
-func (cv *Vectorizer) vectorForWordOrWords(parts []string) (*vectorWithOccurrence, error) {
+func (cv *Vectorizer) vectorForWordOrWords(parts []string, overrides map[string]string) (*vectorWithOccurrence, error) {
 	if len(parts) > 1 {
-		return cv.vectorForWords(parts)
+		return cv.vectorForWords(parts, overrides)
 	}
 
 	return cv.VectorForWord(parts[0])
@@ -113,7 +118,7 @@ type vectorWithOccurrence struct {
 	occurrence uint64
 }
 
-func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, error) {
+func (cv *Vectorizer) vectorForWords(words []string, overrides map[string]string) (*vectorWithOccurrence, error) {
 	vectors, occurrences, words, err := cv.vectorsAndOccurrences(words)
 	if err != nil {
 		return nil, err
@@ -123,7 +128,10 @@ func (cv *Vectorizer) vectorForWords(words []string) (*vectorWithOccurrence, err
 		return nil, nil
 	}
 
-	weights, weightsDebug := cv.occurrencesToWeight(occurrences)
+	weights, weightsDebug, err := cv.occurrencesToWeight(occurrences, words, overrides)
+	if err != nil {
+		return nil, err
+	}
 	cv.debugOccurrenceWeighing(occurrences, weights, words, weightsDebug)
 	weights32 := float64SliceTofloat32(weights)
 	centroid, err := core.ComputeWeightedCentroid(vectors, weights32)
@@ -264,9 +272,9 @@ type weighingDebugInfo struct {
 	Min uint64 `json:"min"`
 }
 
-func (cv *Vectorizer) occurrencesToWeight(occs []uint64) ([]float64, weighingDebugInfo) {
+func (cv *Vectorizer) occurrencesToWeight(occs []uint64, words []string,
+	overrides map[string]string) ([]float64, weighingDebugInfo, error) {
 	max, min := maxMin(occs)
-
 	var weigher func(uint64) float64
 
 	switch cv.config.OccurrenceWeightStrategy {
@@ -282,10 +290,19 @@ func (cv *Vectorizer) occurrencesToWeight(occs []uint64) ([]float64, weighingDeb
 
 	weights := make([]float64, len(occs), len(occs))
 	for i, occ := range occs {
-		weights[i] = weigher(occ)
+		res := weigher(occ)
+		if expr, ok := overrides[words[i]]; ok {
+			calc, err := NewEvaluator(expr, res).Do()
+			if err != nil {
+				return nil, weighingDebugInfo{}, fmt.Errorf("override expression for '%s': '%s': %v", words[i], expr, err)
+			}
+			res = calc
+		}
+
+		weights[i] = res
 	}
 
-	return weights, weighingDebugInfo{max, min}
+	return weights, weighingDebugInfo{max, min}, nil
 }
 
 func maxMin(input []uint64) (max uint64, min uint64) {

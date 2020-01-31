@@ -11,9 +11,9 @@ import (
 func TestWeightManipulator(t *testing.T) {
 
 	type test struct {
-		originalWeight float32
+		originalWeight float64
 		expression     string
-		expectedResult float32
+		expectedResult float64
 		expectedError  error
 		name           string
 	}

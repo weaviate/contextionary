@@ -10,12 +10,12 @@ import (
 // Evaluator of mathematical expression, use with NewEvaluator constructor fn
 type Evaluator struct {
 	expression     string
-	originalWeight float32
+	originalWeight float64
 	parsedStack    []string
 }
 
 // NewEvaluator with original expression and existing weight
-func NewEvaluator(expr string, weight float32) *Evaluator {
+func NewEvaluator(expr string, weight float64) *Evaluator {
 	return &Evaluator{expression: expr, originalWeight: weight}
 }
 
@@ -23,7 +23,7 @@ func NewEvaluator(expr string, weight float32) *Evaluator {
 // postfix notation using the
 // https://en.wikipedia.org/wiki/Shunting-yard_algorithm. Once converted, the
 // expression is evaluated and the result returned
-func (e *Evaluator) Do() (float32, error) {
+func (e *Evaluator) Do() (float64, error) {
 	if err := e.parseExpression(); err != nil {
 		return 0, err
 	}
@@ -35,7 +35,7 @@ func (e *Evaluator) parseExpression() error {
 	var operatorStack []string
 
 	// a number might be made of of multiple digits, this variable acts as a
-	// temporary storage for signle digits
+	// temporary storage for single digits
 	var currOperandDigits []string
 
 	for _, r := range e.expression {
@@ -44,7 +44,7 @@ func (e *Evaluator) parseExpression() error {
 		}
 
 		if isOperand(r) {
-			// dont' direclty append to stack, append to OperandDigitsStack first, as
+			// don't directly append to stack, append to operandDigitsStack first, as
 			// this might be just a single digit of a multi-digit number
 			currOperandDigits = append(currOperandDigits, string(r))
 			continue
@@ -61,11 +61,11 @@ func (e *Evaluator) parseExpression() error {
 			currOperandDigits = nil
 		}
 
-		// we will eventually append our current operator to the operator stack.
-		// However, first it must be compared against current operators, if th
+		// We will eventually append our current operator to the operator stack.
+		// However, first it must be compared against current operators, if the
 		// top of the stack has a higher or equal precedence to the current one,
-		// we will pop that first. We continus this pattern until either the
-		// stakc is empty or the topmost element of the stack is of lower
+		// we will pop that first. We continue this pattern until either the
+		// stack is empty or the topmost element of the stack is of lower
 		// precedence than the current
 		for len(operatorStack) > 0 {
 			topStack := operatorStack[len(operatorStack)-1]
@@ -79,7 +79,7 @@ func (e *Evaluator) parseExpression() error {
 		operatorStack = append(operatorStack, string(r))
 	}
 
-	// in case the number ends with an operand, we need to check again if the
+	// in case the expression ends with an operand, we need to check again if the
 	// temp digit stack still contains elements
 	if len(currOperandDigits) > 0 {
 		e.parsedStack = append(e.parsedStack, strings.Join(currOperandDigits, ""))
@@ -100,8 +100,8 @@ func (e *Evaluator) unrecognizedOperator(op string) error {
 	return fmt.Errorf("unrecognized operator: %s", string(op))
 }
 
-func (e Evaluator) evaluate() (float32, error) {
-	var operandStack []float32
+func (e Evaluator) evaluate() (float64, error) {
+	var operandStack []float64
 	for _, item := range e.parsedStack {
 		if !isOperator(item) {
 			// not an operator, so it must be an operand
@@ -137,7 +137,7 @@ func (e Evaluator) evaluate() (float32, error) {
 	return operandStack[0], nil
 }
 
-func evaluteOperator(op string, left, right float32) (float32, error) {
+func evaluteOperator(op string, left, right float64) (float64, error) {
 	switch op {
 	case "+":
 		return left + right, nil
@@ -170,15 +170,10 @@ func isOperand(r rune) bool {
 	return false
 }
 
-func (e *Evaluator) parseNumberOrVariable(in string) (float32, error) {
+func (e *Evaluator) parseNumberOrVariable(in string) (float64, error) {
 	r := rune(in[0])
 	if unicode.IsNumber(r) {
-		res, err := strconv.ParseFloat(in, 32)
-		if err != nil {
-			return 0, err
-		}
-
-		return float32(res), nil
+		return strconv.ParseFloat(in, 64)
 	} else {
 		if in == "w" {
 			return e.originalWeight, nil
