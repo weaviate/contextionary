@@ -3,7 +3,7 @@ env:
   global:
   - DOCKER_ORG: semitechnologies
   - DOCKER_REPO: contextionary
-  - VERSION: 0.10.0-v0.4.6
+  - VERSION: 0.10.0-v0.4.7
   - LANGUAGES: "'en nl'"
   - GO111MODULE: true
   - secure: eZlMg64iN674fL8nGPjtHD6g8xuad+LtEejud7TeiAm6vl5H53dbuVqqncPalRzqIAOlJqq7c1IHbI62mgekZF2ufHNDCYlXqNL/zUYkUUlaQLmxvdO0HvLbxQEBGF3NLa5DNQ81hw93BTvIL8rGqYsWEaFs6LgLvlpTMhfkXWXSwLiN8hx7s+rVP6OH39kmpJXL2TmLgv/CA82uWJeJSIQUK2vRWhYeQi3m7evf+gr9QAlz2diWkIrrThVcAK+tCb7o1Iv7hsCJqzFGPPKm3IozTW5A8m5kpiVTiXyqSbb2OzA51A8tqoUCgO3f7PyPYdBmt8EmnnhURTUhOR6/TUUU3ueZF9fQIsjbgcTooo4xrt5uWjc2bS79EuYjJAExAvwtNJO+ufHZknFuOisbtB6mRWEwsu5K8kl2hb5WL4bYE5rhoiqillDvcu2H50rpPadP39kysbt/gg2cbwX3a/3o69oEWM5LOlESJbqxjuuXL7HcVXr92vCDlsgMju04W79PiDa8qwdxHWDTYSTkFZQdg0t7yCCosWcxXzKCawNdH7Qfc8z3hy5aTme5oSkYzG1IdklTCAcx16MIsuMWv5BN386nuaTuD3+z+NjSiYVVLyfLlWHj2b6IpVUqdsscLkkP2O/grdoGQHNWpFWxvlhTwYIIT55I90TuWSNv7Ys=
