@@ -12,7 +12,12 @@
 package contextionary
 
 import (
+	"encoding/binary"
 	"fmt"
+	"log"
+	"math"
+	"os"
+	"syscall"
 
 	annoy "github.com/semi-technologies/contextionary/contextionary/core/annoyindex"
 )
@@ -20,6 +25,8 @@ import (
 type mmappedIndex struct {
 	word_index *Wordlist
 	knn        annoy.AnnoyIndex
+	knnRaw     []byte
+	dimensions int
 }
 
 func (m *mmappedIndex) GetNumberOfItems() int {
@@ -54,14 +61,34 @@ func (m *mmappedIndex) ItemIndexToOccurrence(item ItemIndex) (uint64, error) {
 }
 
 func (m *mmappedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
-	if item >= 0 && item <= m.word_index.GetNumberOfWords() {
-		var floats []float32
-		m.knn.GetItem(int(item), &floats)
-
-		return &Vector{floats}, nil
-	} else {
+	if item < 0 && item > m.word_index.GetNumberOfWords() {
 		return nil, fmt.Errorf("Index out of bounds")
 	}
+
+	var floats []float32
+	floats = m.getItem(int(item))
+
+	return &Vector{floats}, nil
+}
+
+func (m *mmappedIndex) getItem(index int) []float32 {
+	fmt.Printf("get item %d\n", index)
+	offset := 16
+	vectorSize := m.dimensions * 4
+	begin := index*(offset+vectorSize) + offset
+	end := begin + vectorSize
+	return vectorFromBytes(m.knnRaw[begin:end])
+}
+
+func vectorFromBytes(in []byte) []float32 {
+	out := make([]float32, len(in)/4)
+	for offset := 0; offset < len(in); offset += 4 {
+		bits := binary.LittleEndian.Uint32(in[offset : offset+4])
+		float := math.Float32frombits(bits)
+		out[offset/4] = float
+	}
+
+	return out
 }
 
 // Compute the distance between two items.
@@ -138,10 +165,39 @@ func LoadVectorFromDisk(annoy_index string, word_index_file_name string) (Contex
 	knn := annoy.NewAnnoyIndexEuclidean(int(word_index.vectorWidth))
 	knn.Load(annoy_index)
 
+	knnRaw, err := loadAnnoyIndexDirectly(annoy_index)
+	if err != nil {
+		return nil, fmt.Errorf("load raw index: %v", err)
+	}
+
 	idx := &mmappedIndex{
 		word_index: word_index,
 		knn:        knn,
+		knnRaw:     knnRaw,
+		dimensions: int(word_index.vectorWidth),
 	}
 
 	return idx, nil
+}
+
+// directly load the annoy index file to avoid memory leaks in the annoy
+// go-port of the C library, see #26
+func loadAnnoyIndexDirectly(path string) ([]byte, error) {
+	fmt.Println("loading index directly")
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatalf("Can't open the knn file at %s: %+v", path, err)
+	}
+
+	file_info, err := file.Stat()
+	if err != nil {
+		log.Fatalf("Can't stat the knn file at %s: %+v", path, err)
+	}
+
+	mmap, err := syscall.Mmap(int(file.Fd()), 0, int(file_info.Size()), syscall.PROT_READ, syscall.MAP_SHARED)
+	if err != nil {
+		log.Fatalf("Can't mmap the knn file %s: %+v", path, err)
+	}
+
+	return mmap, nil
 }

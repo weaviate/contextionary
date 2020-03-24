@@ -60,6 +60,8 @@ func (mi *MemoryIndex) ItemIndexToWord(item ItemIndex) (string, error) {
 }
 
 // Get the vector of an item index.
+// TODO: Is this ever used? Doesn't look like it as part of the investigation
+// in gh-25 and gh-26
 func (mi *MemoryIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
 	if item >= 0 && int(item) <= len(mi.words) {
 		var floats []float32

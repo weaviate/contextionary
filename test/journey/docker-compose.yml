@@ -12,6 +12,7 @@ services:
       MAX_COMPOUND_WORD_LENGTH: 4
     ports:
       - "9999:9999"
+      - "7777:7777"
   etcd:
     image: gcr.io/etcd-development/etcd:v3.3.8
     ports:
