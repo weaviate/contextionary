@@ -15,7 +15,14 @@ corresponds to the docker tag.
 
 ## Languages
 
-Currently only `en` available, other languages coming soon.
+Currently available languages include:
+* `en` 
+* `de`
+* `nl`
+* `cs`
+* `it`
+
+Other languages coming soon.
 
 ## Different types
 
