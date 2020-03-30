@@ -8,6 +8,6 @@ set -x
 docker push "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal"
 
 for lang in $LANGUAGES; do
-  docker push "$DOCKER_ORG/$DOCKER_REPO:${lang}${VERSION}"
+  travis_wait 45 docker push "$DOCKER_ORG/$DOCKER_REPO:${lang}${VERSION}"
 done
 

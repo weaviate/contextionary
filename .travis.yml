@@ -15,4 +15,4 @@ script:
 - set -e
 - ./build.sh
 - ./test/journey.sh
-- travis_wait 50 ./docker_push.sh
+- ./docker_push.sh
