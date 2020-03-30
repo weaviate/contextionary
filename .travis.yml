@@ -28,7 +28,7 @@ jobs:
       script:
         - set -e
         - ./build.sh
-        - travis_wait 45 ./docker_push.sh
+        - travis_wait 90 ./docker_push.sh
 
     - stage: buildanddeploy
       name: "Build and deploy: de"
@@ -37,7 +37,7 @@ jobs:
       script:
         - set -e
         - ./build.sh
-        - travis_wait 45 ./docker_push.sh
+        - travis_wait 90 ./docker_push.sh
 
     - stage: buildanddeploy
       name: "Build and deploy: nl"
@@ -46,7 +46,7 @@ jobs:
       script:
         - set -e
         - ./build.sh
-        - travis_wait 45 ./docker_push.sh
+        - travis_wait 90 ./docker_push.sh
 
     - stage: buildanddeploy
       name: "Build and deploy: it"
@@ -55,7 +55,7 @@ jobs:
       script:
         - set -e
         - ./build.sh
-        - travis_wait 45 ./docker_push.sh
+        - travis_wait 90 ./docker_push.sh
 
     - stage: buildanddeploy
       name: "Build and deploy: cs"
@@ -64,4 +64,4 @@ jobs:
       script:
         - set -e
         - ./build.sh
-        - travis_wait 45 ./docker_push.sh
+        - travis_wait 90 ./docker_push.sh
