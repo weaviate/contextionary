@@ -72,7 +72,6 @@ func (m *mmappedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
 }
 
 func (m *mmappedIndex) getItem(index int) []float32 {
-	fmt.Printf("get item %d\n", index)
 	offset := 16
 	vectorSize := m.dimensions * 4
 	begin := index*(offset+vectorSize) + offset
