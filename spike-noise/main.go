@@ -252,9 +252,9 @@ func rank(in []wordWithDistance) []wordWithDistance {
 		filtered[i] = w
 		i++
 	}
-	filtered = filtered[:i]
-	sort.Slice(filtered, func(a, b int) bool { return filtered[a].InformationGain > filtered[b].InformationGain })
-	return filtered
+	out := filtered[:i]
+	sort.Slice(out, func(a, b int) bool { return out[a].InformationGain > out[b].InformationGain })
+	return out
 }
 
 type wordWithDistance struct {
