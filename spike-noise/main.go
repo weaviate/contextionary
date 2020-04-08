@@ -95,6 +95,16 @@ func chooseRandomItem(list []interface{}) (string, string, string) {
 	return corpus, oldPrediction, control
 }
 
+func chooseItemAt(list []interface{}, i int) (string, string, string) {
+	elem := list[i].(map[string]interface{})
+	corpus := elem["content"].(string)
+	controlID := strfmt.UUID(elem["controlMainCategoryId"].(string))
+	control := mainCategoryById(controlID).Name
+	oldPrediction := elem["OfMainCategory"].([]interface{})[0].(map[string]interface{})["name"].(string)
+
+	return corpus, oldPrediction, control
+}
+
 func mainCategoryById(id strfmt.UUID) mainCategory {
 	for _, cat := range mainCategories {
 		if cat.ID == id {
@@ -154,24 +164,81 @@ func initMainCategories() {
 	}
 }
 
+type doc struct {
+	corpus        string
+	oldPrediction string
+	control       string
+	newPrediction string
+}
+
 func main() {
+	// total := 25
+	total := len(allItems)
 
 	mainCategories = enrichWithVectors(mainCategories)
+	docs := make([]doc, total)
 
-	for i := 0; i <= 10; i++ {
-		corpus, oldPrediction, control := chooseRandomItem(allItems)
-		c := NewClassifier(corpus, oldPrediction, control)
-		c.Run()
+	fmt.Printf("Analyzing items")
+	tfidf := NewTfIdfCalculator(total)
 
-		serveResults(i, corpus, oldPrediction, control, c.ranked)
+	for i := 0; i < total; i++ {
+		fmt.Printf(".")
+		// corpus, oldPrediction, control := chooseRandomItem(allItems)
+		corpus, oldPrediction, control := chooseItemAt(allItems, i)
+		tfidf.AddDoc(corpus)
+		docs[i] = doc{corpus: corpus, oldPrediction: oldPrediction, control: control}
+	}
+	fmt.Printf("\n\n")
+
+	fmt.Printf("Calculating tf-idf")
+	tfidf.Calculate()
+	fmt.Printf("\n\n")
+
+	fmt.Printf("Classifying items")
+	for i := 0; i < total; i++ {
+		fmt.Printf(".")
+		doc := docs[i]
+		c := NewClassifier(i, doc, tfidf)
+		tfIdfTerms := tfidf.GetAllTerms(i)
+
+		newPredictions := c.Run()
+
+		// always use top percentile
+		// this is subject to change
+		docs[i].newPrediction = newPredictions[0].Prediction
+
+		serveResults(i, total, doc.corpus, doc.oldPrediction, doc.control, c.ranked, newPredictions, tfIdfTerms)
 		c = nil
 	}
+	fmt.Printf("\n\n")
+
+	fmt.Printf("Serving on port 7070")
+	calculateSuccessAndServe(docs)
 	http.ListenAndServe(":7070", nil)
 }
 
-type percentile struct {
-	Percentile int
-	Prediction string
+func calculateSuccessAndServe(docs []doc) {
+	total := float32(len(docs))
+	var previouslyCorrect uint
+	var newlyCorrect uint
+
+	for _, doc := range docs {
+		if doc.oldPrediction == doc.control {
+			previouslyCorrect++
+		}
+
+		if doc.newPrediction == doc.control {
+			newlyCorrect++
+		}
+	}
+
+	newSuccessRate := float32(newlyCorrect) / total
+	previousSuccessRate := float32(previouslyCorrect) / total
+
+	absoluteImprovement := newSuccessRate - previousSuccessRate
+	relativeImprovement := newSuccessRate / previousSuccessRate
+
+	serveSuccess(docs, total, newSuccessRate, previousSuccessRate, absoluteImprovement, relativeImprovement)
 }
 
 func rank(in []wordWithDistance) []wordWithDistance {

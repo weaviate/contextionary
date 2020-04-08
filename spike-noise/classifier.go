@@ -10,26 +10,35 @@ import (
 )
 
 type Classifier struct {
+	docIndex      int
 	ranked        []wordWithDistance
 	inputCorpus   string
 	oldPrediction string
 	control       string
 	splitter      *Splitter
+	tfidf         tfidfScorer
 }
 
-func NewClassifier(inputCorpus, oldPrediction, control string) *Classifier {
+type tfidfScorer interface {
+	Get(term string, doc int) float32
+}
+
+func NewClassifier(docIndex int, doc doc, tfidf tfidfScorer) *Classifier {
 	splitter := NewSplitter()
 	return &Classifier{
 		splitter:      splitter,
-		inputCorpus:   inputCorpus,
-		oldPrediction: oldPrediction,
-		control:       control,
+		docIndex:      docIndex,
+		inputCorpus:   doc.corpus,
+		oldPrediction: doc.oldPrediction,
+		control:       doc.control,
+		tfidf:         tfidf,
 	}
 }
 
-func (c *Classifier) Run() {
+func (c *Classifier) Run() []percentile {
 	words := c.splitter.Split(c.inputCorpus)
 	distances := make([]wordWithDistance, len(words))
+
 	for i, word := range words {
 		word = strings.ToLower(word)
 		dist, avgDist, prediction := minimumDistance(word, mainCategories)
@@ -43,8 +52,7 @@ func (c *Classifier) Run() {
 	}
 
 	c.ranked = rank(distances)
-	c.makeNewPredictions(words)
-
+	return c.makeNewPredictions(words)
 }
 
 func minimumDistance(word string, cats []mainCategory) (float32, float32, string) {
@@ -84,19 +92,31 @@ func avg(in []float32) float32 {
 	return sum / float32(len(in))
 }
 
-func (c *Classifier) makeNewPredictions(words []string) {
-	for perc := 10; perc <= 100; perc += 10 {
+func (c *Classifier) makeNewPredictions(words []string) []percentile {
+	out := make([]percentile, 10)
+	for perc := 10; perc <= 10; perc += 10 {
 		var newCorpus []string
 		for _, word := range words {
+			word = strings.ToLower(word)
+
+			if score := c.tfidf.Get(word, c.docIndex); score < 0.0 {
+				continue
+			}
+
 			if c.isInPercentile(perc, word) {
 				newCorpus = append(newCorpus, word)
 			}
 		}
 
-		corpus := strings.Join(newCorpus, " ")
+		if len(newCorpus) == 0 {
+			// if we end up with 0 words, take the topmost single word instead
+			newCorpus = words[0:3]
+		}
+
+		corpus := strings.ToLower(strings.Join(newCorpus, " "))
 		vec, err := c11y.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: []string{corpus}})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Errorf("%s with corpus: %s", err, corpus))
 		}
 
 		vector := extractVector(vec)
@@ -114,8 +134,17 @@ func (c *Classifier) makeNewPredictions(words []string) {
 				prediction = cat.Name
 			}
 		}
-		fmt.Printf("perc: %d - prediction: %s\n", perc, prediction)
+
+		out[perc/10-1] = percentile{Percentile: perc, Prediction: prediction, Match: prediction == c.control}
 	}
+
+	return out
+}
+
+type percentile struct {
+	Percentile int
+	Prediction string
+	Match      bool
 }
 
 func (c *Classifier) isInPercentile(percentage int, needle string) bool {
