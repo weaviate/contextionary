@@ -188,7 +188,7 @@ const tpl = `
 </html>`
 
 func serveSuccess(docs []doc, total, newSuccessRate, previousSuccessRate, absoluteImprovement,
-	relativeImprovement float32) {
+	relativeImprovement float32, byLength []*bucket) {
 
 	data := struct {
 		Docs                []doc
@@ -197,6 +197,7 @@ func serveSuccess(docs []doc, total, newSuccessRate, previousSuccessRate, absolu
 		PreviousSuccessRate string
 		AbsoluteImprovement string
 		RelativeImprovement string
+		ByLength            []*bucket
 	}{
 		Docs:                docs,
 		Total:               total,
@@ -204,6 +205,7 @@ func serveSuccess(docs []doc, total, newSuccessRate, previousSuccessRate, absolu
 		PreviousSuccessRate: formatAsPercentage(previousSuccessRate),
 		AbsoluteImprovement: formatAsPercentage(absoluteImprovement),
 		RelativeImprovement: formatAsPercentage(relativeImprovement),
+		ByLength:            byLength,
 	}
 
 	t, err := template.New("webpage").Parse(succssTpl)
@@ -251,6 +253,45 @@ const succssTpl = `
 						  <th>Relative Improvment</th>
 							<td>{{ .RelativeImprovement }}</td>
 						</tr>
+				  </tbody>
+				</table>
+			</div>
+		</section>
+	  <section class="section">
+			<div class="container">
+			  <h2 class="title">Success Rates by Corpus length</h2>
+				<table class="table">
+			    <thead>
+					  <tr>
+							<th>Corpus Length</th>
+							<th>Total</th>
+							<th>Success Rate</th>
+							<th>Items</th>
+					  </tr>
+					</thead>
+				  <tbody>
+					  {{ range .ByLength }}
+					  <tr>
+							<td>
+							  {{ if eq .Words 2561 }}
+								> 1260
+								{{ else }}
+								<= {{ .Words }}
+								{{ end }}
+							</td>
+							<td>{{ .Total }}</td>
+							<td>{{ .Ratio }}</td>
+							<td>
+							  {{ range .Elements }}
+								  {{ if .Success }}
+									  <a class="button is-small is-success" href="/{{ .Index }}">{{ .Index }}</a>
+									{{ else }}
+									  <a class="button is-small is-danger" href="/{{ .Index }}">{{ .Index }}</a>
+									{{ end }}
+								{{ end }}
+							</td>
+						</tr>
+						{{ end }}
 				  </tbody>
 				</table>
 			</div>

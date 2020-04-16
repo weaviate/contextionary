@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
-	"time"
 	"unicode"
 
 	goswagger "github.com/go-openapi/runtime/client"
@@ -22,22 +20,28 @@ import (
 	"google.golang.org/grpc"
 )
 
-type mainCategory struct {
-	ID          strfmt.UUID
-	Name        string
-	Description string
-	Vector      []float32
+type target struct {
+	ID     strfmt.UUID
+	Name   string
+	Vector []float32
 }
+
+const (
+	SourceClassName                 = "Post"
+	TargetClassName                 = "MainCategory"
+	TargetPropertyName              = "name"
+	ClassifyProperty                = "ofMainCategory"
+	ControlProperty                 = "controlMainCategory"
+	BasedOnProperty                 = "content"
+	WhereFilterToFindUnlabelledData = "{operator: Equal, path: [\"training\"], valueBoolean: false}"
+)
 
 var weaviate *client.Weaviate
 var c11y pb.ContextionaryClient
-var mainCategories []mainCategory
+var targets []target
 var allItems []interface{}
 
-// var exampleCorpus = "I have used both my serial ports with a modem and a serial printer, so I cannot use Appletalk.  Is there a Ethernet to Localtalk hardware that will let me use the Ethernet port on my Q700 as a Localtalk  port.  Until they come out with satellite dishes that sit on your window & give you internet access from your home, I won't at all be using that port.  Saurabh.  "
-
 func init() {
-	initMainCategories()
 	transport := goswagger.New("localhost:8080", "/v1", []string{"http"})
 	weaviate = client.New(transport, strfmt.Default)
 
@@ -49,27 +53,37 @@ func init() {
 
 	c11y = pb.NewContextionaryClient(conn)
 
+	targets = initTargets()
 	allItems = initSourceItems()
 
 }
 
+func uppercaseFirstLetter(in string) string {
+	return fmt.Sprintf("%s%s", strings.ToUpper(string(in[:1])), string(in[1:]))
+}
+
 func initSourceItems() []interface{} {
-	query := `{
+	query := fmt.Sprintf(`{
   Get {
     Things {
-      Post(where: {operator: Equal, path: ["training"], valueBoolean: false}, limit: 10000) {
-        OfMainCategory {
-          ... on MainCategory {
-            name
+      %s (where: %s, limit: 10000) {
+        %s {
+          ... on %s {
+            %s
           }
         }
-        content
-				controlMainCategoryId
+        %s
+        %s {
+          ... on %s {
+            %s
+          }
+        }
       }
     }
   }
 }
-`
+`, SourceClassName, WhereFilterToFindUnlabelledData, uppercaseFirstLetter(ClassifyProperty), TargetClassName, TargetPropertyName, BasedOnProperty,
+		uppercaseFirstLetter(ControlProperty), TargetClassName, TargetPropertyName)
 
 	res, err := weaviate.Graphql.GraphqlPost(graphql.NewGraphqlPostParams().WithBody(&models.GraphQLQuery{
 		Query: query,
@@ -79,44 +93,24 @@ func initSourceItems() []interface{} {
 		log.Fatal(err)
 	}
 
-	list := res.Payload.Data["Get"].(map[string]interface{})["Things"].(map[string]interface{})["Post"].([]interface{})
+	if err := res.Payload.Errors; err != nil {
+		log.Fatal(err[0])
+	}
+
+	list := res.Payload.Data["Get"].(map[string]interface{})["Things"].(map[string]interface{})[SourceClassName].([]interface{})
 	return list
-}
-
-func chooseRandomItem(list []interface{}) (string, string, string) {
-	rand.Seed(time.Now().UnixNano())
-	i := rand.Intn(len(list))
-	elem := list[i].(map[string]interface{})
-	corpus := elem["content"].(string)
-	controlID := strfmt.UUID(elem["controlMainCategoryId"].(string))
-	control := mainCategoryById(controlID).Name
-	oldPrediction := elem["OfMainCategory"].([]interface{})[0].(map[string]interface{})["name"].(string)
-
-	return corpus, oldPrediction, control
 }
 
 func chooseItemAt(list []interface{}, i int) (string, string, string) {
 	elem := list[i].(map[string]interface{})
-	corpus := elem["content"].(string)
-	controlID := strfmt.UUID(elem["controlMainCategoryId"].(string))
-	control := mainCategoryById(controlID).Name
-	oldPrediction := elem["OfMainCategory"].([]interface{})[0].(map[string]interface{})["name"].(string)
+	corpus := elem[BasedOnProperty].(string)
+	control := elem[uppercaseFirstLetter(ControlProperty)].([]interface{})[0].(map[string]interface{})[TargetPropertyName].(string)
+	oldPrediction := elem[uppercaseFirstLetter(ClassifyProperty)].([]interface{})[0].(map[string]interface{})[TargetPropertyName].(string)
 
 	return corpus, oldPrediction, control
 }
 
-func mainCategoryById(id strfmt.UUID) mainCategory {
-	for _, cat := range mainCategories {
-		if cat.ID == id {
-			return cat
-		}
-
-	}
-
-	panic("main cat not found by id")
-}
-
-func enrichWithVectors(in []mainCategory) []mainCategory {
+func enrichWithVectors(in []target) []target {
 	for i, obj := range in {
 		res, err := weaviate.Things.ThingsGet(things.NewThingsGetParams().WithID(obj.ID).WithMeta(ptBool(true)), nil)
 		if err != nil {
@@ -129,39 +123,40 @@ func enrichWithVectors(in []mainCategory) []mainCategory {
 	return in
 }
 
-func initMainCategories() {
-	mainCategories = []mainCategory{
-		mainCategory{
-			ID:          "51dd8b95-9e80-4824-9229-21f40e9b4e85",
-			Name:        "Computers",
-			Description: "Anything related to computers and their operating systems. Includes Apple Macintosh and Microsoft Windows related software.",
-		},
-		mainCategory{
-			ID:          "e546bbab-fcc2-4688-8803-b75b061cc349",
-			Name:        "Recreation",
-			Description: "Leisure time activies and sports for recreational purposes. Includes baseball and hockey, but also motorsports and car discussions.",
-		},
-		mainCategory{
-			ID:          "c2d5a423-5e5a-41df-b7b0-fd7e159482a3",
-			Name:        "Science",
-			Description: "Scientific Studies and experiments by universities, scientists and medical doctors.",
-		},
-		mainCategory{
-			ID:          "ed0bab28-1479-4970-ad4f-c07ee6502da8",
-			Name:        "For Sale",
-			Description: "A marketplace for items items to sell and buy",
-		},
-		mainCategory{
-			ID:          "d0ddbcc2-964a-4211-9ddc-d5d366e0dc14",
-			Name:        "Politics",
-			Description: "Political discussions focused mainly on the United States, but also includes world-wide politics. Hot topics include the political situation in the middle east as well as gun control",
-		},
-		mainCategory{
-			ID:          "74e76a5b-8b4c-46b5-9898-e6b569c18a00",
-			Name:        "Religion",
-			Description: "Discussion about religion and atheism, includes Christianity, Islam and Jewish religions. Contains debates about wheter a God exists",
-		},
+func initTargets() []target {
+	query := fmt.Sprintf(`{
+  Get {
+    Things {
+      %s {
+			  uuid
+				%s
+      }
+    }
+  }
+}
+`, TargetClassName, TargetPropertyName)
+
+	res, err := weaviate.Graphql.GraphqlPost(graphql.NewGraphqlPostParams().WithBody(&models.GraphQLQuery{
+		Query: query,
+	}), nil)
+
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	if err := res.Payload.Errors; err != nil {
+		log.Fatal(err[0])
+	}
+
+	list := res.Payload.Data["Get"].(map[string]interface{})["Things"].(map[string]interface{})[TargetClassName].([]interface{})
+
+	targets := make([]target, len(list))
+	for i, obj := range list {
+		targets[i].ID = strfmt.UUID(obj.(map[string]interface{})["uuid"].(string))
+		targets[i].Name = obj.(map[string]interface{})[TargetPropertyName].(string)
+	}
+
+	return enrichWithVectors(targets)
 }
 
 type doc struct {
@@ -172,10 +167,7 @@ type doc struct {
 }
 
 func main() {
-	// total := 25
 	total := len(allItems)
-
-	mainCategories = enrichWithVectors(mainCategories)
 	docs := make([]doc, total)
 
 	fmt.Printf("Analyzing items")
@@ -183,7 +175,6 @@ func main() {
 
 	for i := 0; i < total; i++ {
 		fmt.Printf(".")
-		// corpus, oldPrediction, control := chooseRandomItem(allItems)
 		corpus, oldPrediction, control := chooseItemAt(allItems, i)
 		tfidf.AddDoc(corpus)
 		docs[i] = doc{corpus: corpus, oldPrediction: oldPrediction, control: control}
@@ -238,22 +229,112 @@ func calculateSuccessAndServe(docs []doc) {
 	absoluteImprovement := newSuccessRate - previousSuccessRate
 	relativeImprovement := newSuccessRate / previousSuccessRate
 
-	serveSuccess(docs, total, newSuccessRate, previousSuccessRate, absoluteImprovement, relativeImprovement)
+	byLength := calculateSuccessByLength(docs)
+	serveSuccess(docs, total, newSuccessRate, previousSuccessRate, absoluteImprovement, relativeImprovement, byLength)
 }
 
-func rank(in []wordWithDistance) []wordWithDistance {
-	i := 0
-	filtered := make([]wordWithDistance, len(in))
-	for _, w := range in {
-		if w.Distance < -9 {
-			continue
+type bucket struct {
+	Words    int
+	Success  uint
+	Total    uint
+	Ratio    float64
+	Elements []bucketElement
+}
+
+type bucketElement struct {
+	Index   int
+	Success bool
+}
+
+func increaseSuccess(buckets map[int]*bucket, index int) {
+	if _, ok := buckets[index]; !ok {
+		buckets[index] = &bucket{
+			Words: index,
+		}
+	}
+
+	buckets[index].Success++
+}
+
+func increaseTotal(buckets map[int]*bucket, index int, docIndex int, success bool) {
+	if _, ok := buckets[index]; !ok {
+		buckets[index] = &bucket{
+			Words: index,
+		}
+	}
+
+	buckets[index].Total++
+	buckets[index].Elements = append(buckets[index].Elements, bucketElement{Index: docIndex, Success: success})
+}
+
+func calculateSuccessByLength(docs []doc) []*bucket {
+	buckets := map[int]*bucket{}
+	for i, doc := range docs {
+		words := len(NewSplitter().Split(doc.corpus))
+		success := doc.newPrediction == doc.control
+		if success {
+			switch true {
+			case words < 5:
+				increaseSuccess(buckets, 5)
+			case words < 10:
+				increaseSuccess(buckets, 10)
+			case words < 20:
+				increaseSuccess(buckets, 20)
+			case words < 40:
+				increaseSuccess(buckets, 40)
+			case words < 80:
+				increaseSuccess(buckets, 80)
+			case words < 160:
+				increaseSuccess(buckets, 160)
+			case words < 320:
+				increaseSuccess(buckets, 320)
+			case words < 640:
+				increaseSuccess(buckets, 640)
+			case words < 1280:
+				increaseSuccess(buckets, 1280)
+			case words < 2560:
+				increaseSuccess(buckets, 2560)
+			default:
+				increaseSuccess(buckets, 2561)
+			}
 		}
 
-		filtered[i] = w
+		switch true {
+		case words < 5:
+			increaseTotal(buckets, 5, i, success)
+		case words < 10:
+			increaseTotal(buckets, 10, i, success)
+		case words < 20:
+			increaseTotal(buckets, 20, i, success)
+		case words < 40:
+			increaseTotal(buckets, 40, i, success)
+		case words < 80:
+			increaseTotal(buckets, 80, i, success)
+		case words < 160:
+			increaseTotal(buckets, 160, i, success)
+		case words < 320:
+			increaseTotal(buckets, 320, i, success)
+		case words < 640:
+			increaseTotal(buckets, 640, i, success)
+		case words < 1280:
+			increaseTotal(buckets, 1280, i, success)
+		case words < 2560:
+			increaseTotal(buckets, 2560, i, success)
+		default:
+			increaseTotal(buckets, 2561, i, success)
+		}
+	}
+
+	out := make([]*bucket, len(buckets))
+	i := 0
+	for _, value := range buckets {
+		value.Ratio = float64(value.Success) / float64(value.Total)
+		out[i] = value
 		i++
 	}
-	out := filtered[:i]
-	sort.Slice(out, func(a, b int) bool { return out[a].InformationGain > out[b].InformationGain })
+
+	sort.Slice(out, func(a, b int) bool { return out[a].Words < out[b].Words })
+
 	return out
 }
 

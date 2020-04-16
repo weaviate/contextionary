@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
+	"sort"
 	"strings"
 	"sync"
 
@@ -58,7 +60,7 @@ func (c *Classifier) Run() []percentile {
 			go func(i, j int, elem string) {
 
 				word := strings.ToLower(elem)
-				dist, avgDist, prediction := minimumDistance(word, mainCategories)
+				dist, avgDist, prediction := minimumDistance(word, targets)
 
 				c.Lock()
 				distances[i+j] = wordWithDistance{
@@ -81,7 +83,42 @@ func (c *Classifier) Run() []percentile {
 	return c.makeNewPredictions(words)
 }
 
-func minimumDistance(word string, cats []mainCategory) (float32, float32, string) {
+func rank(in []wordWithDistance) []wordWithDistance {
+	i := 0
+	filtered := make([]wordWithDistance, len(in))
+	for _, w := range in {
+		if w.Distance < -9 {
+			continue
+		}
+
+		filtered[i] = w
+		i++
+	}
+	out := filtered[:i]
+	sort.Slice(out, func(a, b int) bool { return out[a].InformationGain > out[b].InformationGain })
+
+	// simple dedup since it's already ordered, we only need to check the previous element
+	indexOut := 0
+	dedupped := make([]wordWithDistance, len(out))
+	for i, elem := range out {
+		if i == 0 {
+			dedupped[indexOut] = elem
+			indexOut++
+			continue
+		}
+
+		if elem.Word == out[i-1].Word {
+			continue
+		}
+
+		dedupped[indexOut] = elem
+		indexOut++
+	}
+
+	return dedupped[:indexOut]
+}
+
+func minimumDistance(word string, cats []target) (float32, float32, string) {
 	var all []float32
 	minimum := float32(1000000.00)
 	var prediction string
@@ -171,7 +208,7 @@ func (c *Classifier) makeNewPredictions(words []string) []percentile {
 
 	var minimum = float32(100000)
 	var prediction string
-	for _, cat := range mainCategories {
+	for _, cat := range targets {
 		dist, err := cosineDist(vector, cat.Vector)
 		if err != nil {
 			log.Fatal(err)
@@ -189,11 +226,17 @@ func (c *Classifier) makeNewPredictions(words []string) []percentile {
 }
 
 func (c *Classifier) boostByInformationGain(percentage int) []*pb.Override {
-	maxBoost := 4
+	maxBoost := float32(3)
 	cutoff := int(float32(percentage) / float32(100) * float32(len(c.ranked)))
 	out := make([]*pb.Override, cutoff)
 	for i, word := range c.ranked[:cutoff] {
-		boost := float32(maxBoost) - (float32(i)/float32(cutoff))*float32(maxBoost)
+		boost := 1 - float32(math.Log(float64(i)/float64(cutoff)))*float32(1)
+		if math.IsInf(float64(boost), 1) || boost > maxBoost {
+			boost = maxBoost
+		}
+		if i == 0 {
+			boost = boost / 2
+		}
 		out[i] = &pb.Override{
 			Expression: fmt.Sprintf("%f * w", boost),
 			Word:       word.Word,
