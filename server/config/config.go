@@ -24,6 +24,7 @@ type Config struct {
 	OccurrenceWeightStrategy     string
 	OccurrenceWeightLinearFactor float32
 	MaxCompoundWordLength        int
+	MaximumBatchSize             int
 
 	LogLevel string
 }
@@ -88,11 +89,17 @@ func (c *Config) init() error {
 	// the vector file will lead to missing out on compound words, whereas a
 	// larger value will lead to unnecessary lookups slowing down the
 	// vectorization process
-	compoundLength, err := c.optionalInt("MAX_COMPOUND_WORD_LENGTH", 4)
+	compoundLength, err := c.optionalInt("MAX_COMPOUND_WORD_LENGTH", 2)
 	if err != nil {
 		return err
 	}
 	c.MaxCompoundWordLength = compoundLength
+
+	batchSize, err := c.optionalInt("MAX_BATCH_SIZE", 200)
+	if err != nil {
+		return err
+	}
+	c.MaximumBatchSize = batchSize
 
 	loglevel := c.optionalString("LOG_LEVEL", "info")
 	c.LogLevel = loglevel

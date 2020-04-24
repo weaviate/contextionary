@@ -33,6 +33,8 @@ func help() {
 	fmt.Printf("\n")
 	fmt.Printf("\t%-15s%s\n", "vectorize", "Vectorize any string")
 	fmt.Printf("\t               %s\n", "Usage: client vectorize \"input string to vectorize\"")
+	fmt.Printf("\t%-15s%s\n", "multi-vector-for-word", "Vectorize multiple strings")
+	fmt.Printf("\t               %s\n", "Usage: client multi-vector-for-word \"word1 word2 word3 ... wordN\"")
 }
 
 func main() {
@@ -69,6 +71,8 @@ func main() {
 		extend(client, args[1:])
 	case "vectorize":
 		vectorize(client, args[1:])
+	case "multi-vector-for-word":
+		multiVecForWord(client, args[1:])
 
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command '%s'\n", cmd)
@@ -181,6 +185,29 @@ func vectorize(client pb.ContextionaryClient, args []string) {
 		os.Exit(1)
 	} else {
 		fmt.Fprintf(os.Stdout, "Success: %v", res.Entries)
+		os.Exit(0)
+	}
+}
+
+func multiVecForWord(client pb.ContextionaryClient, args []string) {
+	if len(args) < 1 {
+		fmt.Fprintf(os.Stderr, "need at least one argument: the input word to vectorize")
+		os.Exit(1)
+	}
+
+	words := make([]*pb.Word, len(args))
+	for i, word := range args {
+		words[i] = &pb.Word{Word: word}
+	}
+
+	res, err := client.MultiVectorForWord(context.Background(), &pb.WordList{
+		Words: words,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %s", err)
+		os.Exit(1)
+	} else {
+		fmt.Fprintf(os.Stdout, "Success: %v", res.Vectors)
 		os.Exit(0)
 	}
 }

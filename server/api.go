@@ -84,7 +84,7 @@ func (s *server) MultiVectorForWord(ctx context.Context, params *pb.WordList) (*
 	out := make([]*pb.Vector, len(params.Words))
 	var errors []error
 
-	concurrent := 20 // TODO: make configurable through config
+	concurrent := s.config.MaximumBatchSize
 	for i := 0; i < len(params.Words); i += concurrent {
 		end := i + concurrent
 		if end > len(params.Words) {
@@ -97,6 +97,7 @@ func (s *server) MultiVectorForWord(ctx context.Context, params *pb.WordList) (*
 		for j, elem := range batch {
 			wg.Add(1)
 			go func(i, j int, word string) {
+				defer wg.Done()
 				word = strings.ToLower(word)
 				vec, err := s.vectorizer.VectorForWord(word)
 				if err != nil {
@@ -107,7 +108,9 @@ func (s *server) MultiVectorForWord(ctx context.Context, params *pb.WordList) (*
 				}
 
 				if vec == nil {
-					// leave field as nil
+					lock.Lock()
+					out[i+j] = &pb.Vector{}
+					lock.Unlock()
 					return
 				}
 
@@ -115,7 +118,6 @@ func (s *server) MultiVectorForWord(ctx context.Context, params *pb.WordList) (*
 				out[i+j] = vectorToProto(vec.vector)
 				lock.Unlock()
 
-				wg.Done()
 			}(i, j, elem.Word)
 		}
 
