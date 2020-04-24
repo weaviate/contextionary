@@ -8,6 +8,7 @@ service Contextionary {
   rpc SchemaSearch(SchemaSearchParams) returns (SchemaSearchResults) {}
   rpc SafeGetSimilarWordsWithCertainty(SimilarWordsParams) returns (SimilarWordsResults) {}
   rpc VectorForWord(Word) returns (Vector) {}
+  rpc MultiVectorForWord(WordList) returns (VectorList) {}
   rpc VectorForCorpi(Corpi) returns (Vector) {}
   rpc NearestWordsByVector(VectorNNParams) returns (NearestWords) {}
   rpc Meta(MetaParams) returns (MetaOverview) {}
@@ -33,12 +34,20 @@ message Word {
  string word = 1;
 }
 
+message WordList {
+ repeated Word words = 1;
+}
+
 message WordPresent {
  bool present = 1;
 }
 
 message Vector {
   repeated VectorEntry entries = 1;
+}
+
+message VectorList {
+  repeated Vector vectors = 1;
 }
 
 message VectorEntry {

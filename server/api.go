@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
 
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
@@ -75,6 +77,67 @@ func pbWordsFromStrings(input []string) []*pb.Word {
 	}
 
 	return output
+}
+
+func (s *server) MultiVectorForWord(ctx context.Context, params *pb.WordList) (*pb.VectorList, error) {
+	lock := &sync.Mutex{}
+	out := make([]*pb.Vector, len(params.Words))
+	var errors []error
+
+	concurrent := 20 // TODO: make configurable through config
+	for i := 0; i < len(params.Words); i += concurrent {
+		end := i + concurrent
+		if end > len(params.Words) {
+			end = len(params.Words)
+		}
+
+		batch := params.Words[i:end]
+
+		var wg = &sync.WaitGroup{}
+		for j, elem := range batch {
+			wg.Add(1)
+			go func(i, j int, word string) {
+				word = strings.ToLower(word)
+				vec, err := s.vectorizer.VectorForWord(word)
+				if err != nil {
+					lock.Lock()
+					errors = append(errors, err)
+					lock.Unlock()
+					return
+				}
+
+				if vec == nil {
+					// leave field as nil
+					return
+				}
+
+				lock.Lock()
+				out[i+j] = vectorToProto(vec.vector)
+				lock.Unlock()
+
+				wg.Done()
+			}(i, j, elem.Word)
+		}
+
+		wg.Wait()
+	}
+
+	if len(errors) > 0 {
+		return nil, joinErrors(errors)
+	}
+
+	return &pb.VectorList{
+		Vectors: out,
+	}, nil
+}
+
+func joinErrors(in []error) error {
+	msgs := make([]string, len(in))
+	for i, err := range in {
+		msgs[i] = fmt.Sprintf("at pos %d: %v", i, err)
+	}
+
+	return fmt.Errorf("%s", strings.Join(msgs, ", "))
 }
 
 func (s *server) VectorForWord(ctx context.Context, params *pb.Word) (*pb.Vector, error) {
