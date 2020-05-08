@@ -116,6 +116,7 @@ func (s *server) MultiVectorForWord(ctx context.Context, params *pb.WordList) (*
 
 				lock.Lock()
 				out[i+j] = vectorToProto(vec.vector)
+				out[i+j].Occurrence = vec.occurrence
 				lock.Unlock()
 
 			}(i, j, elem.Word)
