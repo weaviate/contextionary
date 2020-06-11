@@ -1,4 +1,5 @@
 if: branch = master
+
 env:
   global:
   - DOCKER_ORG: semitechnologies
