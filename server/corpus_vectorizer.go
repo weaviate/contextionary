@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	errortypes "github.com/semi-technologies/contextionary/errors"
@@ -20,6 +23,8 @@ type Vectorizer struct {
 	logger           logrus.FieldLogger
 	splitter         splitter
 	extensions       extensionLookerUpper
+	cache            *sync.Map
+	cacheCount       int32
 }
 
 const (
@@ -46,6 +51,7 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 		splitter:         splitter,
 		logger:           logger,
 		extensions:       extensions,
+		cache:            &sync.Map{},
 	}
 
 	if err := v.validateConfig(); err != nil {
@@ -226,6 +232,26 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 		return nil, nil
 	}
 
+	if int(cv.cacheCount) > cv.config.MaximumVectorCacheSize {
+		before := time.Now()
+		cv.logger.WithField("action", "vectorize_start_purge_cache").
+			Debug("start purging vectorization cache")
+
+		cv.cache.Range(func(key, value interface{}) bool {
+			cv.cache.Delete(key)
+			atomic.AddInt32(&cv.cacheCount, -1)
+			return true
+		})
+
+		cv.logger.WithField("action", "vectorize_complete_purge_cache").
+			WithField("took", time.Since(before)).
+			Debug("complete purging vectorization cache")
+	}
+	cached, ok := cv.cache.Load(word)
+	if ok {
+		return cached.(*vectorWithOccurrence), nil
+	}
+
 	wi := cv.c11y.WordToItemIndex(word)
 	if !wi.IsPresent() {
 		cv.logger.WithField("action", "vectorize_library_word").
@@ -253,10 +279,14 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 		WithField("occurence", o).
 		Debug("present including")
 
-	return &vectorWithOccurrence{
+	vo := &vectorWithOccurrence{
 		vector:     v,
 		occurrence: o,
-	}, nil
+	}
+
+	cv.cache.Store(word, vo)
+	atomic.AddInt32(&cv.cacheCount, 1)
+	return vo, nil
 }
 
 func (cv *Vectorizer) vectorFromExtension(ext *extensions.Extension) (*vectorWithOccurrence, error) {

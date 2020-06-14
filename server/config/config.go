@@ -25,6 +25,7 @@ type Config struct {
 	OccurrenceWeightLinearFactor float32
 	MaxCompoundWordLength        int
 	MaximumBatchSize             int
+	MaximumVectorCacheSize       int
 
 	LogLevel string
 }
@@ -89,7 +90,7 @@ func (c *Config) init() error {
 	// the vector file will lead to missing out on compound words, whereas a
 	// larger value will lead to unnecessary lookups slowing down the
 	// vectorization process
-	compoundLength, err := c.optionalInt("MAX_COMPOUND_WORD_LENGTH", 2)
+	compoundLength, err := c.optionalInt("MAX_COMPOUND_WORD_LENGTH", 1)
 	if err != nil {
 		return err
 	}
@@ -100,6 +101,12 @@ func (c *Config) init() error {
 		return err
 	}
 	c.MaximumBatchSize = batchSize
+
+	vectorCacheSize, err := c.optionalInt("MAX_VECTORCACHE_SIZE", 10000)
+	if err != nil {
+		return err
+	}
+	c.MaximumVectorCacheSize = vectorCacheSize
 
 	loglevel := c.optionalString("LOG_LEVEL", "info")
 	c.LogLevel = loglevel
