@@ -2,7 +2,7 @@
 
 set -e
 
-VECTORDB_VERSION=0.16.0
+VECTORDB_VERSION=0.14.0
 LANGUAGE=${1}
 
 rm -rf ./data && mkdir ./data
