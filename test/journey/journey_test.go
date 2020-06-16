@@ -123,7 +123,7 @@ func Test_Contextionary_Journey(t *testing.T) {
 				corpi := []string{"car", "car of brand mercedes", "color blue"}
 				res, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
 				assert.Nil(t, err)
-				assert.Len(t, res.Entries, 600)
+				assert.Len(t, res.Entries, 300)
 			})
 
 			t.Run("two corpi with and without splitting characters should lead to the same vector", func(t *testing.T) {
@@ -131,11 +131,11 @@ func Test_Contextionary_Journey(t *testing.T) {
 				corpi2 := []string{"car,", "car#of,,,,brand<mercedes", "color!!blue"}
 				res1, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi1})
 				assert.Nil(t, err)
-				assert.Len(t, res1.Entries, 600)
+				assert.Len(t, res1.Entries, 300)
 
 				res2, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi2})
 				assert.Nil(t, err)
-				assert.Len(t, res2.Entries, 600)
+				assert.Len(t, res2.Entries, 300)
 
 				assert.Equal(t, res1.Entries, res2.Entries)
 			})
