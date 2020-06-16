@@ -83,6 +83,8 @@ func (cv *Vectorizer) Corpi(corpi []string, weightOverrides map[string]string) (
 		weightOverrides = map[string]string{}
 	}
 
+	var source []core.InputElement
+
 	for i, corpus := range corpi {
 		parts := cv.splitter.Split(corpus)
 		if len(parts) == 0 {
@@ -96,6 +98,7 @@ func (cv *Vectorizer) Corpi(corpi []string, weightOverrides map[string]string) (
 
 		if v != nil {
 			corpusVectors = append(corpusVectors, *v.vector)
+			source = append(source, v.source...)
 		}
 	}
 
@@ -108,6 +111,7 @@ func (cv *Vectorizer) Corpi(corpi []string, weightOverrides map[string]string) (
 		return nil, err
 	}
 
+	vector.Source = source
 	return vector, nil
 }
 
@@ -122,6 +126,7 @@ func (cv *Vectorizer) vectorForWordOrWords(parts []string, overrides map[string]
 type vectorWithOccurrence struct {
 	vector     *core.Vector
 	occurrence uint64
+	source     []core.InputElement
 }
 
 func (cv *Vectorizer) vectorForWords(words []string, overrides map[string]string) (*vectorWithOccurrence, error) {
@@ -147,7 +152,19 @@ func (cv *Vectorizer) vectorForWords(words []string, overrides map[string]string
 
 	return &vectorWithOccurrence{
 		vector: centroid,
+		source: buildVectorInputElements(words, weights, occurrences),
 	}, nil
+}
+
+func buildVectorInputElements(words []string, weights []float64, occurrences []uint64) []core.InputElement {
+	out := make([]core.InputElement, len(words))
+	for i := range words {
+		out[i].Concept = words[i]
+		out[i].Weight = weights[i]
+		out[i].Occurrence = occurrences[i]
+	}
+
+	return out
 }
 
 func float64SliceTofloat32(in []float64) []float32 {
@@ -282,6 +299,12 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 	vo := &vectorWithOccurrence{
 		vector:     v,
 		occurrence: o,
+		source: []core.InputElement{
+			{
+				Concept:    word,
+				Occurrence: o,
+			},
+		},
 	}
 
 	cv.cache.Store(word, vo)
@@ -294,6 +317,13 @@ func (cv *Vectorizer) vectorFromExtension(ext *extensions.Extension) (*vectorWit
 	return &vectorWithOccurrence{
 		vector:     &v,
 		occurrence: uint64(ext.Occurrence),
+		source: []core.InputElement{
+			{
+				Concept:    ext.Concept,
+				Weight:     1,
+				Occurrence: uint64(ext.Occurrence),
+			},
+		},
 	}, nil
 }
 

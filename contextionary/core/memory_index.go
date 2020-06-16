@@ -67,7 +67,7 @@ func (mi *MemoryIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
 		var floats []float32
 		mi.knn.GetItem(int(item), &floats)
 
-		return &Vector{floats}, nil
+		return &Vector{vector: floats}, nil
 	} else {
 		return nil, fmt.Errorf("Index out of bounds")
 	}

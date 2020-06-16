@@ -19,10 +19,17 @@ import (
 // Opque type that models a fixed-length vector.
 type Vector struct {
 	vector []float32
+	Source []InputElement
+}
+
+type InputElement struct {
+	Concept    string
+	Weight     float64
+	Occurrence uint64
 }
 
 func NewVector(vector []float32) Vector {
-	return Vector{vector}
+	return Vector{vector: vector}
 }
 
 func (v *Vector) Equal(other *Vector) (bool, error) {

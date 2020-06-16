@@ -225,7 +225,16 @@ func vectorToProto(in *core.Vector) *pb.Vector {
 		output[i] = &pb.VectorEntry{Entry: entry}
 	}
 
-	return &pb.Vector{Entries: output}
+	source := make([]*pb.InputElement, len(in.Source))
+	for i, s := range in.Source {
+		source[i] = &pb.InputElement{
+			Concept:    s.Concept,
+			Occurrence: s.Occurrence,
+			Weight:     float32(s.Weight),
+		}
+	}
+
+	return &pb.Vector{Entries: output, Source: source}
 }
 
 func vectorFromProto(in *pb.Vector) core.Vector {

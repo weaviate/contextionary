@@ -68,7 +68,7 @@ func (m *mmappedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
 	var floats []float32
 	floats = m.getItem(int(item))
 
-	return &Vector{floats}, nil
+	return &Vector{vector: floats}, nil
 }
 
 func (m *mmappedIndex) getItem(index int) []float32 {

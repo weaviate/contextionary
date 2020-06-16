@@ -44,7 +44,14 @@ message WordPresent {
 
 message Vector {
   repeated VectorEntry entries = 1;
-}
+  repeated InputElement source = 2;
+};
+
+message InputElement {
+  string concept = 1;
+  float weight = 2;
+  uint64 occurrence = 3;
+};
 
 message VectorList {
   repeated Vector vectors = 1;

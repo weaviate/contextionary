@@ -184,7 +184,8 @@ func vectorize(client pb.ContextionaryClient, args []string) {
 		fmt.Fprintf(os.Stderr, "ERROR: %s", err)
 		os.Exit(1)
 	} else {
-		fmt.Fprintf(os.Stdout, "Success: %v", res.Entries)
+		fmt.Fprintf(os.Stdout, "Success: %v\n", res.Entries)
+		fmt.Fprintf(os.Stdout, "Source: %v\n", res.Source)
 		os.Exit(0)
 	}
 }
