@@ -303,6 +303,7 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 			{
 				Concept:    word,
 				Occurrence: o,
+				Weight:     1,
 			},
 		},
 	}
