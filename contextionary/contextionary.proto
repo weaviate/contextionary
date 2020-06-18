@@ -11,6 +11,7 @@ service Contextionary {
   rpc MultiVectorForWord(WordList) returns (VectorList) {}
   rpc VectorForCorpi(Corpi) returns (Vector) {}
   rpc NearestWordsByVector(VectorNNParams) returns (NearestWords) {}
+  rpc MultiNearestWordsByVector(VectorNNParamsList) returns (NearestWordsList) {}
   rpc Meta(MetaParams) returns (MetaOverview) {}
   rpc AddExtension(ExtensionInput) returns (AddExtensionResult) {}
 }
@@ -67,6 +68,10 @@ message VectorNNParams {
   int32 n = 3;
 }
 
+message VectorNNParamsList {
+  repeated VectorNNParams Params = 1;
+}
+
 message Corpi {
   repeated string corpi = 1;
   repeated Override overrides = 2;
@@ -93,6 +98,10 @@ message SimilarWordsResults {
 message NearestWords {
   repeated string words = 1;
   repeated float distances = 2;
+}
+
+message NearestWordsList {
+  repeated NearestWords words = 1;
 }
 
 message Keyword {

@@ -263,6 +263,61 @@ func (s *server) NearestWordsByVector(ctx context.Context, params *pb.VectorNNPa
 	}, nil
 }
 
+func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.VectorNNParamsList) (*pb.NearestWordsList, error) {
+	lock := &sync.Mutex{}
+	out := make([]*pb.NearestWords, len(params.Params))
+	var errors []error
+
+	concurrent := s.config.MaximumBatchSize
+	for i := 0; i < len(params.Params); i += concurrent {
+		end := i + concurrent
+		if end > len(params.Params) {
+			end = len(params.Params)
+		}
+
+		batch := params.Params[i:end]
+
+		var wg = &sync.WaitGroup{}
+		for j, elem := range batch {
+			wg.Add(1)
+			go func(i, j int, elem *pb.VectorNNParams) {
+				defer wg.Done()
+
+				ii, dist, err := s.combinedContextionary.GetNnsByVector(vectorFromProto(elem.Vector), int(elem.N), int(elem.K))
+				if err != nil {
+					lock.Lock()
+					errors = append(errors, GrpcErrFromTyped(err))
+					lock.Unlock()
+					return
+				}
+
+				words, err := s.itemIndexesToWords(ii)
+				if err != nil {
+					lock.Lock()
+					errors = append(errors, GrpcErrFromTyped(err))
+					lock.Unlock()
+					return
+				}
+
+				out[i+j] = &pb.NearestWords{
+					Distances: dist,
+					Words:     words,
+				}
+			}(i, j, elem)
+		}
+
+		wg.Wait()
+	}
+
+	if len(errors) > 0 {
+		return nil, joinErrors(errors)
+	}
+
+	return &pb.NearestWordsList{
+		Words: out,
+	}, nil
+}
+
 func (s *server) itemIndexesToWords(in []core.ItemIndex) ([]string, error) {
 	output := make([]string, len(in), len(in))
 	for i, itemIndex := range in {
