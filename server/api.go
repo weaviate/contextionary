@@ -299,9 +299,18 @@ func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.Vecto
 					return
 				}
 
+				vectors, err := s.itemIndexesToVectors(ii)
+				if err != nil {
+					lock.Lock()
+					errors = append(errors, GrpcErrFromTyped(err))
+					lock.Unlock()
+					return
+				}
+
 				out[i+j] = &pb.NearestWords{
 					Distances: dist,
 					Words:     words,
+					Vectors:   vectors,
 				}
 			}(i, j, elem)
 		}
@@ -330,4 +339,21 @@ func (s *server) itemIndexesToWords(in []core.ItemIndex) ([]string, error) {
 	}
 
 	return output, nil
+}
+
+func (s *server) itemIndexesToVectors(in []core.ItemIndex) (*pb.VectorList, error) {
+	out := &pb.VectorList{
+		Vectors: make([]*pb.Vector, len(in)),
+	}
+
+	for i, itemIndex := range in {
+		vector, err := s.combinedContextionary.GetVectorForItemIndex(itemIndex)
+		if err != nil {
+			return nil, GrpcErrFromTyped(err)
+		}
+
+		out.Vectors[i] = vectorToProto(vector)
+	}
+
+	return out, nil
 }

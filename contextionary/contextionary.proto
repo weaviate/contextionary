@@ -98,6 +98,7 @@ message SimilarWordsResults {
 message NearestWords {
   repeated string words = 1;
   repeated float distances = 2;
+  VectorList vectors = 3;
 }
 
 message NearestWordsList {
