@@ -2,15 +2,15 @@
 
 set -e
 
-VECTORDB_VERSION=0.16.0
-LANGUAGE=${1}
+language=${1}
+version="${2}"
 
 rm -rf ./data && mkdir ./data
 
 # Download the latest files and remove old ones
 for FILE in stopwords.json contextionary.idx contextionary.knn; do
     echo "Start Downloading $FILE" && \
-    wget --quiet -O ./data/$FILE https://c11y.semi.technology/$VECTORDB_VERSION/$LANGUAGE/$FILE && \
+    wget --quiet -O ./data/$FILE "https://c11y.semi.technology/$version/$language/$FILE" && \
     echo "$FILE = done" &
 done 
 

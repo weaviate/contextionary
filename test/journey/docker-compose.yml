@@ -44,5 +44,7 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - ./:/testfiles
+    environment:
+      DIMENSIONS: "$DIMENSIONS"
 
 

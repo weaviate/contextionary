@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"strconv"
 	"testing"
 
 	pb "github.com/semi-technologies/contextionary/contextionary"
@@ -9,6 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
+
+var expectedDimensions int
+
+func init() {
+
+	d, err := strconv.Atoi(os.Getenv("DIMENSIONS"))
+	if err != nil {
+		panic(err)
+	}
+
+	expectedDimensions = d
+}
 
 func Test_Contextionary_Journey(t *testing.T) {
 	// minimal
@@ -122,20 +137,22 @@ func Test_Contextionary_Journey(t *testing.T) {
 			t.Run("not only stopwords", func(t *testing.T) {
 				corpi := []string{"car", "car of brand mercedes", "color blue"}
 				res, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi})
-				assert.Nil(t, err)
-				assert.Len(t, res.Entries, 300)
+				require.Nil(t, err)
+				fmt.Println(expectedDimensions)
+				fmt.Println(res)
+				assert.Len(t, res.Entries, expectedDimensions)
 			})
 
 			t.Run("two corpi with and without splitting characters should lead to the same vector", func(t *testing.T) {
 				corpi1 := []string{"car", "car of brand mercedes", "color blue"}
 				corpi2 := []string{"car,", "car#of,,,,brand<mercedes", "color!!blue"}
 				res1, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi1})
-				assert.Nil(t, err)
-				assert.Len(t, res1.Entries, 300)
+				require.Nil(t, err)
+				assert.Len(t, res1.Entries, expectedDimensions)
 
 				res2, err := client.VectorForCorpi(context.Background(), &pb.Corpi{Corpi: corpi2})
-				assert.Nil(t, err)
-				assert.Len(t, res2.Entries, 300)
+				require.Nil(t, err)
+				assert.Len(t, res2.Entries, expectedDimensions)
 
 				assert.Equal(t, res1.Entries, res2.Entries)
 			})

@@ -146,7 +146,11 @@ func (ci *CombinedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) 
 	}
 
 	word, err := (*vi).GetVectorForItemIndex(offsetted_index)
-	return word, errors.NewInternalf(err.Error())
+	if err != nil {
+		return word, errors.NewInternalf(err.Error())
+	}
+
+	return word, nil
 }
 
 // Compute the distance between two items.

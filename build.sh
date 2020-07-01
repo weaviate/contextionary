@@ -32,6 +32,7 @@ for lang in $LANGUAGES; do
   full_version="${lang}${VERSION}" 
   docker build -f "$FULL_VERSION_DOCKERFILE" \
     --build-arg VERSION="$full_version" \
+    --build-arg MODEL_VERSION="$MODEL_VERSION" \
     --build-arg LANGUAGE="$lang" \
     -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .
 done
