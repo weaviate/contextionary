@@ -4,7 +4,7 @@ env:
   global:
   - DOCKER_ORG: semitechnologies
   - DOCKER_REPO: contextionary
-  - VERSION: 0.14.0-v0.4.13
+  - VERSION: 0.14.0-v0.4.14
   - MODEL_VERSION: 0.14.0
   - DIMENSIONS: 600 # set to dimensions of underlying db because the test suite needs to know what to expect
   - GO111MODULE: true
