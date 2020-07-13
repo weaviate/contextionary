@@ -21,11 +21,12 @@ type Config struct {
 
 	ServerPort int
 
-	OccurrenceWeightStrategy     string
-	OccurrenceWeightLinearFactor float32
-	MaxCompoundWordLength        int
-	MaximumBatchSize             int
-	MaximumVectorCacheSize       int
+	OccurrenceWeightStrategy           string
+	OccurrenceWeightLinearFactor       float32
+	MaxCompoundWordLength              int
+	MaximumBatchSize                   int
+	MaximumVectorCacheSize             int
+	NeighborOccurrenceIgnorePercentile int
 
 	LogLevel string
 }
@@ -82,6 +83,17 @@ func (c *Config) init() error {
 		return err
 	}
 	c.OccurrenceWeightLinearFactor = factor
+
+	ignorePercentile, err := c.optionalInt("NEIGHBOR_OCCURRENCE_IGNORE_PERCENTILE", 5)
+	if err != nil {
+		return err
+	}
+
+	if ignorePercentile < 0 || ignorePercentile > 100 {
+		return fmt.Errorf("minimum relative neighbor occurrence must be a value between 0 and 100, got: %d", ignorePercentile)
+	}
+
+	c.NeighborOccurrenceIgnorePercentile = ignorePercentile
 
 	strategy := c.optionalString("OCCURRENCE_WEIGHT_STRATEGY", "log")
 	c.OccurrenceWeightStrategy = strategy

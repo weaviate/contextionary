@@ -252,7 +252,7 @@ func (s *server) NearestWordsByVector(ctx context.Context, params *pb.VectorNNPa
 	if err != nil {
 		return nil, GrpcErrFromTyped(err)
 	}
-	words, err := s.itemIndexesToWords(ii)
+	words, _, err := s.itemIndexesToWordsAndOccs(ii)
 	if err != nil {
 		return nil, GrpcErrFromTyped(err)
 	}
@@ -269,6 +269,7 @@ func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.Vecto
 	var errors []error
 
 	concurrent := s.config.MaximumBatchSize
+	requiredMinOcc := s.combinedContextionary.OccurrencePercentile(s.config.NeighborOccurrenceIgnorePercentile)
 	for i := 0; i < len(params.Params); i += concurrent {
 		end := i + concurrent
 		if end > len(params.Params) {
@@ -283,7 +284,7 @@ func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.Vecto
 			go func(i, j int, elem *pb.VectorNNParams) {
 				defer wg.Done()
 
-				ii, dist, err := s.combinedContextionary.GetNnsByVector(vectorFromProto(elem.Vector), int(elem.N), int(elem.K))
+				ii, dist, err := s.combinedContextionary.GetNnsByVector(vectorFromProto(elem.Vector), int(elem.N)*5, int(elem.K)) // multiply by 5 to account for filtering
 				if err != nil {
 					lock.Lock()
 					errors = append(errors, GrpcErrFromTyped(err))
@@ -291,12 +292,25 @@ func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.Vecto
 					return
 				}
 
-				words, err := s.itemIndexesToWords(ii)
+				words, occs, err := s.itemIndexesToWordsAndOccs(ii)
 				if err != nil {
 					lock.Lock()
 					errors = append(errors, GrpcErrFromTyped(err))
 					lock.Unlock()
 					return
+				}
+
+				filteredWords := make([]string, elem.N) // can never be lnoger than what the user asked for
+				filteredI := 0
+				for i := range words {
+					if filteredI >= len(filteredWords) {
+						break
+					}
+
+					if occs[i] >= requiredMinOcc {
+						filteredWords[filteredI] = words[i]
+						filteredI++
+					}
 				}
 
 				vectors, err := s.itemIndexesToVectors(ii)
@@ -309,7 +323,7 @@ func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.Vecto
 
 				out[i+j] = &pb.NearestWords{
 					Distances: dist,
-					Words:     words,
+					Words:     filteredWords[:filteredI],
 					Vectors:   vectors,
 				}
 			}(i, j, elem)
@@ -327,18 +341,26 @@ func (s *server) MultiNearestWordsByVector(ctx context.Context, params *pb.Vecto
 	}, nil
 }
 
-func (s *server) itemIndexesToWords(in []core.ItemIndex) ([]string, error) {
-	output := make([]string, len(in), len(in))
+func (s *server) itemIndexesToWordsAndOccs(in []core.ItemIndex) ([]string, []uint64, error) {
+	words := make([]string, len(in), len(in))
+	occs := make([]uint64, len(in), len(in))
 	for i, itemIndex := range in {
 		w, err := s.combinedContextionary.ItemIndexToWord(itemIndex)
 		if err != nil {
-			return nil, GrpcErrFromTyped(err)
+			return nil, nil, GrpcErrFromTyped(err)
 		}
 
-		output[i] = w
+		words[i] = w
+
+		occ, err := s.combinedContextionary.ItemIndexToOccurrence(itemIndex)
+		if err != nil {
+			return nil, nil, GrpcErrFromTyped(err)
+		}
+
+		occs[i] = occ
 	}
 
-	return output, nil
+	return words, occs, nil
 }
 
 func (s *server) itemIndexesToVectors(in []core.ItemIndex) (*pb.VectorList, error) {

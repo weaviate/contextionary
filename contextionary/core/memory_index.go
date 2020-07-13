@@ -47,7 +47,11 @@ func (mi *MemoryIndex) WordToItemIndex(word string) ItemIndex {
 }
 
 func (mi *MemoryIndex) ItemIndexToOccurrence(item ItemIndex) (uint64, error) {
-	panic("not implemented in memory index")
+	return 0, nil
+}
+
+func (mi *MemoryIndex) OccurrencePercentile(perc int) uint64 {
+	return 0
 }
 
 // Based on an index, return the assosiated word.

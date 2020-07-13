@@ -60,6 +60,10 @@ func (m *mmappedIndex) ItemIndexToOccurrence(item ItemIndex) (uint64, error) {
 	}
 }
 
+func (m *mmappedIndex) OccurrencePercentile(perc int) uint64 {
+	return m.word_index.OccurrencePercentile(perc)
+}
+
 func (m *mmappedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
 	if item < 0 && item > m.word_index.GetNumberOfWords() {
 		return nil, fmt.Errorf("Index out of bounds")

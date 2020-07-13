@@ -20,13 +20,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"syscall"
 )
 
 type Wordlist struct {
-	vectorWidth   uint64
-	numberOfWords uint64
-	metadata      map[string]interface{}
+	vectorWidth           uint64
+	numberOfWords         uint64
+	metadata              map[string]interface{}
+	occurrencePercentiles []uint64
 
 	file         os.File
 	startOfTable int
@@ -67,17 +69,29 @@ func LoadWordlist(path string) (*Wordlist, error) {
 	var offset int = 4 - (start_of_table % 4)
 	start_of_table += offset
 
-	return &Wordlist{
+	wl := &Wordlist{
 		vectorWidth:   vectorWidth,
 		numberOfWords: nrWords,
 		metadata:      metadata,
 		startOfTable:  start_of_table,
 		mmap:          mmap,
-	}, nil
+	}
+
+	wl.initOccurrencePercentiles()
+
+	return wl, nil
 }
 
 func (w *Wordlist) GetNumberOfWords() ItemIndex {
 	return ItemIndex(w.numberOfWords)
+}
+
+func (w *Wordlist) OccurrencePercentile(percentile int) uint64 {
+	if percentile < 0 || percentile > 100 {
+		panic("incorrect usage of occurrence percentile, must be between 0 and 100")
+	}
+
+	return w.occurrencePercentiles[percentile]
 }
 
 func (w *Wordlist) FindIndexByWord(_needle string) ItemIndex {
@@ -136,4 +150,32 @@ func (w *Wordlist) getWord(index ItemIndex) (string, uint64) {
 	}
 
 	return "", 0
+}
+
+func (w *Wordlist) initOccurrencePercentiles() {
+	w.occurrencePercentiles = make([]uint64, 101) // make 101 elements longs, so both index 0 and 100 are included
+	max := int(w.GetNumberOfWords())
+	allOccs := make([]uint64, max)
+
+	for i := ItemIndex(0); int(i) < max; i++ {
+		_, occ := w.getWord(i)
+		allOccs[i] = occ
+	}
+
+	sort.Slice(allOccs, func(a, b int) bool { return allOccs[a] < allOccs[b] })
+
+	for i := 0; i <= 100; i++ { // note that this is 101 elements!
+		if i == 0 {
+			w.occurrencePercentiles[i] = 0
+			continue
+		}
+
+		if i == 100 {
+			w.occurrencePercentiles[i] = allOccs[len(allOccs)-1]
+			continue
+		}
+
+		occ := uint64(float64(i) / 100 * float64(len(allOccs)))
+		w.occurrencePercentiles[i] = occ
+	}
 }

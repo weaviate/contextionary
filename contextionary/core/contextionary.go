@@ -43,6 +43,9 @@ type Contextionary interface {
 	// Based on an index, return the assosiated word.
 	ItemIndexToOccurrence(item ItemIndex) (uint64, error)
 
+	//OccurrencePercentile shows the occurrence of the mentioned percentile in ascending order
+	OccurrencePercentile(perc int) uint64
+
 	// Get the vector of an item index.
 	GetVectorForItemIndex(item ItemIndex) (*Vector, error)
 

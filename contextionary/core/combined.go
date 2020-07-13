@@ -136,7 +136,27 @@ func (ci *CombinedIndex) ItemIndexToWord(item ItemIndex) (string, error) {
 }
 
 func (ci *CombinedIndex) ItemIndexToOccurrence(item ItemIndex) (uint64, error) {
-	panic("not implemented for combined index")
+	offsetted_index, vi, err := ci.find_vector_index_for_item_index(item)
+
+	if err != nil {
+		return 0, err
+	}
+
+	occ, err := (*vi).ItemIndexToOccurrence(offsetted_index)
+	return occ, err
+}
+
+func (ci *CombinedIndex) OccurrencePercentile(perc int) uint64 {
+	max := uint64(0)
+
+	for _, index := range ci.indices {
+		occ := (*index.index).OccurrencePercentile(perc)
+		if occ > max {
+			max = occ
+		}
+	}
+
+	return max
 }
 
 func (ci *CombinedIndex) GetVectorForItemIndex(item ItemIndex) (*Vector, error) {
