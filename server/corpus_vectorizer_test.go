@@ -261,6 +261,10 @@ func (f *fakeC11y) GetVectorLength() int {
 	panic("not implemented")
 }
 
+func (f *fakeC11y) OccurrencePercentile(foo int) uint64 {
+	panic("not implemented")
+}
+
 const (
 	formula1RacingCarIndex = 8
 	fastCarIndex           = 7

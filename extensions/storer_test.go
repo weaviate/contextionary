@@ -64,7 +64,7 @@ func Test_Storer(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.concept, func(t *testing.T) {
 				err := s.Put(context.Background(), test.concept, test.inp)
-				assert.Equal(t, test.expectedErr, err)
+				assert.Equal(t, test.expectedErr.Error(), err.Error())
 			})
 		}
 	})
@@ -119,7 +119,7 @@ func Test_Storer(t *testing.T) {
 
 type fakeVectorizer struct{}
 
-func (f *fakeVectorizer) Corpi(corpi []string) (*core.Vector, error) {
+func (f *fakeVectorizer) Corpi(corpi []string, overrides map[string]string) (*core.Vector, error) {
 	v := core.NewVector([]float32{1, 2, 3})
 	return &v, nil
 }
