@@ -25,6 +25,7 @@ jobs:
         - ./test/journey.sh
 
     - stage: buildanddeploy
+      if: tag IS present
       name: "Build and deploy: en"
       env:
         - LANGUAGES="en"
