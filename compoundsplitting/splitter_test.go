@@ -7,23 +7,7 @@ import (
 	"testing"
 )
 
-type DictMock struct {
-	words  map[string]bool
-	scores map[string]float64
-}
 
-func (dm *DictMock) Contains(word string) bool {
-	_, exists := dm.words[word]
-	return exists
-}
-
-func (dm *DictMock) Score(phrase []string) float64 {
-	score := 0.0
-	for _, word := range phrase {
-		score += dm.scores[word]
-	}
-	return score
-}
 
 func TestSplitTreeSplitter(t *testing.T){
 	dictMock := &DictMock{
@@ -276,4 +260,5 @@ func TestNode(t *testing.T) {
 
 
 }
+
 

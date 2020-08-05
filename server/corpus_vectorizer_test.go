@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/semi-technologies/contextionary/compoundsplitting"
 	"strings"
 	"testing"
 
@@ -26,7 +27,8 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 		extensions := &fakeExtensionLookerUpper{}
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
@@ -45,7 +47,8 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 		extensions := &fakeExtensionLookerUpper{}
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		overrides := map[string]string{
@@ -55,7 +58,7 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 
 		vector, err := v.Corpi([]string{"car is mercedes"}, overrides)
 		require.Nil(t, err)
-		assert.Equal(t, []float32{1, 0.5, 0, 3}, vector.ToArray())
+		assert.Equal (t, []float32{1, 0.5, 0, 3}, vector.ToArray())
 	})
 
 	t.Run("with a single word, no weighing should occurr", func(t *testing.T) {
@@ -69,7 +72,8 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 		extensions := &fakeExtensionLookerUpper{}
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"mercedes"}, nil)
@@ -90,7 +94,8 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		split := &primitiveSplitter{}
 		extensions := &fakeExtensionLookerUpper{}
 		logger, _ := test.NewNullLogger()
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
@@ -109,7 +114,8 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
@@ -129,7 +135,8 @@ func Test_CorpusVectorizing_WithLinearWeighting(t *testing.T) {
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"car is mercedes"}, nil)
@@ -155,7 +162,8 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is a fast car"}, nil)
@@ -175,7 +183,8 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is like a formula 1 racing car"}, nil)
@@ -195,7 +204,8 @@ func Test_CorpusVectorizing_WithCompoundWords(t *testing.T) {
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"fast car mercedes"}, nil)
@@ -221,7 +231,8 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is a zebra"}, nil)
@@ -241,7 +252,8 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 		split := &primitiveSplitter{}
 		logger, _ := test.NewNullLogger()
 		extensions := &fakeExtensionLookerUpper{}
-		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
 
 		vector, err := v.Corpi([]string{"the mercedes is a zebra carrier"}, nil)
@@ -250,6 +262,85 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 			"vector position is the centroid of 'mercedes' and custom word 'zebra carrier'")
 	})
 }
+
+
+func Test_CorpusVectorizing_UnknownCompoundWords(t *testing.T) {
+	// these tests use weight factor 0, this makes the vector position
+	// calculation a bit easier to understand, weighting itself is already
+	// tested separately
+
+	t.Run("word not in contextionary and word not splittable", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurrenceWeightStrategy: OccurrenceStrategyLog,
+			MaxCompoundWordLength:    1,
+		}
+		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+		compoundSplitter := compoundsplitting.NewEmptyTestSplitter()
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
+		require.Nil(t, err)
+		_, err = v.Corpi([]string{"steammachine"}, nil)
+		require.NotNil(t, err)
+
+	})
+
+	t.Run("word not in contextionary but compounds are", func(t *testing.T) {
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurrenceWeightStrategy: OccurrenceStrategyLog,
+			MaxCompoundWordLength:    1,
+		}
+		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+		compoundSplitter := compoundsplitting.NewTestSplitter(map[string]float64{
+			"steam": 1.0,
+			"machine": 1.0,
+		})
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
+		require.Nil(t, err)
+		vec, err := v.Corpi([]string{"steammachine"}, nil)
+		require.Nil(t, err)
+		require.NotNil(t, vec)
+		assert.Equal(t, []float32{1, 0.5, 0, 0}, vec.ToArray())
+	})
+
+	t.Run("word in compounds but not in contextionary", func(t *testing.T) {
+		// This should never be the case and shows that the contextionary is incompatible with the word count splitter
+		// Maybe the contextionary index file got updated without the compound splitter gettinng updated?
+		c11y := &fakeC11y{}
+		swd := &fakeStopwordDetector{}
+		config := &config.Config{
+			OccurrenceWeightStrategy: OccurrenceStrategyLog,
+			MaxCompoundWordLength:    1,
+		}
+		split := &primitiveSplitter{}
+		extensions := &fakeExtensionLookerUpper{}
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+		compoundSplitter := compoundsplitting.NewTestSplitter(map[string]float64{
+			"roller": 1.0,
+			"blade": 1.0,
+		})
+		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
+		require.Nil(t, err)
+		_, err = v.Corpi([]string{"rollerblade"}, nil)
+		require.NotNil(t, err)
+	})
+
+
+
+	// TODO add test that runs into splitting a compound word into two known words and builds a vector out of them
+
+	// TODO test no compound splitting found
+}
+
 
 type fakeC11y struct{}
 
@@ -266,6 +357,9 @@ func (f *fakeC11y) OccurrencePercentile(foo int) uint64 {
 }
 
 const (
+	notInContextionary = -1
+	machineIndex = 10
+	steamIndex = 9
 	formula1RacingCarIndex = 8
 	fastCarIndex           = 7
 	mercedesIndex          = 6
@@ -275,6 +369,8 @@ var (
 	fastCarVector           = []float32{0, 2, 2, 0.5}
 	mercedesVector          = []float32{1, 0, 0, 4}
 	formula1RacingCarVector = []float32{-3, 0, -3, 0}
+	steamVector = []float32{1, 0, 0, 0}
+	machineVector = []float32{1, 1, 0, 0}
 )
 
 func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
@@ -294,6 +390,12 @@ func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {
 		return 5
 	case "mercedes":
 		return mercedesIndex
+	case "steam":
+		return steamIndex
+	case "machine":
+		return machineIndex
+	case "steammachine", "rollerblade", "roller", "blade":
+		return notInContextionary
 	default:
 		panic(fmt.Sprintf("no behavior for word '%s' in fake", word))
 	}
@@ -313,6 +415,10 @@ func (f *fakeC11y) ItemIndexToOccurrence(item contextionary.ItemIndex) (uint64, 
 		return 300, nil
 	case formula1RacingCarIndex:
 		return 50, nil
+	case steamIndex:
+		return 100, nil
+	case machineIndex:
+		return 60, nil
 	default:
 		return 0, fmt.Errorf("no behavior for item %v in fake", item)
 	}
@@ -331,6 +437,12 @@ func (f *fakeC11y) GetVectorForItemIndex(item contextionary.ItemIndex) (*context
 		return &v, nil
 	case formula1RacingCarIndex:
 		v := contextionary.NewVector(formula1RacingCarVector)
+		return &v, nil
+	case steamIndex:
+		v := contextionary.NewVector(steamVector)
+		return &v, nil
+	case machineIndex:
+		v := contextionary.NewVector(machineVector)
 		return &v, nil
 	default:
 		return nil, fmt.Errorf("no vector for item %v in fake", item)

@@ -192,3 +192,24 @@ func (node *Node) RecursivelyFindLeavesBeforeIndex(index int) []*Node {
 	return foundLeaves
 }
 
+
+// NewEmptyTestSplitter creates a splitter,
+//  that does not know any words and
+//  thus is not able to split any words
+func NewEmptyTestSplitter() *Splitter {
+	dictMock := &DictMock{
+		scores: map[string]float64{},
+	}
+	return &Splitter{
+		dict:         dictMock,
+	}
+}
+
+func NewTestSplitter(wordScoreMapping map[string]float64) *Splitter {
+	dict := &DictMock{
+		scores: wordScoreMapping,
+	}
+	return &Splitter{
+		dict: dict,
+	}
+}

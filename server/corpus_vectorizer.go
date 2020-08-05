@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/semi-technologies/contextionary/compoundsplitting"
 	"math"
 	"strings"
 	"sync"
@@ -25,6 +26,7 @@ type Vectorizer struct {
 	extensions       extensionLookerUpper
 	cache            *sync.Map
 	cacheCount       int32
+	compoundWordSplitter *compoundsplitting.Splitter
 }
 
 const (
@@ -42,7 +44,8 @@ type extensionLookerUpper interface {
 
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	config *config.Config, logger logrus.FieldLogger,
-	splitter splitter, extensions extensionLookerUpper) (*Vectorizer, error) {
+	splitter splitter, extensions extensionLookerUpper,
+	compoundWordSplitter *compoundsplitting.Splitter) (*Vectorizer, error) {
 
 	v := &Vectorizer{
 		c11y:             c11y,
@@ -52,6 +55,7 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 		logger:           logger,
 		extensions:       extensions,
 		cache:            &sync.Map{},
+		compoundWordSplitter: compoundWordSplitter,
 	}
 
 	if err := v.validateConfig(); err != nil {
@@ -270,39 +274,111 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 	}
 
 	wi := cv.c11y.WordToItemIndex(word)
-	if !wi.IsPresent() {
+	if wi.IsPresent() {
+		// create vector out of it
+		v, o, err := cv.itemIndexToVectorAndOccurence(wi)
+		if err != nil {
+			return nil, err
+		}
+
 		cv.logger.WithField("action", "vectorize_library_word").
 			WithField("word", word).
 			WithField("stopword", false).
-			WithField("present", false).
-			Debug("not present - skipping")
-		return nil, nil
+			WithField("present", true).
+			WithField("compound", false).
+			WithField("occurence", o).
+			Debug("present including")
+
+		return cv.newVectorWithOccurence(word, v, o), nil
 	}
 
-	v, err := cv.c11y.GetVectorForItemIndex(wi)
-	if err != nil {
-		return nil, err
-	}
+	// Word not in contextioanry try to compound split
+	compoundWords := cv.compoundWordSplitter.Split(word)
+	if len(compoundWords) > 0 {
+		compoundVector, err := cv.compoundToVectorWithOccurence(compoundWords)
+		switch err.(type) {
+		case nil:
+			break
+		case errortypes.NotFound:
+			// Just don't return a vector
+			return nil, nil
+		default:
+			return nil, err
+		}
+		cv.logger.WithField("action", "vectorize_library_word").
+			WithField("word", word).
+			WithField("stopword", false).
+			WithField("present", true).
+			WithField("compound", true).
+			WithField("occurence", compoundVector.occurrence).
+			Debug("present including")
 
-	o, err := cv.c11y.ItemIndexToOccurrence(wi)
-	if err != nil {
-		return nil, err
+		return compoundVector, nil
 	}
 
 	cv.logger.WithField("action", "vectorize_library_word").
 		WithField("word", word).
 		WithField("stopword", false).
-		WithField("present", true).
-		WithField("occurence", o).
-		Debug("present including")
+		WithField("present", false).
+		WithField("compound", false).
+		Debug("not present - skipping")
+	return nil, nil
+}
 
+func (cv *Vectorizer) compoundToVectorWithOccurence(words []string) (*vectorWithOccurrence, error) {
+
+	vectors := []core.Vector{}
+	occurenceSum := uint64(0)
+	for _, word := range words {
+		wi := cv.c11y.WordToItemIndex(word)
+		if !wi.IsPresent() {
+			cv.logger.WithFields(logrus.Fields{
+				"compounds": words,
+				"missing":word,
+			}).Error("compounds of compound word splitting where not available in the contextionary there seems to be a compatiblity issue - skippinng")
+			return nil, errortypes.NewNotFoundf("compound missing")
+		}
+		v, o, err := cv.itemIndexToVectorAndOccurence(wi)
+		if err != nil {
+			return nil, err
+		}
+		vectors = append(vectors, *v)
+		occurenceSum  += o
+	}
+
+	// new occurence is average occurence
+	occurenceAvg := occurenceSum / uint64(len(vectors))
+
+	centroid, err := core.ComputeCentroid(vectors)
+	if err != nil {
+		return nil, err
+	}
+	return cv.newVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg), nil
+}
+
+func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Vector, uint64, error) {
+
+	v, err := cv.c11y.GetVectorForItemIndex(wi)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	o, err := cv.c11y.ItemIndexToOccurrence(wi)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return v, o, nil
+}
+
+func (cv *Vectorizer) newVectorWithOccurence(word string, vector *core.Vector, occurence  uint64) *vectorWithOccurrence {
 	vo := &vectorWithOccurrence{
-		vector:     v,
-		occurrence: o,
+		vector:     vector,
+		occurrence: occurence,
 		source: []core.InputElement{
 			{
 				Concept:    word,
-				Occurrence: o,
+				Occurrence: occurence,
 				Weight:     1,
 			},
 		},
@@ -310,7 +386,7 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 
 	cv.cache.Store(word, vo)
 	atomic.AddInt32(&cv.cacheCount, 1)
-	return vo, nil
+	return vo
 }
 
 func (cv *Vectorizer) vectorFromExtension(ext *extensions.Extension) (*vectorWithOccurrence, error) {

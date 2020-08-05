@@ -144,7 +144,10 @@ func (cd *ContextionaryDict) loadContextionary(path string, filter *Hunhandle) e
 	// Read meta data
 	metaDataBytes := data[24:24+metaDataLength]
 	var metadata map[string]interface{}
-	json.Unmarshal(metaDataBytes, &metadata)
+	unMarshalErr := json.Unmarshal(metaDataBytes, &metadata)
+	if unMarshalErr != nil {
+		return unMarshalErr
+	}
 
 	var startOfTable uint64 = 24 + uint64(metaDataLength)
 	var offset uint64 = 4 - (startOfTable % 4)
@@ -177,4 +180,21 @@ func getWordAndOccurence(data []byte, pointer uint64) (string, uint64) {
 			return word, ocurrence
 		}
 	}
+}
+
+type DictMock struct {
+	scores map[string]float64
+}
+
+func (dm *DictMock) Contains(word string) bool {
+	_, exists := dm.scores[word]
+	return exists
+}
+
+func (dm *DictMock) Score(phrase []string) float64 {
+	score := 0.0
+	for _, word := range phrase {
+		score += dm.scores[word]
+	}
+	return score
 }
