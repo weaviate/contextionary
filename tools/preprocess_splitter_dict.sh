@@ -23,6 +23,14 @@ if [ "$language" == "nl" ]; then
   aff_file="/app/dictionaries/nl_NL/nl_NL.aff"
   dic_file="/app/dictionaries/nl_NL/nl_NL.dic"
 fi
+if [ "$language" == "it" ]; then
+  aff_file="/app/dictionaries/it_IT/it_IT.aff"
+  dic_file="/app/dictionaries/it_IT/it_IT.dic"
+fi
+if [ "$language" == "cs" ]; then
+  aff_file="/app/dictionaries/cs_CZ/cs_CZ.aff"
+  dic_file="/app/dictionaries/cs_CZ/cs_CZ.dic"
+fi
 
 if [ "$aff_file" == "" ]; then
   echo "Missing dictionary for preprocessor see process_splitter_dict.sh"
