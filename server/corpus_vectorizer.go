@@ -3,12 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/semi-technologies/contextionary/compoundsplitting"
 	"math"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/semi-technologies/contextionary/compoundsplitting"
 
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	errortypes "github.com/semi-technologies/contextionary/errors"
@@ -18,14 +19,14 @@ import (
 )
 
 type Vectorizer struct {
-	c11y             core.Contextionary
-	stopwordDetector stopwordDetector
-	config           *config.Config
-	logger           logrus.FieldLogger
-	splitter         splitter
-	extensions       extensionLookerUpper
-	cache            *sync.Map
-	cacheCount       int32
+	c11y                 core.Contextionary
+	stopwordDetector     stopwordDetector
+	config               *config.Config
+	logger               logrus.FieldLogger
+	splitter             splitter
+	extensions           extensionLookerUpper
+	cache                *sync.Map
+	cacheCount           int32
 	compoundWordSplitter *compoundsplitting.Splitter
 }
 
@@ -48,13 +49,13 @@ func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	compoundWordSplitter *compoundsplitting.Splitter) (*Vectorizer, error) {
 
 	v := &Vectorizer{
-		c11y:             c11y,
-		stopwordDetector: sw,
-		config:           config,
-		splitter:         splitter,
-		logger:           logger,
-		extensions:       extensions,
-		cache:            &sync.Map{},
+		c11y:                 c11y,
+		stopwordDetector:     sw,
+		config:               config,
+		splitter:             splitter,
+		logger:               logger,
+		extensions:           extensions,
+		cache:                &sync.Map{},
 		compoundWordSplitter: compoundWordSplitter,
 	}
 
@@ -334,7 +335,7 @@ func (cv *Vectorizer) compoundToVectorWithOccurence(words []string) (*vectorWith
 		if !wi.IsPresent() {
 			cv.logger.WithFields(logrus.Fields{
 				"compounds": words,
-				"missing":word,
+				"missing":   word,
 			}).Error("compounds of compound word splitting where not available in the contextionary there seems to be a compatiblity issue - skippinng")
 			return nil, errortypes.NewNotFoundf("compound missing")
 		}
@@ -343,7 +344,7 @@ func (cv *Vectorizer) compoundToVectorWithOccurence(words []string) (*vectorWith
 			return nil, err
 		}
 		vectors = append(vectors, *v)
-		occurenceSum  += o
+		occurenceSum += o
 	}
 
 	// new occurence is average occurence
@@ -371,7 +372,7 @@ func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Ve
 	return v, o, nil
 }
 
-func (cv *Vectorizer) newVectorWithOccurence(word string, vector *core.Vector, occurence  uint64) *vectorWithOccurrence {
+func (cv *Vectorizer) newVectorWithOccurence(word string, vector *core.Vector, occurence uint64) *vectorWithOccurrence {
 	vo := &vectorWithOccurrence{
 		vector:     vector,
 		occurrence: occurence,

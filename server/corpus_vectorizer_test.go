@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/semi-technologies/contextionary/compoundsplitting"
 	"strings"
 	"testing"
+
+	"github.com/semi-technologies/contextionary/compoundsplitting"
 
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/extensions"
@@ -58,7 +59,7 @@ func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {
 
 		vector, err := v.Corpi([]string{"car is mercedes"}, overrides)
 		require.Nil(t, err)
-		assert.Equal (t, []float32{1, 0.5, 0, 3}, vector.ToArray())
+		assert.Equal(t, []float32{1, 0.5, 0, 3}, vector.ToArray())
 	})
 
 	t.Run("with a single word, no weighing should occurr", func(t *testing.T) {
@@ -263,7 +264,6 @@ func Test_CorpusVectorizing_WithCustomWords(t *testing.T) {
 	})
 }
 
-
 func Test_CorpusVectorizing_UnknownCompoundWords(t *testing.T) {
 	// these tests use weight factor 0, this makes the vector position
 	// calculation a bit easier to understand, weighting itself is already
@@ -300,7 +300,7 @@ func Test_CorpusVectorizing_UnknownCompoundWords(t *testing.T) {
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
 		compoundSplitter := compoundsplitting.NewTestSplitter(map[string]float64{
-			"steam": 1.0,
+			"steam":   1.0,
 			"machine": 1.0,
 		})
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
@@ -326,7 +326,7 @@ func Test_CorpusVectorizing_UnknownCompoundWords(t *testing.T) {
 		logger.SetLevel(logrus.DebugLevel)
 		compoundSplitter := compoundsplitting.NewTestSplitter(map[string]float64{
 			"roller": 1.0,
-			"blade": 1.0,
+			"blade":  1.0,
 		})
 		v, err := NewVectorizer(c11y, swd, config, logger, split, extensions, compoundSplitter)
 		require.Nil(t, err)
@@ -334,13 +334,10 @@ func Test_CorpusVectorizing_UnknownCompoundWords(t *testing.T) {
 		require.NotNil(t, err)
 	})
 
-
-
 	// TODO add test that runs into splitting a compound word into two known words and builds a vector out of them
 
 	// TODO test no compound splitting found
 }
-
 
 type fakeC11y struct{}
 
@@ -357,9 +354,9 @@ func (f *fakeC11y) OccurrencePercentile(foo int) uint64 {
 }
 
 const (
-	notInContextionary = -1
-	machineIndex = 10
-	steamIndex = 9
+	notInContextionary     = -1
+	machineIndex           = 10
+	steamIndex             = 9
 	formula1RacingCarIndex = 8
 	fastCarIndex           = 7
 	mercedesIndex          = 6
@@ -369,8 +366,8 @@ var (
 	fastCarVector           = []float32{0, 2, 2, 0.5}
 	mercedesVector          = []float32{1, 0, 0, 4}
 	formula1RacingCarVector = []float32{-3, 0, -3, 0}
-	steamVector = []float32{1, 0, 0, 0}
-	machineVector = []float32{1, 1, 0, 0}
+	steamVector             = []float32{1, 0, 0, 0}
+	machineVector           = []float32{1, 1, 0, 0}
 )
 
 func (f *fakeC11y) WordToItemIndex(word string) contextionary.ItemIndex {

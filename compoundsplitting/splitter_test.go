@@ -1,15 +1,13 @@
 package compoundsplitting
 
-
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-
-
-func TestSplitTreeSplitter(t *testing.T){
+func TestSplitTreeSplitter(t *testing.T) {
 	dictMock := &DictMock{
 		words: map[string]bool{
 			"drie":     true,
@@ -19,16 +17,16 @@ func TestSplitTreeSplitter(t *testing.T){
 			"broodje":  true,
 		},
 		scores: map[string]float64{
-			"drie": 2.0,
-			"hoek": 2.0,
-			"brood": 4.0,
+			"drie":     2.0,
+			"hoek":     2.0,
+			"brood":    4.0,
 			"driehoek": 5.0,
-			"broodje": 5.0,
+			"broodje":  5.0,
 		},
 	}
 
 	ts := Splitter{
-		dict:         dictMock,
+		dict: dictMock,
 	}
 
 	// drie hoek brood
@@ -54,21 +52,21 @@ func TestSplitTreeSplitter(t *testing.T){
 	assert.Equal(t, 0, len(splited), "Expected no result since no substring is in the dict")
 }
 
-func TestNegativeScore(t *testing.T){
+func TestNegativeScore(t *testing.T) {
 	dictMock := &DictMock{
 		words: map[string]bool{
-			"drie": true,
-			"hoek": true,
-			"brood": true,
+			"drie":     true,
+			"hoek":     true,
+			"brood":    true,
 			"driehoek": true,
-			"broodje": true,
+			"broodje":  true,
 		},
 		scores: map[string]float64{
-			"drie": -10.0,
-			"hoek": -10.0,
-			"brood": -8.0,
+			"drie":     -10.0,
+			"hoek":     -10.0,
+			"brood":    -8.0,
 			"driehoek": -2.0,
-			"broodje": -2.0,
+			"broodje":  -2.0,
 		},
 	}
 
@@ -258,7 +256,4 @@ func TestNode(t *testing.T) {
 		assert.Equal(t, 2, len(test.RecursivelyFindLeavesBeforeIndex(8)))
 	})
 
-
 }
-
-

@@ -2,10 +2,11 @@ package compoundsplitting
 
 import (
 	"bufio"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoading(t *testing.T) {
@@ -47,13 +48,13 @@ func TestPreprocessorSplitterDictFile(t *testing.T) {
 	}
 
 	err = file.Close()
-	if err != nil  {
+	if err != nil {
 		t.Fail()
 	}
 
 	// Load from output file
 	dict, err := NewContextionaryDictFromFile(outputFile)
-	if err != nil  {
+	if err != nil {
 		t.Fail()
 	}
 
@@ -63,7 +64,7 @@ func TestPreprocessorSplitterDictFile(t *testing.T) {
 
 	// Remove test file
 	err = os.Remove(outputFile)
-	if err != nil  {
+	if err != nil {
 		t.Fail()
 	}
 }

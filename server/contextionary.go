@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/semi-technologies/contextionary/compoundsplitting"
 	"os"
+
+	"github.com/semi-technologies/contextionary/compoundsplitting"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/semi-technologies/contextionary/adapters/repos"

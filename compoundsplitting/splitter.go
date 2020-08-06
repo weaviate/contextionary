@@ -15,7 +15,7 @@ type Dictionary interface {
 type Splitter struct {
 	dict Dictionary
 	// Combinations of compound combinations in a phrase
-	combinations []*Node
+	combinations      []*Node
 	minimalWordLength int
 }
 
@@ -27,7 +27,7 @@ func NewSplitter(dict Dictionary) *Splitter {
 
 func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
 	return &Splitter{
-		dict: dict,
+		dict:              dict,
 		minimalWordLength: minWordLength,
 	}
 }
@@ -85,7 +85,7 @@ func (sp *Splitter) findAllWordCombinations(str string) {
 		for i := 1; i <= len(offsetted); i++ {
 			// go from left to right to find a word
 			word := offsetted[:i]
-			if len(word) < sp.minimalWordLength{
+			if len(word) < sp.minimalWordLength {
 				continue
 			}
 
@@ -96,7 +96,6 @@ func (sp *Splitter) findAllWordCombinations(str string) {
 	}
 }
 
-
 func (sp *Splitter) getAllWordCombinations() [][]string {
 	wordCombinations := [][]string{}
 
@@ -104,24 +103,24 @@ func (sp *Splitter) getAllWordCombinations() [][]string {
 		wordCombinations = append(wordCombinations, combination.RecursivelyBuildNames()...)
 	}
 
-	return  wordCombinations
+	return wordCombinations
 }
 
 // Node for of the word tree
 type Node struct {
-	name string
-	children []*Node
+	name       string
+	children   []*Node
 	startIndex int // inclusiv
-	endIndex int // exclusive
+	endIndex   int // exclusive
 }
 
 // NewNode from node name and in compoundword index
-func NewNode(name string, startIndex int) *Node{
+func NewNode(name string, startIndex int) *Node {
 	return &Node{
 		name:       name,
 		children:   []*Node{},
 		startIndex: startIndex,
-		endIndex:   startIndex+len(name),
+		endIndex:   startIndex + len(name),
 	}
 }
 
@@ -192,7 +191,6 @@ func (node *Node) RecursivelyFindLeavesBeforeIndex(index int) []*Node {
 	return foundLeaves
 }
 
-
 // NewEmptyTestSplitter creates a splitter,
 //  that does not know any words and
 //  thus is not able to split any words
@@ -201,7 +199,7 @@ func NewEmptyTestSplitter() *Splitter {
 		scores: map[string]float64{},
 	}
 	return &Splitter{
-		dict:         dictMock,
+		dict: dictMock,
 	}
 }
 
