@@ -23,7 +23,7 @@ RUN tools/dev/gen_simple_contextionary.sh
 RUN mkdir -p ./data
 
 COPY ./tools/preprocess_splitter_dict.sh ./
-RUN /bin/bash preprocess_splitter_dict.sh "$LANGUAGE"
+RUN /bin/bash preprocess_splitter_dict.sh "$LANGUAGE" "/app/data/contextionary.idx"
 
 
 FROM alpine

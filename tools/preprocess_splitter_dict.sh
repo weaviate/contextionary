@@ -3,11 +3,11 @@
 set -e
 
 language=${1}
+index_file=${2}
 
 # Get dictionaries
 git clone https://github.com/LibreOffice/dictionaries.git
 
-index_file="/app/data/contextionary.idx"
 aff_file=""
 dic_file=""
 
