@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/semi-technologies/contextionary/compoundsplitting"
+
 	"github.com/coreos/etcd/clientv3"
 	"github.com/semi-technologies/contextionary/adapters/repos"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
@@ -38,7 +40,14 @@ func (s *server) init() error {
 
 	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
 	extensionRetriever := extensions.NewLookerUpper(er)
-	vectorizer, err := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever)
+
+	dict, err := compoundsplitting.NewContextionaryDictFromFile(s.config.CompoundSplittingDictionaryFile)
+	if err != nil {
+		return err
+	}
+	compoundSplitter := compoundsplitting.NewSplitter(dict)
+
+	vectorizer, err := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever, compoundSplitter)
 	if err != nil {
 		return err
 	}

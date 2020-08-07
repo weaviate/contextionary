@@ -3,7 +3,7 @@
 FROM golang:1.12 as builder
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y bzip2 jq
+RUN apt-get update && apt-get install -y bzip2 jq hunspell libhunspell-dev git
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -15,14 +15,17 @@ RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ./contextionary-server -a 
 RUN tools/dev/gen_simple_contextionary.sh
 RUN mkdir -p ./data
 
+COPY ./tools/preprocess_splitter_dict.sh ./
+RUN /bin/bash preprocess_splitter_dict.sh "en" "/app/tools/dev/example.idx"
 
 FROM scratch
 
-COPY --from=builder /app/tools/dev/example.idx /app/tools/dev/example.knn /app/tools/dev/stopwords.json /
+COPY --from=builder /app/tools/dev/example.idx /app/tools/dev/example.knn /app/tools/dev/stopwords.json /app/data/splitter_dict.csv /
 COPY --from=builder /app/contextionary-server /
 
 ENV KNN_FILE=/example.knn
 ENV IDX_FILE=/example.idx
 ENV STOPWORDS_FILE=/stopwords.json
+ENV COMPOUND_SPLITTING_DICTIONARY_FILE=/splitter_dict.csv
 
 ENTRYPOINT [ "/contextionary-server" ]

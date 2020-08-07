@@ -28,6 +28,8 @@ type Config struct {
 	MaximumVectorCacheSize             int
 	NeighborOccurrenceIgnorePercentile int
 
+	CompoundSplittingDictionaryFile string
+
 	LogLevel string
 }
 
@@ -119,6 +121,12 @@ func (c *Config) init() error {
 		return err
 	}
 	c.MaximumVectorCacheSize = vectorCacheSize
+
+	compoundSplittingDictionaryFile, err := c.requiredString("COMPOUND_SPLITTING_DICTIONARY_FILE")
+	if err != nil {
+		return err
+	}
+	c.CompoundSplittingDictionaryFile = compoundSplittingDictionaryFile
 
 	loglevel := c.optionalString("LOG_LEVEL", "info")
 	c.LogLevel = loglevel
