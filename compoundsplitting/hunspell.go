@@ -1,4 +1,5 @@
 package compoundsplitting
+
 // #cgo linux LDFLAGS: -lhunspell
 // #cgo darwin LDFLAGS: -lhunspell-1.7 -L/usr/local/Cellar/hunspell/1.7.0_2/lib
 // #cgo darwin CFLAGS: -I/usr/local/Cellar/hunspell/1.7.0_2/include/
@@ -8,12 +9,16 @@ package compoundsplitting
 // #include <hunspell/hunspell.h>
 import "C"
 import (
-
-"sync"
-"unsafe"
-"reflect"
-"runtime"
+	"reflect"
+	"runtime"
+	"sync"
+	"unsafe"
 )
+
+// Code in this file copied/based on
+// https://github.com/sthorne/go-hunspell/blob/99efdad5368d3e39a44c8cdaf101c33a4f20f8b9/hunspell.go
+// Original is licensed under "MIT License" Original license located at:
+// https://github.com/sthorne/go-hunspell/blob/99efdad5368d3e39a44c8cdaf101c33a4f20f8b9/LICENSE
 
 type Hunhandle struct {
 	handle *C.Hunhandle

@@ -1,8 +1,9 @@
 package compoundsplitting
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestImplementation(t *testing.T) {

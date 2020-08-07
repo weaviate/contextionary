@@ -85,7 +85,6 @@ func NewContextionaryDictFromFile(contextionaryDictFile string) (*ContextionaryD
 	return dict, nil
 }
 
-
 // Contains true if word is in contextionary
 func (cd *ContextionaryDict) Contains(word string) bool {
 	_, exists := cd.dict[word]
@@ -99,7 +98,7 @@ func (cd *ContextionaryDict) Score(phrase []string) float64 {
 	// share most of the characters with the compound.
 	lenScore := 0
 	for _, word := range phrase {
-		lenScore +=len(word)
+		lenScore += len(word)
 	}
 
 	// Give a boost for less words
@@ -142,7 +141,7 @@ func (cd *ContextionaryDict) loadContextionary(path string, filter *Hunhandle) e
 	metaDataLength := binary.LittleEndian.Uint64(metaDataLengthBytes)
 
 	// Read meta data
-	metaDataBytes := data[24:24+metaDataLength]
+	metaDataBytes := data[24 : 24+metaDataLength]
 	var metadata map[string]interface{}
 	unMarshalErr := json.Unmarshal(metaDataBytes, &metadata)
 	if unMarshalErr != nil {
@@ -156,8 +155,8 @@ func (cd *ContextionaryDict) loadContextionary(path string, filter *Hunhandle) e
 	for wordIndex := uint64(0); wordIndex < nrWords; wordIndex++ {
 		// entryAddress is the index in the data where the pointer to
 		// the word is located
-		entryAddress := startOfTable + 8 * wordIndex
-		pointerToWordByte := data[entryAddress: entryAddress+8]
+		entryAddress := startOfTable + 8*wordIndex
+		pointerToWordByte := data[entryAddress : entryAddress+8]
 		pointerToWord := binary.LittleEndian.Uint64(pointerToWordByte)
 		word, occurence := getWordAndOccurence(data, pointerToWord)
 		// Only add the word if it passes the filter
@@ -171,12 +170,12 @@ func (cd *ContextionaryDict) loadContextionary(path string, filter *Hunhandle) e
 
 // getWordAndOccurence from the data frame indecated by the pointer
 func getWordAndOccurence(data []byte, pointer uint64) (string, uint64) {
-	ocurrence := binary.LittleEndian.Uint64(data[pointer:pointer+8])
+	ocurrence := binary.LittleEndian.Uint64(data[pointer : pointer+8])
 
-	pointer = pointer+8
-	for i := uint64(0);;i++ {
+	pointer = pointer + 8
+	for i := uint64(0); ; i++ {
 		if data[pointer+i] == '\x00' {
-			word := string(data[pointer:pointer+i])
+			word := string(data[pointer : pointer+i])
 			return word, ocurrence
 		}
 	}
