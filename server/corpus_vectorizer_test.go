@@ -333,12 +333,6 @@ func Test_CorpusVectorizing_UnknownCompoundWords(t *testing.T) {
 		_, err = v.Corpi([]string{"rollerblade"}, nil)
 		require.NotNil(t, err)
 	})
-
-
-
-	// TODO add test that runs into splitting a compound word into two known words and builds a vector out of them
-
-	// TODO test no compound splitting found
 }
 
 

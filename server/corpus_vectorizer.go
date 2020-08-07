@@ -289,7 +289,7 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 			WithField("occurence", o).
 			Debug("present including")
 
-		return cv.newVectorWithOccurence(word, v, o), nil
+		return cv.newCachedVectorWithOccurence(word, v, o), nil
 	}
 
 	// Word not in contextioanry try to compound split
@@ -353,7 +353,7 @@ func (cv *Vectorizer) compoundToVectorWithOccurence(words []string) (*vectorWith
 	if err != nil {
 		return nil, err
 	}
-	return cv.newVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg), nil
+	return cv.newCachedVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg), nil
 }
 
 func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Vector, uint64, error) {
@@ -371,7 +371,7 @@ func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Ve
 	return v, o, nil
 }
 
-func (cv *Vectorizer) newVectorWithOccurence(word string, vector *core.Vector, occurence  uint64) *vectorWithOccurrence {
+func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence  uint64) *vectorWithOccurrence {
 	vo := &vectorWithOccurrence{
 		vector:     vector,
 		occurrence: occurence,
