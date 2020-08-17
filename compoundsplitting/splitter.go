@@ -5,8 +5,9 @@ import "fmt"
 // minWordLength prevents the splitting into very small (often not real) words
 //  to prevent a bloated tree
 const minWordLength = 4
-// maxTreeNodes prevents a tree from growing too big when adding very long strings
-const maxTreeNodes = 60
+
+// maxWordLength prevents a tree from growing too big when adding very long strings
+const maxWordLength = 100
 
 type Dictionary interface {
 	// Score receives a phrase of words and gives a score on how "good" this phrase is.
@@ -41,6 +42,9 @@ func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
 // Split a compound word into its compounds
 func (sp *Splitter) Split(word string) ([]string, error) {
 	sp.combinations = []*Node{}
+	if len(word) > maxWordLength {
+		return []string{}, nil
+	}
 	err := sp.findAllWordCombinations(word)
 	if err != nil {
 		return nil, err
@@ -89,7 +93,6 @@ func (sp *Splitter) insertCompound(word string, startIndex int) error {
 
 func (sp *Splitter) findAllWordCombinations(str string) error {
 
-	compountsInserted := 0
 	for offset, _ := range str {
 		// go from left to right and choose offsetted substring
 		offsetted := str[offset:]
@@ -102,13 +105,9 @@ func (sp *Splitter) findAllWordCombinations(str string) error {
 			}
 
 			if sp.dict.Contains(word) {
-				compountsInserted += 1
 				err := sp.insertCompound(word, offset)
 				if err != nil {
 					return err
-				}
-				if compountsInserted > maxTreeNodes {
-					return nil
 				}
 			}
 		}
