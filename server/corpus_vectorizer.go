@@ -294,7 +294,10 @@ func (cv *Vectorizer) vectorForLibraryWord(word string) (*vectorWithOccurrence, 
 	}
 
 	// Word not in contextioanry try to compound split
-	compoundWords := cv.compoundWordSplitter.Split(word)
+	compoundWords, splitterErr := cv.compoundWordSplitter.Split(word)
+	if splitterErr != nil {
+		return nil, splitterErr
+	}
 	if len(compoundWords) > 0 {
 		compoundVector, err := cv.compoundToVectorWithOccurence(compoundWords)
 		switch err.(type) {

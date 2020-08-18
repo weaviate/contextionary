@@ -3,19 +3,13 @@ package compoundsplitting
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSplitTreeSplitter(t *testing.T) {
 	dictMock := &DictMock{
-		words: map[string]bool{
-			"drie":     true,
-			"hoek":     true,
-			"brood":    true,
-			"driehoek": true,
-			"broodje":  true,
-		},
 		scores: map[string]float64{
 			"drie":     2.0,
 			"hoek":     2.0,
@@ -42,25 +36,20 @@ func TestSplitTreeSplitter(t *testing.T) {
 		fmt.Printf("%v\n", combination)
 	}
 
-	splited := ts.Split("driehoeksbroodje")
+	splited, err := ts.Split("driehoeksbroodje")
+	assert.Nil(t, err)
 	assert.Equal(t, 2, len(splited))
 	assert.Equal(t, "driehoek", splited[0])
 	assert.Equal(t, "broodje", splited[1])
 
 	// Test no result
-	splited = ts.Split("raupenprozessionsspinner")
+	splited, err = ts.Split("raupenprozessionsspinner")
+	assert.Nil(t, err)
 	assert.Equal(t, 0, len(splited), "Expected no result since no substring is in the dict")
 }
 
 func TestNegativeScore(t *testing.T) {
 	dictMock := &DictMock{
-		words: map[string]bool{
-			"drie":     true,
-			"hoek":     true,
-			"brood":    true,
-			"driehoek": true,
-			"broodje":  true,
-		},
 		scores: map[string]float64{
 			"drie":     -10.0,
 			"hoek":     -10.0,
@@ -72,7 +61,8 @@ func TestNegativeScore(t *testing.T) {
 
 	ts := NewSplitter(dictMock)
 
-	splited := ts.Split("driehoeksbroodje")
+	splited, err := ts.Split("driehoeksbroodje")
+	assert.Nil(t, err)
 	assert.Equal(t, 2, len(splited))
 	assert.Equal(t, "driehoek", splited[0])
 	assert.Equal(t, "broodje", splited[1])
@@ -256,4 +246,50 @@ func TestNode(t *testing.T) {
 		assert.Equal(t, 2, len(test.RecursivelyFindLeavesBeforeIndex(8)))
 	})
 
+}
+
+func TestSplitVeryLongWords(t *testing.T) {
+	dictMock := &DictMock{
+		scores: map[string]float64{
+			"aaaa": 1.0,
+			"bbbb": 1.0,
+		},
+	}
+
+	ts := Splitter{
+		dict: dictMock,
+	}
+
+	t1 := time.Now()
+
+	split, err := ts.Split("aaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaa")
+
+	t2 := time.Now()
+	diff := t2.Sub(t1)
+
+	assert.Nil(t, err)
+	assert.Less(t, 0, len(split))
+
+	if diff > time.Millisecond * 200 {
+		fmt.Errorf("Splitter took too long")
+		t.Fail()
+	}
+}
+
+func TestSplitTooLongWords(t *testing.T) {
+	dictMock := &DictMock{
+		scores: map[string]float64{
+			"aaaa": 1.0,
+			"bbbb": 1.0,
+		},
+	}
+
+	ts := Splitter{
+		dict: dictMock,
+	}
+
+	split, err := ts.Split("aaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbbaaaabbbb")
+
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(split))
 }

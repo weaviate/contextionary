@@ -2,6 +2,13 @@ package compoundsplitting
 
 import "fmt"
 
+// minWordLength prevents the splitting into very small (often not real) words
+//  to prevent a bloated tree
+const minWordLength = 4
+
+// maxWordLength prevents a tree from growing too big when adding very long strings
+const maxWordLength = 100
+
 type Dictionary interface {
 	// Score receives a phrase of words and gives a score on how "good" this phrase is.
 	//  If a compound word can be splitted into multiple phrases it will choose the one with the highest score.
@@ -22,7 +29,7 @@ type Splitter struct {
 // New Splitter recognizing words given by dict and
 //  selecting split phrases based on scoring
 func NewSplitter(dict Dictionary) *Splitter {
-	return NewSplitterWordLength(dict, 4)
+	return NewSplitterWordLength(dict, minWordLength)
 }
 
 func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
@@ -33,9 +40,15 @@ func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
 }
 
 // Split a compound word into its compounds
-func (sp *Splitter) Split(word string) []string {
+func (sp *Splitter) Split(word string) ([]string, error) {
 	sp.combinations = []*Node{}
-	sp.findAllWordCombinations(word)
+	if len(word) > maxWordLength {
+		return []string{}, nil
+	}
+	err := sp.findAllWordCombinations(word)
+	if err != nil {
+		return nil, err
+	}
 	combinations := sp.getAllWordCombinations()
 	maxScore := 0.0
 	maxPhrase := []string{}
@@ -51,10 +64,10 @@ func (sp *Splitter) Split(word string) []string {
 			maxPhrase = combination
 		}
 	}
-	return maxPhrase
+	return maxPhrase, nil
 }
 
-func (sp *Splitter) insertCompound(word string, startIndex int) {
+func (sp *Splitter) insertCompound(word string, startIndex int) error {
 	compound := NewNode(word, startIndex)
 	appended := false
 	for _, combination := range sp.combinations {
@@ -67,7 +80,7 @@ func (sp *Splitter) insertCompound(word string, startIndex int) {
 			appended = true
 			err := leave.AddChild(compound)
 			if err != nil {
-				panic("AAAAHAAA")
+				return err
 			}
 		}
 	}
@@ -75,9 +88,11 @@ func (sp *Splitter) insertCompound(word string, startIndex int) {
 		// if compound was not added to any leave add it to combinations
 		sp.combinations = append(sp.combinations, compound)
 	}
+	return nil
 }
 
-func (sp *Splitter) findAllWordCombinations(str string) {
+func (sp *Splitter) findAllWordCombinations(str string) error {
+
 	for offset, _ := range str {
 		// go from left to right and choose offsetted substring
 		offsetted := str[offset:]
@@ -90,10 +105,14 @@ func (sp *Splitter) findAllWordCombinations(str string) {
 			}
 
 			if sp.dict.Contains(word) {
-				sp.insertCompound(word, offset)
+				err := sp.insertCompound(word, offset)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }
 
 func (sp *Splitter) getAllWordCombinations() [][]string {
