@@ -2,12 +2,13 @@ package compoundsplitting
 
 import "fmt"
 
-// minWordLength prevents the splitting into very small (often not real) words
+// minCompoundWordLength prevents the splitting into very small (often not real) words
 //  to prevent a bloated tree
-const minWordLength = 4
-
+const minCompoundWordLength = 4
 // maxWordLength prevents a tree from growing too big when adding very long strings
 const maxWordLength = 100
+// maxNumberTreeNodes
+const maxNumberTreeNodes = 40
 
 type Dictionary interface {
 	// Score receives a phrase of words and gives a score on how "good" this phrase is.
@@ -29,7 +30,7 @@ type Splitter struct {
 // New Splitter recognizing words given by dict and
 //  selecting split phrases based on scoring
 func NewSplitter(dict Dictionary) *Splitter {
-	return NewSplitterWordLength(dict, minWordLength)
+	return NewSplitterWordLength(dict, minCompoundWordLength)
 }
 
 func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
@@ -92,7 +93,7 @@ func (sp *Splitter) insertCompound(word string, startIndex int) error {
 }
 
 func (sp *Splitter) findAllWordCombinations(str string) error {
-
+	compoundsUsed := 0
 	for offset, _ := range str {
 		// go from left to right and choose offsetted substring
 		offsetted := str[offset:]
@@ -105,6 +106,11 @@ func (sp *Splitter) findAllWordCombinations(str string) error {
 			}
 
 			if sp.dict.Contains(word) {
+				compoundsUsed += 1
+				if compoundsUsed == maxNumberTreeNodes {
+					// Tree is getting out of bounds stopping for performance
+					return nil
+				}
 				err := sp.insertCompound(word, offset)
 				if err != nil {
 					return err

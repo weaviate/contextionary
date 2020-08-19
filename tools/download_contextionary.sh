@@ -10,6 +10,7 @@ rm -rf ./data && mkdir ./data
 # Download the latest files and remove old ones
 for FILE in stopwords.json contextionary.idx contextionary.knn; do
     echo "Start Downloading $FILE" && \
+    #echo "Downloading url: https://c11y.semi.technology/$version/$language/$FILE"
     wget --quiet -O ./data/$FILE "https://c11y.semi.technology/$version/$language/$FILE" && \
     echo "$FILE = done" &
 done 

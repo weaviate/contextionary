@@ -13,7 +13,7 @@ dic_file=""
 
 if [ "$language" == "en" ]; then
   aff_file="/app/dictionaries/en/en_US.aff"
-  dic_file="/app/dictionaries/en/en_US.aff"
+  dic_file="/app/dictionaries/en/en_US.dic"
 fi
 if [ "$language" == "de" ]; then
   aff_file="/app/dictionaries/de/de_DE_frami.aff"
@@ -37,5 +37,6 @@ if [ "$aff_file" == "" ]; then
   exit 3
 fi
 
+echo "Building dict with:"
 go run main/splitter_preprocessor.go "$index_file" "$dic_file" "$aff_file" "/app/data/splitter_dict.csv"
 
