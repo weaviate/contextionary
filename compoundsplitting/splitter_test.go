@@ -293,3 +293,31 @@ func TestSplitTooLongWords(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(split))
 }
+
+func TestUnboundTree(t *testing.T) {
+	dictMock := &DictMock{
+		scores: map[string]float64{
+			"5555": 1.0,
+			"55555": 1.0,
+			"5555555555555555": 1.0,
+		},
+	}
+
+	ts := Splitter{
+		dict: dictMock,
+	}
+
+	t1 := time.Now()
+
+	_, err := ts.Split("ql55555555555555555555555555555")
+
+	t2 := time.Now()
+	diff := t2.Sub(t1)
+
+	assert.Nil(t, err)
+
+	if diff > time.Millisecond * 200 {
+		fmt.Errorf("Splitter took too long")
+		t.Fail()
+	}
+}
