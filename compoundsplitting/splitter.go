@@ -1,14 +1,22 @@
 package compoundsplitting
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"time"
+)
 
 // minCompoundWordLength prevents the splitting into very small (often not real) words
 //  to prevent a bloated tree
 const minCompoundWordLength = 4
+
 // maxWordLength prevents a tree from growing too big when adding very long strings
 const maxWordLength = 100
+
 // maxNumberTreeNodes
-const maxNumberTreeNodes = 40
+const maxNumberTreeNodes = 20
+
+const cancelSplittingAfter = 500 * time.Millisecond
 
 type Dictionary interface {
 	// Score receives a phrase of words and gives a score on how "good" this phrase is.
@@ -25,6 +33,7 @@ type Splitter struct {
 	// Combinations of compound combinations in a phrase
 	combinations      []*Node
 	minimalWordLength int
+	cancelAfter       time.Duration
 }
 
 // New Splitter recognizing words given by dict and
@@ -37,20 +46,33 @@ func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
 	return &Splitter{
 		dict:              dict,
 		minimalWordLength: minWordLength,
+		cancelAfter:       cancelSplittingAfter,
 	}
 }
 
 // Split a compound word into its compounds
 func (sp *Splitter) Split(word string) ([]string, error) {
+	for i := range sp.combinations {
+		// explicitly set to nil, so the items will be garbage-collected. See
+		// https://github.com/golang/go/wiki/SliceTricks#delete-without-preserving-order
+		sp.combinations[i] = nil
+	}
+
 	sp.combinations = []*Node{}
 	if len(word) > maxWordLength {
 		return []string{}, nil
 	}
-	err := sp.findAllWordCombinations(word)
+
+	// spawn a new context that cancels the recursion if we are spending too much
+	// time on it
+	ctx, cancel := context.WithTimeout(context.Background(), sp.cancelAfter)
+	defer cancel()
+
+	err := sp.findAllWordCombinations(ctx, word)
 	if err != nil {
 		return nil, err
 	}
-	combinations := sp.getAllWordCombinations()
+	combinations := sp.getAllWordCombinations(ctx)
 	maxScore := 0.0
 	maxPhrase := []string{}
 	for _, combination := range combinations {
@@ -68,13 +90,14 @@ func (sp *Splitter) Split(word string) ([]string, error) {
 	return maxPhrase, nil
 }
 
-func (sp *Splitter) insertCompound(word string, startIndex int) error {
+func (sp *Splitter) insertCompound(ctx context.Context, word string,
+	startIndex int) error {
 	compound := NewNode(word, startIndex)
 	appended := false
 	for _, combination := range sp.combinations {
 		// For all possible combinations
 
-		leaves := combination.RecursivelyFindLeavesBeforeIndex(startIndex)
+		leaves := combination.RecursivelyFindLeavesBeforeIndex(ctx, startIndex)
 		for _, leave := range leaves {
 			// Append the new compound to the leaves
 
@@ -92,7 +115,7 @@ func (sp *Splitter) insertCompound(word string, startIndex int) error {
 	return nil
 }
 
-func (sp *Splitter) findAllWordCombinations(str string) error {
+func (sp *Splitter) findAllWordCombinations(ctx context.Context, str string) error {
 	compoundsUsed := 0
 	for offset, _ := range str {
 		// go from left to right and choose offsetted substring
@@ -111,7 +134,7 @@ func (sp *Splitter) findAllWordCombinations(str string) error {
 					// Tree is getting out of bounds stopping for performance
 					return nil
 				}
-				err := sp.insertCompound(word, offset)
+				err := sp.insertCompound(ctx, word, offset)
 				if err != nil {
 					return err
 				}
@@ -121,11 +144,12 @@ func (sp *Splitter) findAllWordCombinations(str string) error {
 	return nil
 }
 
-func (sp *Splitter) getAllWordCombinations() [][]string {
+func (sp *Splitter) getAllWordCombinations(ctx context.Context) [][]string {
 	wordCombinations := [][]string{}
 
 	for _, combination := range sp.combinations {
-		wordCombinations = append(wordCombinations, combination.RecursivelyBuildNames()...)
+		wordCombinations = append(wordCombinations,
+			combination.RecursivelyBuildNames(ctx)...)
 	}
 
 	return wordCombinations
@@ -171,11 +195,16 @@ func (node *Node) findChildNodesBeforeIndex(index int) []*Node {
 }
 
 // RecursivelyBuildNames of compounds
-func (node *Node) RecursivelyBuildNames() [][]string {
+func (node *Node) RecursivelyBuildNames(ctx context.Context) [][]string {
 	compoundName := [][]string{}
+	if ctx.Err() != nil {
+		// we've been going recursively too long, abort!
+		compoundName = append(compoundName, []string{node.name})
+		return compoundName
+	}
 
 	for _, child := range node.children {
-		childNames := child.RecursivelyBuildNames()
+		childNames := child.RecursivelyBuildNames(ctx)
 
 		for _, childName := range childNames {
 			// Add the name of this node first
@@ -193,12 +222,16 @@ func (node *Node) RecursivelyBuildNames() [][]string {
 }
 
 // RecursivelyFindLeavesBeforeIndex where to add a new node
-func (node *Node) RecursivelyFindLeavesBeforeIndex(index int) []*Node {
+func (node *Node) RecursivelyFindLeavesBeforeIndex(ctx context.Context, index int) []*Node {
 	foundLeaves := []*Node{}
+	if ctx.Err() != nil {
+		// we've been going recursively too long, abort!
+		return foundLeaves
+	}
 
 	children := node.findChildNodesBeforeIndex(index)
 	for _, child := range children {
-		leaves := child.RecursivelyFindLeavesBeforeIndex(index)
+		leaves := child.RecursivelyFindLeavesBeforeIndex(ctx, index)
 		if len(leaves) == 0 {
 			// There are no leaves this means the child node is already a leave
 			foundLeaves = append(foundLeaves, child)

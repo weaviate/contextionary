@@ -186,7 +186,6 @@ func LoadVectorFromDisk(annoy_index string, word_index_file_name string) (Contex
 // directly load the annoy index file to avoid memory leaks in the annoy
 // go-port of the C library, see #26
 func loadAnnoyIndexDirectly(path string) ([]byte, error) {
-	fmt.Println("loading index directly")
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalf("Can't open the knn file at %s: %+v", path, err)

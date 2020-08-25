@@ -1,11 +1,13 @@
 package compoundsplitting
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSplitTreeSplitter(t *testing.T) {
@@ -20,7 +22,8 @@ func TestSplitTreeSplitter(t *testing.T) {
 	}
 
 	ts := Splitter{
-		dict: dictMock,
+		dict:        dictMock,
+		cancelAfter: 500 * time.Millisecond,
 	}
 
 	// drie hoek brood
@@ -28,9 +31,9 @@ func TestSplitTreeSplitter(t *testing.T) {
 	// driehoek brood
 	//          broodje
 
-	ts.findAllWordCombinations("driehoeksbroodje")
+	ts.findAllWordCombinations(context.Background(), "driehoeksbroodje")
 
-	combinations := ts.getAllWordCombinations()
+	combinations := ts.getAllWordCombinations(context.Background())
 	assert.Equal(t, 4, len(combinations))
 	for _, combination := range combinations {
 		fmt.Printf("%v\n", combination)
@@ -38,7 +41,7 @@ func TestSplitTreeSplitter(t *testing.T) {
 
 	splited, err := ts.Split("driehoeksbroodje")
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(splited))
+	require.Equal(t, 2, len(splited))
 	assert.Equal(t, "driehoek", splited[0])
 	assert.Equal(t, "broodje", splited[1])
 
@@ -72,7 +75,7 @@ func TestInsertCompound(t *testing.T) {
 
 	t.Run("Add a new word", func(t *testing.T) {
 		ts := Splitter{}
-		ts.insertCompound("test", 0)
+		ts.insertCompound(context.Background(), "test", 0)
 
 		assert.Equal(t, 1, len(ts.combinations))
 		assert.Equal(t, "test", ts.combinations[0].name)
@@ -80,8 +83,8 @@ func TestInsertCompound(t *testing.T) {
 
 	t.Run("Add a two words", func(t *testing.T) {
 		ts := Splitter{}
-		ts.insertCompound("test", 0)
-		ts.insertCompound("testje", 0)
+		ts.insertCompound(context.Background(), "test", 0)
+		ts.insertCompound(context.Background(), "testje", 0)
 
 		assert.Equal(t, 2, len(ts.combinations))
 		assert.Equal(t, "test", ts.combinations[0].name)
@@ -92,8 +95,8 @@ func TestInsertCompound(t *testing.T) {
 		ts := Splitter{}
 
 		// phrase: testje
-		ts.insertCompound("test", 0)
-		ts.insertCompound("stje", 2)
+		ts.insertCompound(context.Background(), "test", 0)
+		ts.insertCompound(context.Background(), "stje", 2)
 
 		assert.Equal(t, 2, len(ts.combinations))
 		assert.Equal(t, "test", ts.combinations[0].name)
@@ -106,8 +109,8 @@ func TestInsertCompound(t *testing.T) {
 		// phrase: testjenuttig
 		//         123456789111
 		//                  012
-		ts.insertCompound("test", 0)
-		ts.insertCompound("nuttig", 8)
+		ts.insertCompound(context.Background(), "test", 0)
+		ts.insertCompound(context.Background(), "nuttig", 8)
 
 		assert.Equal(t, 1, len(ts.combinations))
 		phrase := ts.combinations[0]
@@ -122,9 +125,9 @@ func TestInsertCompound(t *testing.T) {
 		// phrase: testjenuttig
 		//         123456789111
 		//                  012
-		ts.insertCompound("test", 0)
-		ts.insertCompound("est", 1)
-		ts.insertCompound("nuttig", 8)
+		ts.insertCompound(context.Background(), "test", 0)
+		ts.insertCompound(context.Background(), "est", 1)
+		ts.insertCompound(context.Background(), "nuttig", 8)
 
 		assert.Equal(t, 2, len(ts.combinations))
 		phrase := ts.combinations[0]
@@ -142,11 +145,11 @@ func TestInsertCompound(t *testing.T) {
 		// phrase: driehoeksbroodje
 		//         1234567891111111
 		//                  0123456
-		ts.insertCompound("drie", 0)
-		ts.insertCompound("driehoek", 0)
-		ts.insertCompound("hoek", 5)
-		ts.insertCompound("brood", 10)
-		ts.insertCompound("broodje", 10)
+		ts.insertCompound(context.Background(), "drie", 0)
+		ts.insertCompound(context.Background(), "driehoek", 0)
+		ts.insertCompound(context.Background(), "hoek", 5)
+		ts.insertCompound(context.Background(), "brood", 10)
+		ts.insertCompound(context.Background(), "broodje", 10)
 
 		// drie hoek brood
 		//           broodje
@@ -233,17 +236,17 @@ func TestNode(t *testing.T) {
 		caseN.AddChild(es)
 		as.AddChild(es)
 
-		assert.Equal(t, 0, len(test.RecursivelyFindLeavesBeforeIndex(0)))
-		assert.Equal(t, 0, len(test.RecursivelyFindLeavesBeforeIndex(3)))
-		assert.Equal(t, 1, len(test.RecursivelyFindLeavesBeforeIndex(4)))
-		node := test.RecursivelyFindLeavesBeforeIndex(4)[0]
+		assert.Equal(t, 0, len(test.RecursivelyFindLeavesBeforeIndex(context.Background(), 0)))
+		assert.Equal(t, 0, len(test.RecursivelyFindLeavesBeforeIndex(context.Background(), 3)))
+		assert.Equal(t, 1, len(test.RecursivelyFindLeavesBeforeIndex(context.Background(), 4)))
+		node := test.RecursivelyFindLeavesBeforeIndex(context.Background(), 4)[0]
 		assert.Equal(t, "test", node.name)
 
-		assert.Equal(t, 1, len(test.RecursivelyFindLeavesBeforeIndex(7)))
-		node = test.RecursivelyFindLeavesBeforeIndex(7)[0]
+		assert.Equal(t, 1, len(test.RecursivelyFindLeavesBeforeIndex(context.Background(), 7)))
+		node = test.RecursivelyFindLeavesBeforeIndex(context.Background(), 7)[0]
 		assert.Equal(t, "as", node.name)
 
-		assert.Equal(t, 2, len(test.RecursivelyFindLeavesBeforeIndex(8)))
+		assert.Equal(t, 2, len(test.RecursivelyFindLeavesBeforeIndex(context.Background(), 8)))
 	})
 
 }
@@ -270,7 +273,7 @@ func TestSplitVeryLongWords(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Less(t, 0, len(split))
 
-	if diff > time.Millisecond * 200 {
+	if diff > time.Millisecond*200 {
 		fmt.Errorf("Splitter took too long")
 		t.Fail()
 	}
@@ -297,8 +300,8 @@ func TestSplitTooLongWords(t *testing.T) {
 func TestUnboundTree(t *testing.T) {
 	dictMock := &DictMock{
 		scores: map[string]float64{
-			"5555": 1.0,
-			"55555": 1.0,
+			"5555":             1.0,
+			"55555":            1.0,
 			"5555555555555555": 1.0,
 		},
 	}
@@ -316,7 +319,7 @@ func TestUnboundTree(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	if diff > time.Millisecond * 200 {
+	if diff > time.Millisecond*200 {
 		fmt.Errorf("Splitter took too long")
 		t.Fail()
 	}

@@ -375,7 +375,7 @@ func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Ve
 	return v, o, nil
 }
 
-func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence  uint64) *vectorWithOccurrence {
+func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence uint64) *vectorWithOccurrence {
 	vo := &vectorWithOccurrence{
 		vector:     vector,
 		occurrence: occurence,
