@@ -30,8 +30,6 @@ type Dictionary interface {
 //  the best option based on a scoring mechanism
 type Splitter struct {
 	dict Dictionary
-	//// Combinations of compound combinations in a phrase
-	//combinations      []*Node
 	cancelAfter       time.Duration
 }
 
