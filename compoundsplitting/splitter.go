@@ -30,49 +30,44 @@ type Dictionary interface {
 //  the best option based on a scoring mechanism
 type Splitter struct {
 	dict Dictionary
-	// Combinations of compound combinations in a phrase
-	combinations      []*Node
-	minimalWordLength int
+	//// Combinations of compound combinations in a phrase
+	//combinations      []*Node
 	cancelAfter       time.Duration
 }
 
 // New Splitter recognizing words given by dict and
 //  selecting split phrases based on scoring
 func NewSplitter(dict Dictionary) *Splitter {
-	return NewSplitterWordLength(dict, minCompoundWordLength)
-}
-
-func NewSplitterWordLength(dict Dictionary, minWordLength int) *Splitter {
 	return &Splitter{
 		dict:              dict,
-		minimalWordLength: minWordLength,
 		cancelAfter:       cancelSplittingAfter,
 	}
 }
 
+type CompoundSplit struct {
+	// Combinations of compound combinations in a phrase
+	combinations      []*Node
+}
+
 // Split a compound word into its compounds
 func (sp *Splitter) Split(word string) ([]string, error) {
-	for i := range sp.combinations {
-		// explicitly set to nil, so the items will be garbage-collected. See
-		// https://github.com/golang/go/wiki/SliceTricks#delete-without-preserving-order
-		sp.combinations[i] = nil
-	}
 
-	sp.combinations = []*Node{}
 	if len(word) > maxWordLength {
 		return []string{}, nil
 	}
+
+	compoundSplit := CompoundSplit{}
 
 	// spawn a new context that cancels the recursion if we are spending too much
 	// time on it
 	ctx, cancel := context.WithTimeout(context.Background(), sp.cancelAfter)
 	defer cancel()
 
-	err := sp.findAllWordCombinations(ctx, word)
+	err := sp.findAllWordCombinations(ctx, word, &compoundSplit)
 	if err != nil {
 		return nil, err
 	}
-	combinations := sp.getAllWordCombinations(ctx)
+	combinations := compoundSplit.getAllWordCombinations(ctx)
 	maxScore := 0.0
 	maxPhrase := []string{}
 	for _, combination := range combinations {
@@ -90,11 +85,11 @@ func (sp *Splitter) Split(word string) ([]string, error) {
 	return maxPhrase, nil
 }
 
-func (sp *Splitter) insertCompound(ctx context.Context, word string,
+func (cs *CompoundSplit) insertCompound(ctx context.Context, word string,
 	startIndex int) error {
 	compound := NewNode(word, startIndex)
 	appended := false
-	for _, combination := range sp.combinations {
+	for _, combination := range cs.combinations {
 		// For all possible combinations
 
 		leaves := combination.RecursivelyFindLeavesBeforeIndex(ctx, startIndex)
@@ -110,12 +105,12 @@ func (sp *Splitter) insertCompound(ctx context.Context, word string,
 	}
 	if !appended {
 		// if compound was not added to any leave add it to combinations
-		sp.combinations = append(sp.combinations, compound)
+		cs.combinations = append(cs.combinations, compound)
 	}
 	return nil
 }
 
-func (sp *Splitter) findAllWordCombinations(ctx context.Context, str string) error {
+func (sp *Splitter) findAllWordCombinations(ctx context.Context, str string, compoundSplit *CompoundSplit) error {
 	compoundsUsed := 0
 	for offset, _ := range str {
 		// go from left to right and choose offsetted substring
@@ -124,7 +119,7 @@ func (sp *Splitter) findAllWordCombinations(ctx context.Context, str string) err
 		for i := 1; i <= len(offsetted); i++ {
 			// go from left to right to find a word
 			word := offsetted[:i]
-			if len(word) < sp.minimalWordLength {
+			if len(word) < minCompoundWordLength {
 				continue
 			}
 
@@ -134,7 +129,7 @@ func (sp *Splitter) findAllWordCombinations(ctx context.Context, str string) err
 					// Tree is getting out of bounds stopping for performance
 					return nil
 				}
-				err := sp.insertCompound(ctx, word, offset)
+				err := compoundSplit.insertCompound(ctx, word, offset)
 				if err != nil {
 					return err
 				}
@@ -144,10 +139,10 @@ func (sp *Splitter) findAllWordCombinations(ctx context.Context, str string) err
 	return nil
 }
 
-func (sp *Splitter) getAllWordCombinations(ctx context.Context) [][]string {
+func (cs *CompoundSplit) getAllWordCombinations(ctx context.Context) [][]string {
 	wordCombinations := [][]string{}
 
-	for _, combination := range sp.combinations {
+	for _, combination := range cs.combinations {
 		wordCombinations = append(wordCombinations,
 			combination.RecursivelyBuildNames(ctx)...)
 	}

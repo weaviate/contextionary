@@ -31,9 +31,12 @@ func TestSplitTreeSplitter(t *testing.T) {
 	// driehoek brood
 	//          broodje
 
-	ts.findAllWordCombinations(context.Background(), "driehoeksbroodje")
 
-	combinations := ts.getAllWordCombinations(context.Background())
+	cs := CompoundSplit{}
+
+	ts.findAllWordCombinations(context.Background(), "driehoeksbroodje", &cs)
+
+	combinations := cs.getAllWordCombinations(context.Background())
 	assert.Equal(t, 4, len(combinations))
 	for _, combination := range combinations {
 		fmt.Printf("%v\n", combination)
@@ -74,7 +77,7 @@ func TestNegativeScore(t *testing.T) {
 func TestInsertCompound(t *testing.T) {
 
 	t.Run("Add a new word", func(t *testing.T) {
-		ts := Splitter{}
+		ts := CompoundSplit{}
 		ts.insertCompound(context.Background(), "test", 0)
 
 		assert.Equal(t, 1, len(ts.combinations))
@@ -82,7 +85,7 @@ func TestInsertCompound(t *testing.T) {
 	})
 
 	t.Run("Add a two words", func(t *testing.T) {
-		ts := Splitter{}
+		ts := CompoundSplit{}
 		ts.insertCompound(context.Background(), "test", 0)
 		ts.insertCompound(context.Background(), "testje", 0)
 
@@ -92,7 +95,7 @@ func TestInsertCompound(t *testing.T) {
 	})
 
 	t.Run("Add a two words different index", func(t *testing.T) {
-		ts := Splitter{}
+		ts := CompoundSplit{}
 
 		// phrase: testje
 		ts.insertCompound(context.Background(), "test", 0)
@@ -104,7 +107,7 @@ func TestInsertCompound(t *testing.T) {
 	})
 
 	t.Run("Add a two words different index", func(t *testing.T) {
-		ts := Splitter{}
+		ts := CompoundSplit{}
 
 		// phrase: testjenuttig
 		//         123456789111
@@ -120,7 +123,7 @@ func TestInsertCompound(t *testing.T) {
 	})
 
 	t.Run("Add a two combinations", func(t *testing.T) {
-		ts := Splitter{}
+		ts := CompoundSplit{}
 
 		// phrase: testjenuttig
 		//         123456789111
@@ -140,7 +143,7 @@ func TestInsertCompound(t *testing.T) {
 	})
 
 	t.Run("Add driehoeksbroodje", func(t *testing.T) {
-		ts := Splitter{}
+		ts := CompoundSplit{}
 
 		// phrase: driehoeksbroodje
 		//         1234567891111111
