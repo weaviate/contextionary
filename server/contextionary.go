@@ -41,7 +41,7 @@ func (s *server) init() error {
 	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
 	extensionRetriever := extensions.NewLookerUpper(er)
 
-	dict, err := compoundsplitting.NewContextionaryDictFromFile(s.config.CompoundSplittingDictionaryFile)
+	dict, err := compoundsplitting.NewContextionaryDict(s.config.CompoundSplittingDictionaryFile)
 	if err != nil {
 		return err
 	}
