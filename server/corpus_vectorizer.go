@@ -357,7 +357,7 @@ func (cv *Vectorizer) compoundToVectorWithOccurence(words []string) (*vectorWith
 	if err != nil {
 		return nil, err
 	}
-	return cv.newCachedVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg), nil
+	return cv.newCachedVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg, words...), nil
 }
 
 func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Vector, uint64, error) {
@@ -375,13 +375,19 @@ func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Ve
 	return v, o, nil
 }
 
-func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence uint64) *vectorWithOccurrence {
+func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence uint64, parts ...string) *vectorWithOccurrence {
+	inputWord := word
+	if len(parts) > 0 {
+		allParts := strings.Join(parts, ", ")
+		inputWord += " (" + allParts + ")"
+	}
+
 	vo := &vectorWithOccurrence{
 		vector:     vector,
 		occurrence: occurence,
 		source: []core.InputElement{
 			{
-				Concept:    word,
+				Concept:    inputWord,
 				Occurrence: occurence,
 				Weight:     1,
 			},
