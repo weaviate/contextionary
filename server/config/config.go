@@ -28,6 +28,7 @@ type Config struct {
 	MaximumVectorCacheSize             int
 	NeighborOccurrenceIgnorePercentile int
 
+	EnableCompundSplitting          bool
 	CompoundSplittingDictionaryFile string
 
 	LogLevel string
@@ -122,11 +123,15 @@ func (c *Config) init() error {
 	}
 	c.MaximumVectorCacheSize = vectorCacheSize
 
-	compoundSplittingDictionaryFile, err := c.requiredString("COMPOUND_SPLITTING_DICTIONARY_FILE")
-	if err != nil {
-		return err
+	c.EnableCompundSplitting = c.optionalBool("ENABLE_COMPOUND_SPLITTING", false)
+
+	if c.EnableCompundSplitting {
+		compoundSplittingDictionaryFile, err := c.requiredString("COMPOUND_SPLITTING_DICTIONARY_FILE")
+		if err != nil {
+			return err
+		}
+		c.CompoundSplittingDictionaryFile = compoundSplittingDictionaryFile
 	}
-	c.CompoundSplittingDictionaryFile = compoundSplittingDictionaryFile
 
 	loglevel := c.optionalString("LOG_LEVEL", "info")
 	c.LogLevel = loglevel
@@ -186,4 +191,15 @@ func (c *Config) optionalString(varName, defaultInput string) string {
 	}
 
 	return value
+}
+
+func (c *Config) optionalBool(varName string, defaultInput bool) bool {
+	value := os.Getenv(varName)
+	if value == "" {
+		c.logger.Infof("optional var '%s' is not set, defaulting to '%v'",
+			varName, defaultInput)
+		return defaultInput
+	}
+
+	return value == "true" || value == "1" || value == "on" || value == "enabled"
 }

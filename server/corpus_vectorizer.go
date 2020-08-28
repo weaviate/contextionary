@@ -9,8 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/semi-technologies/contextionary/compoundsplitting"
-
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	errortypes "github.com/semi-technologies/contextionary/errors"
 	"github.com/semi-technologies/contextionary/extensions"
@@ -27,7 +25,7 @@ type Vectorizer struct {
 	extensions           extensionLookerUpper
 	cache                *sync.Map
 	cacheCount           int32
-	compoundWordSplitter *compoundsplitting.Splitter
+	compoundWordSplitter compoundSplitter
 }
 
 const (
@@ -39,6 +37,10 @@ type splitter interface {
 	Split(corpus string) []string
 }
 
+type compoundSplitter interface {
+	Split(word string) ([]string, error)
+}
+
 type extensionLookerUpper interface {
 	Lookup(concept string) (*extensions.Extension, error)
 }
@@ -46,7 +48,7 @@ type extensionLookerUpper interface {
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	config *config.Config, logger logrus.FieldLogger,
 	splitter splitter, extensions extensionLookerUpper,
-	compoundWordSplitter *compoundsplitting.Splitter) (*Vectorizer, error) {
+	compoundWordSplitter compoundSplitter) (*Vectorizer, error) {
 
 	v := &Vectorizer{
 		c11y:                 c11y,
