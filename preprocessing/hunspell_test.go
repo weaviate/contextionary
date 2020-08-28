@@ -1,4 +1,4 @@
-package compoundsplitting
+package preprocessing
 
 import (
 	"testing"

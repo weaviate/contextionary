@@ -1,4 +1,4 @@
-package compoundsplitting
+package preprocessing
 
 // #cgo linux LDFLAGS: -lhunspell
 // #cgo darwin LDFLAGS: -lhunspell-1.7 -L/usr/local/Cellar/hunspell/1.7.0_2/lib

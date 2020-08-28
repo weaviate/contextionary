@@ -9,8 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/semi-technologies/contextionary/compoundsplitting"
-
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	errortypes "github.com/semi-technologies/contextionary/errors"
 	"github.com/semi-technologies/contextionary/extensions"
@@ -27,7 +25,7 @@ type Vectorizer struct {
 	extensions           extensionLookerUpper
 	cache                *sync.Map
 	cacheCount           int32
-	compoundWordSplitter *compoundsplitting.Splitter
+	compoundWordSplitter compoundSplitter
 }
 
 const (
@@ -39,6 +37,10 @@ type splitter interface {
 	Split(corpus string) []string
 }
 
+type compoundSplitter interface {
+	Split(word string) ([]string, error)
+}
+
 type extensionLookerUpper interface {
 	Lookup(concept string) (*extensions.Extension, error)
 }
@@ -46,7 +48,7 @@ type extensionLookerUpper interface {
 func NewVectorizer(c11y core.Contextionary, sw stopwordDetector,
 	config *config.Config, logger logrus.FieldLogger,
 	splitter splitter, extensions extensionLookerUpper,
-	compoundWordSplitter *compoundsplitting.Splitter) (*Vectorizer, error) {
+	compoundWordSplitter compoundSplitter) (*Vectorizer, error) {
 
 	v := &Vectorizer{
 		c11y:                 c11y,
@@ -204,6 +206,9 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 					// this compound word exists, use its vector and occurrence
 					vectors = append(vectors, *vector.vector)
 					occurrences = append(occurrences, vector.occurrence)
+					if len(vector.source) > 0 {
+						compound = vector.source[0].Concept
+					}
 					debugOutput = append(debugOutput, compound)
 
 					// however, now we must make sure to skip the additionalWords
@@ -357,7 +362,7 @@ func (cv *Vectorizer) compoundToVectorWithOccurence(words []string) (*vectorWith
 	if err != nil {
 		return nil, err
 	}
-	return cv.newCachedVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg), nil
+	return cv.newCachedVectorWithOccurence(strings.Join(words, ""), centroid, occurenceAvg, words...), nil
 }
 
 func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Vector, uint64, error) {
@@ -375,13 +380,19 @@ func (cv *Vectorizer) itemIndexToVectorAndOccurence(wi core.ItemIndex) (*core.Ve
 	return v, o, nil
 }
 
-func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence  uint64) *vectorWithOccurrence {
+func (cv *Vectorizer) newCachedVectorWithOccurence(word string, vector *core.Vector, occurence uint64, parts ...string) *vectorWithOccurrence {
+	inputWord := word
+	if len(parts) > 0 {
+		allParts := strings.Join(parts, ", ")
+		inputWord += " (" + allParts + ")"
+	}
+
 	vo := &vectorWithOccurrence{
 		vector:     vector,
 		occurrence: occurence,
 		source: []core.InputElement{
 			{
-				Concept:    word,
+				Concept:    inputWord,
 				Occurrence: occurence,
 				Weight:     1,
 			},

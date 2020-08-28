@@ -40,14 +40,13 @@ func (s *server) init() error {
 
 	er := repos.NewEtcdExtensionRepo(s.etcdClient, s.logger, s.config)
 	extensionRetriever := extensions.NewLookerUpper(er)
-
-	dict, err := compoundsplitting.NewContextionaryDictFromFile(s.config.CompoundSplittingDictionaryFile)
+	compoundSplitter, err := s.initCompoundSplitter()
 	if err != nil {
 		return err
 	}
-	compoundSplitter := compoundsplitting.NewSplitter(dict)
 
-	vectorizer, err := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger, NewSplitter(), extensionRetriever, compoundSplitter)
+	vectorizer, err := NewVectorizer(s.rawContextionary, s.stopwordDetector, s.config, s.logger,
+		NewSplitter(), extensionRetriever, compoundSplitter)
 	if err != nil {
 		return err
 	}
@@ -172,5 +171,17 @@ func (s *server) getInitialSchema(c *clientv3.Client) error {
 		return fmt.Errorf("unexpected number of results for key '%s', "+
 			"expected to have 0 or 1, but got %d: %#v", s.config.SchemaProviderKey,
 			len(res.Kvs), res.Kvs)
+	}
+}
+
+func (s *server) initCompoundSplitter() (compoundSplitter, error) {
+	if s.config.EnableCompundSplitting {
+		dict, err := compoundsplitting.NewContextionaryDict(s.config.CompoundSplittingDictionaryFile)
+		if err != nil {
+			return nil, err
+		}
+		return compoundsplitting.NewSplitter(dict), nil
+	} else {
+		return compoundsplitting.NewNoopSplitter(), nil
 	}
 }

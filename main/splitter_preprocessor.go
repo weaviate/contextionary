@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/semi-technologies/contextionary/compoundsplitting"
+	"github.com/semi-technologies/contextionary/preprocessing"
 	"os"
 )
 
@@ -12,7 +12,7 @@ func main() {
 		panic(missing.Error())
 	}
 
-	err := compoundsplitting.GenerateSplittingDictFile(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
+	err := preprocessing.GenerateSplittingDictFile(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
 	if err != nil {
 		panic(err.Error())
 	}

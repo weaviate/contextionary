@@ -1,23 +1,13 @@
-package compoundsplitting
+package preprocessing
 
 import (
 	"bufio"
+	"github.com/semi-technologies/contextionary/compoundsplitting"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
-
-func TestLoading(t *testing.T) {
-	t.Run("Load binary with filter", func(t *testing.T) {
-		c11yDict := NewContextionaryDict("../test/compoundsplitting/contextionary.idx", "../test/compoundsplitting/nl_NL.dic", "../test/compoundsplitting/nl_NL.aff")
-
-		assert.True(t, c11yDict.Contains("amsterdam"))
-		assert.True(t, c11yDict.Contains("appellante"))
-		assert.True(t, c11yDict.Contains("appellantes"))
-	})
-}
 
 func TestPreprocessorSplitterDictFile(t *testing.T) {
 	// Create the file
@@ -53,7 +43,7 @@ func TestPreprocessorSplitterDictFile(t *testing.T) {
 	}
 
 	// Load from output file
-	dict, err := NewContextionaryDictFromFile(outputFile)
+	dict, err := compoundsplitting.NewContextionaryDict(outputFile)
 	if err != nil {
 		t.Fail()
 	}
