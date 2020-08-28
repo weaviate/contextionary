@@ -206,6 +206,9 @@ func (cv *Vectorizer) vectorsAndOccurrences(words []string) ([]core.Vector, []ui
 					// this compound word exists, use its vector and occurrence
 					vectors = append(vectors, *vector.vector)
 					occurrences = append(occurrences, vector.occurrence)
+					if len(vector.source) > 0 {
+						compound = vector.source[0].Concept
+					}
 					debugOutput = append(debugOutput, compound)
 
 					// however, now we must make sure to skip the additionalWords
