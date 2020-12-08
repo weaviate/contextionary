@@ -15,9 +15,11 @@ type Config struct {
 	IDXFile       string
 	StopwordsFile string
 
-	SchemaProviderURL string
-	SchemaProviderKey string
-	ExtensionsPrefix  string
+	SchemaProviderURL       string
+	SchemaProviderKey       string
+	ExtensionsPrefix        string
+	ExtensionsStorageOrigin string
+	ExtensionsStorageMode   string
 
 	ServerPort int
 
@@ -63,10 +65,7 @@ func (c *Config) init() error {
 	}
 	c.StopwordsFile = sw
 
-	sp, err := c.requiredString("SCHEMA_PROVIDER_URL")
-	if err != nil {
-		return err
-	}
+	sp := c.optionalString("SCHEMA_PROVIDER_URL", "")
 	c.SchemaProviderURL = sp
 
 	spk := c.optionalString("SCHEMA_PROVIDER_KEY", "/weaviate/schema/state")
@@ -74,6 +73,12 @@ func (c *Config) init() error {
 
 	ep := c.optionalString("EXTENSIONS_PREFIX", "/contextionary/")
 	c.ExtensionsPrefix = ep
+
+	extMode := c.optionalString("EXTENSIONS_STORAGE_MODE", "etcd")
+	c.ExtensionsStorageMode = extMode
+
+	extOrigin := c.optionalString("EXTENSIONS_STORAGE_ORIGIN", "")
+	c.ExtensionsStorageOrigin = extOrigin
 
 	port, err := c.optionalInt("SERVER_PORT", 9999)
 	if err != nil {

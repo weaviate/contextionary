@@ -78,17 +78,10 @@ func new() *server {
 	}
 	logger.SetLevel(loglevel)
 	logger.WithField("log_level", loglevel.String()).Info()
-	etcdClient, err := clientv3.New(clientv3.Config{Endpoints: []string{cfg.SchemaProviderURL}})
-	if err != nil {
-		logger.WithField("action", "startup").
-			WithError(err).Error("cannot construct etcd client")
-		os.Exit(1)
-	}
 
 	s := &server{
-		config:     cfg,
-		logger:     logger,
-		etcdClient: etcdClient,
+		config: cfg,
+		logger: logger,
 	}
 
 	err = s.init()

@@ -30,6 +30,7 @@ require (
 	golang.org/x/net v0.0.0-20191002035440-2ec189313ef0
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/grpc v1.24.0
+	honnef.co/go/tools v0.0.1-2019.2.3
 )
 
 replace github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
