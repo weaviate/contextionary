@@ -55,7 +55,7 @@ func (r *ModuleExtensionRepo) updateConsumers(returnCh chan extensions.WatchResp
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET",
-		r.uri("/v1/modules/contextionary/extensions-storage/"), nil)
+		r.uri("/v1/modules/text2vec-contextionary/extensions-storage/"), nil)
 	if err != nil {
 		r.logger.WithField("action", "extensions_retrieve_all").
 			WithError(err).Error()
@@ -108,7 +108,7 @@ func (r *ModuleExtensionRepo) Put(ctx context.Context, ext extensions.Extension)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "PUT", r.uri(fmt.Sprintf(
-		"/v1/modules/contextionary/extensions-storage/%s", ext.Concept)), bytes.NewReader(extBytes))
+		"/v1/modules/text2vec-contextionary/extensions-storage/%s", ext.Concept)), bytes.NewReader(extBytes))
 
 	res, err := r.client.Do(req)
 	if err != nil {
