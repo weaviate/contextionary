@@ -74,7 +74,7 @@ func (c *Config) init() error {
 	ep := c.optionalString("EXTENSIONS_PREFIX", "/contextionary/")
 	c.ExtensionsPrefix = ep
 
-	extMode := c.optionalString("EXTENSIONS_STORAGE_MODE", "etcd")
+	extMode := c.optionalString("EXTENSIONS_STORAGE_MODE", "weaviate")
 	c.ExtensionsStorageMode = extMode
 
 	extOrigin := c.optionalString("EXTENSIONS_STORAGE_ORIGIN", "")

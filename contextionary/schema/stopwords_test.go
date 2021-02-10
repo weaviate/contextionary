@@ -13,7 +13,7 @@
 import (
 	"testing"
 
-	"github.com/semi-technologies/contextionary/contextionary/core"
+	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/weaviate/entities/models"
 	"github.com/semi-technologies/weaviate/entities/schema"
 	"github.com/stretchr/testify/assert"
@@ -24,68 +24,39 @@ func Test_SchemaContextionary_WithStopwords(t *testing.T) {
 	rawC := fakeRawContextinoaryForTest()
 
 	schema := schema.Schema{
-		Actions: &models.SemanticSchema{
-			Classes: []*models.SemanticSchemaClass{
-				&models.SemanticSchemaClass{
+		Objects: &models.Schema{
+			Classes: []*models.Class{
+				&models.Class{
 					Class: "Car",
-					Properties: []*models.SemanticSchemaClassProperty{
-						&models.SemanticSchemaClassProperty{
+					Properties: []*models.Property{
+						&models.Property{
 							Name: "power",
-						},
-					},
-					Keywords: models.SemanticSchemaKeywords{
-						&models.SemanticSchemaKeywordsItems0{
-							Keyword: "car",
-							Weight:  0.5,
 						},
 					},
 				},
-				&models.SemanticSchemaClass{
+				&models.Class{
 					Class: "ACar",
-					Properties: []*models.SemanticSchemaClassProperty{
-						&models.SemanticSchemaClassProperty{
+					Properties: []*models.Property{
+						&models.Property{
 							Name: "power",
-							Keywords: models.SemanticSchemaKeywords{
-								&models.SemanticSchemaKeywordsItems0{
-									Keyword: "car",
-									Weight:  0.5,
-								},
-								&models.SemanticSchemaKeywordsItems0{
-									Keyword: "the",
-									Weight:  0.5,
-								},
-							},
 						},
-						&models.SemanticSchemaClassProperty{
+						&models.Property{
 							Name: "thePower",
 						},
 					},
-					Keywords: models.SemanticSchemaKeywords{
-						&models.SemanticSchemaKeywordsItems0{
-							Keyword: "power",
-							Weight:  0.5,
-						},
-						&models.SemanticSchemaKeywordsItems0{
-							Keyword: "in",
-							Weight:  0.5,
-						},
-					},
 				},
-				&models.SemanticSchemaClass{
+				&models.Class{
 					Class: "TheCarInA",
-					Properties: []*models.SemanticSchemaClassProperty{
-						&models.SemanticSchemaClassProperty{
+					Properties: []*models.Property{
+						&models.Property{
 							Name: "power",
 						},
-						&models.SemanticSchemaClassProperty{
+						&models.Property{
 							Name: "thePowerInACar",
 						},
 					},
 				},
 			},
-		},
-		Things: &models.SemanticSchema{
-			Classes: []*models.SemanticSchemaClass{},
 		},
 	}
 

@@ -1,43 +1,31 @@
 version: "3.4"
 services:
+  weaviate:
+    image: semitechnologies/weaviate:1.1.0
+    ports:
+     - "8080:8080"
+    environment:
+      LOG_LEVEL: "debug"
+      CONTEXTIONARY_URL: host.docker.internal:9999
+      QUERY_DEFAULTS_LIMIT: 20
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: "./data"
+      DEFAULT_VECTORIZER_MODULE: text2vec-contextionary
   minimal:
     image: c11y-local-journeytest-minimal
     environment:
-      SCHEMA_PROVIDER_URL: etcd:2379
+      EXTENSIONS_STORAGE_MODE: weaviate
+      EXTENSIONS_STORAGE_ORIGIN: http://weaviate:8080
   full:
     image: c11y-local-journeytest-full
     environment:
-      SCHEMA_PROVIDER_URL: etcd:2379
+      EXTENSIONS_STORAGE_MODE: weaviate
+      EXTENSIONS_STORAGE_ORIGIN: http://weaviate:8080
       LOG_LEVEL: debug
       MAX_COMPOUND_WORD_LENGTH: 4
       MAX_BATCH_SIZE: 200
     ports:
       - "9999:9999"
-      - "7777:7777"
-  etcd:
-    image: gcr.io/etcd-development/etcd:v3.3.8
-    ports:
-      - "2379:2379"
-    entrypoint: /usr/local/bin/etcd
-    command: 
-      - "--name"
-      - "s1"
-      - "--data-dir"
-      - "/etcd-data"
-      - "--listen-client-urls"
-      - "http://0.0.0.0:2379"
-      - "--advertise-client-urls"
-      - "http://0.0.0.0:2379"
-      - "--listen-peer-urls"
-      - "http://0.0.0.0:2380"
-      - "--initial-advertise-peer-urls"
-      - "http://0.0.0.0:2380"
-      - "--initial-cluster"
-      - "s1=http://0.0.0.0:2380"
-      - "--initial-cluster-token"
-      - "tkn"
-      - "--initial-cluster-state"
-      - "new"
   test-env:
     build: 
       context: . # paths are relative to the docker-compose file, so they point to ./test/journey/

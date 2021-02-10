@@ -28,38 +28,12 @@ func fatal(err error) {
 }
 
 var sampleSchema = schema.Schema{
-	Things: &models.SemanticSchema{
-		Classes: []*models.SemanticSchemaClass{{
+	Objects: &models.Schema{
+		Classes: []*models.Class{{
 			Class: "City",
-			Keywords: models.SemanticSchemaKeywords{{
-				Keyword: "city",
-				Weight:  1.0,
-			}, {
-				Keyword: "town",
-				Weight:  0.8,
-			}, {
-				Keyword: "urban",
-				Weight:  0.9,
-			}},
 		}, {
 			Class: "Town",
-			Keywords: models.SemanticSchemaKeywords{{
-				Keyword: "city",
-				Weight:  0.8,
-			}, {
-				Keyword: "town",
-				Weight:  1,
-			}, {
-				Keyword: "urban",
-				Weight:  0.3,
-			}, {
-				Keyword: "village",
-				Weight:  0.8,
-			}},
 		}},
-	},
-	Actions: &models.SemanticSchema{
-		Classes: []*models.SemanticSchemaClass{},
 	},
 }
 
