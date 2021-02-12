@@ -16,7 +16,7 @@ import (
 
 func (s *server) AddExtension(ctx context.Context, params *pb.ExtensionInput) (*pb.AddExtensionResult, error) {
 	err := s.extensionStorer.Put(ctx, params.Concept, extensions.ExtensionInput{
-		Definition: params.Definition,
+		Definition: strings.ToLower(params.Definition),
 		Weight:     params.Weight,
 	})
 	if err != nil {

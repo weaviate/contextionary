@@ -115,16 +115,10 @@ enum SearchType {
   PROPERTY=1;
 };
 
-enum Kind {
-  THING=0;
-  ACTION=1;
-}
-
 message SchemaSearchParams {
   SearchType searchType = 1;
   string name = 2;
   repeated Keyword keywords = 3;
-  Kind kind = 4;
   float certainty = 5;
 }
 
@@ -135,6 +129,5 @@ message SchemaSearchResults {
 
 message SchemaSearchResult {
   string name = 1;
-  Kind kind = 2;
   float certainty = 3;
 }

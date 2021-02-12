@@ -105,8 +105,7 @@ func (s *server) buildContextionary() error {
 
 func emptySchema() schema.Schema {
 	return schema.Schema{
-		Actions: &models.Schema{},
-		Things:  &models.Schema{},
+		Objects: &models.Schema{},
 	}
 }
 

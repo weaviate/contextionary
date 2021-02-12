@@ -28,7 +28,7 @@ echo "Cleaning up from previous runs"
 docker-compose -f ./test/journey/docker-compose.yml down
 
 echo "Starting containers"
-docker-compose -f ./test/journey/docker-compose.yml up -d minimal full etcd
+docker-compose -f ./test/journey/docker-compose.yml up -d minimal full weaviate
 
 echo "Building tests"
 docker-compose -f ./test/journey/docker-compose.yml build test-env 

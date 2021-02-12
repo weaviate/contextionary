@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	grpc "google.golang.org/grpc"
@@ -154,7 +155,7 @@ func extend(client pb.ContextionaryClient, args []string) {
 		os.Exit(1)
 	}
 	concept := args[0]
-	definition := args[1]
+	definition := strings.ToLower(args[1])
 
 	_, err := client.AddExtension(context.Background(), &pb.ExtensionInput{
 		Concept:    concept,
@@ -272,7 +273,6 @@ func searchClass(client pb.ContextionaryClient, args []string) {
 	params := &pb.SchemaSearchParams{
 		Certainty: float32(certainty),
 		Name:      searchTerm,
-		Kind:      pb.Kind_THING,
 	}
 
 	ctx := context.Background()

@@ -2,3 +2,5 @@ data/
 local-vectordb/
 
 .idea
+
+vendor/

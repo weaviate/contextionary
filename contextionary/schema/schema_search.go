@@ -19,13 +19,11 @@ import (
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/errors"
-	"github.com/semi-technologies/weaviate/entities/schema/kind"
 )
 
 // SearchResult is a single search result. See wrapping Search Results for the Type
 type SearchResult struct {
 	Name      string
-	Kind      kind.Kind
 	Certainty float32
 }
 
@@ -185,7 +183,7 @@ type rawResults []rawResult
 
 func (r rawResults) extractClassNames(p SearchParams) []*pb.SchemaSearchResult {
 	var results []*pb.SchemaSearchResult
-	regex := regexp.MustCompile(fmt.Sprintf("^\\$%s\\[([A-Za-z]+)\\]$", kindAllCaps(p.Kind)))
+	regex := regexp.MustCompile(fmt.Sprintf("^\\$%s\\[([A-Za-z]+)\\]$", "OBJECT"))
 
 	for _, rawRes := range r {
 		if regex.MatchString(rawRes.name) {
@@ -197,7 +195,6 @@ func (r rawResults) extractClassNames(p SearchParams) []*pb.SchemaSearchResult {
 			results = append(results, &pb.SchemaSearchResult{
 				Name:      regex.FindStringSubmatch(rawRes.name)[1], //safe because we ran .MatchString before
 				Certainty: certainty,
-				Kind:      p.Kind,
 			})
 		}
 	}
@@ -222,7 +219,6 @@ func (r rawResults) extractPropertyNames(p SearchParams) []*pb.SchemaSearchResul
 			res := &pb.SchemaSearchResult{
 				Name:      name,
 				Certainty: certainty,
-				Kind:      p.Kind,
 			}
 			if _, ok := propsMap[name]; !ok {
 				propsMap[name] = []*pb.SchemaSearchResult{res}
@@ -236,7 +232,6 @@ func (r rawResults) extractPropertyNames(p SearchParams) []*pb.SchemaSearchResul
 	for _, resultsPerName := range propsMap {
 		results = append(results, &pb.SchemaSearchResult{
 			Name:      resultsPerName[0].Name,
-			Kind:      resultsPerName[0].Kind,
 			Certainty: meanCertainty(resultsPerName),
 		})
 	}
@@ -255,14 +250,4 @@ func meanCertainty(rs []*pb.SchemaSearchResult) float32 {
 
 func distanceToCertainty(d float32) float32 {
 	return 1 - d/12
-}
-
-func kindAllCaps(k pb.Kind) string {
-	switch k {
-	case pb.Kind_THING:
-		return "THING"
-	case pb.Kind_ACTION:
-		return "ACTION"
-	}
-	panic("getting here should be impossible")
 }

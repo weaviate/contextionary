@@ -3,8 +3,8 @@ module github.com/semi-technologies/contextionary/test/journey
 go 1.13
 
 require (
-	github.com/semi-technologies/contextionary v0.0.0-20200108103649-8f26e727d5ec
-	github.com/stretchr/testify v1.4.0
+	github.com/semi-technologies/contextionary v0.0.0-20210212092842-6243654e8f33
+	github.com/stretchr/testify v1.6.1
 	google.golang.org/grpc v1.24.0
 )
 

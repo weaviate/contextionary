@@ -24,6 +24,22 @@ Currently available languages include:
 
 Other languages coming soon.
 
-## Different types
+## How to build and test project
 
-Types such as minimal, small, full, etc. coming soon.
+1. Regenerate schema:
+
+```bash
+./gen_proto_code.sh
+```
+
+2. Build image:
+
+```bash
+LANGUAGES=en MODEL_VERSION=0.16.0 ./build.sh
+```
+
+3. Run journey tests:
+
+```bash
+LANGUAGES=en MODEL_VERSION=0.16.0 ./build.sh && DIMENSIONS=300 ./test/journey.sh
+```
