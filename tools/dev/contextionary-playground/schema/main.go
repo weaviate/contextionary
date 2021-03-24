@@ -15,9 +15,6 @@ import (
 	"os"
 
 	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
-	schemaContextionary "github.com/semi-technologies/contextionary/contextionary/schema"
-	"github.com/semi-technologies/weaviate/entities/models"
-	"github.com/semi-technologies/weaviate/entities/schema"
 )
 
 func fatal(err error) {
@@ -27,16 +24,6 @@ func fatal(err error) {
 	}
 }
 
-var sampleSchema = schema.Schema{
-	Objects: &models.Schema{
-		Classes: []*models.Class{{
-			Class: "City",
-		}, {
-			Class: "Town",
-		}},
-	},
-}
-
 func main() {
 	c11y, err := contextionary.LoadVectorFromDisk("./test/contextionary/example.knn", "./test/contextionary/example.idx")
 	fatal(err)
@@ -44,12 +31,8 @@ func main() {
 	fmt.Println("results before building centroid based on keywords: ")
 	kNN("city", c11y)
 
-	// TODO: replace nil argument with actual stop word detector
-	inMemoryC11y, err := schemaContextionary.BuildInMemoryContextionaryFromSchema(sampleSchema, &c11y, nil)
-	fatal(err)
-
 	// Combine contextionaries
-	contextionaries := []contextionary.Contextionary{*inMemoryC11y, c11y}
+	contextionaries := []contextionary.Contextionary{c11y}
 	combined, err := contextionary.CombineVectorIndices(contextionaries)
 	fatal(err)
 

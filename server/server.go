@@ -9,7 +9,6 @@ import (
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/extensions"
 	"github.com/semi-technologies/contextionary/server/config"
-	"github.com/semi-technologies/weaviate/entities/schema"
 	"github.com/sirupsen/logrus"
 	grpc "google.golang.org/grpc"
 )
@@ -32,8 +31,6 @@ func main() {
 }
 
 type server struct {
-	schema schema.Schema
-
 	// to be used to serve rpc requests, combination of the raw contextionary
 	// and the schema
 	combinedContextionary core.Contextionary

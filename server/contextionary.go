@@ -9,16 +9,12 @@ import (
 	"github.com/semi-technologies/contextionary/adapters/repos"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/contextionary/core/stopwords"
-	schemac "github.com/semi-technologies/contextionary/contextionary/schema"
 	"github.com/semi-technologies/contextionary/extensions"
-	"github.com/semi-technologies/weaviate/entities/models"
-	"github.com/semi-technologies/weaviate/entities/schema"
 )
 
 func (s *server) init() error {
 	s.logger.WithField("config", s.config).Debugf("starting up with this config")
 
-	s.schema = emptySchema()
 	if err := s.loadRawContextionary(); err != nil {
 		return err
 	}
@@ -73,29 +69,8 @@ type stopwordDetector interface {
 
 // any time the schema changes the contextionary needs to be rebuilt.
 func (s *server) buildContextionary() error {
-	schemaContextionary, err := schemac.BuildInMemoryContextionaryFromSchema(s.schema, &s.rawContextionary, s.stopwordDetector)
-	if err != nil {
-		return fmt.Errorf("could not build in-memory contextionary from schema; %v", err)
-	}
-
-	// Combine contextionaries
-	contextionaries := []core.Contextionary{s.rawContextionary, *schemaContextionary}
-	combined, err := core.CombineVectorIndices(contextionaries)
-	if err != nil {
-		return fmt.Errorf("could not combine the contextionary database with the in-memory generated contextionary: %v", err)
-	}
-
-	// messaging.InfoMessage("Contextionary extended with names in the schema")
-
-	s.combinedContextionary = combined
-
+	s.combinedContextionary = s.rawContextionary
 	return nil
-}
-
-func emptySchema() schema.Schema {
-	return schema.Schema{
-		Objects: &models.Schema{},
-	}
 }
 
 func (s *server) initCompoundSplitter() (compoundSplitter, error) {
