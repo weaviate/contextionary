@@ -6,7 +6,6 @@ import (
 
 	"github.com/semi-technologies/contextionary/compoundsplitting"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/semi-technologies/contextionary/adapters/repos"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/contextionary/core/stopwords"
@@ -37,19 +36,9 @@ func (s *server) init() error {
 	var er extensionRepo
 	var extensionRetriever extensionLookerUpper
 
-	if s.config.ExtensionsStorageMode == "weaviate" {
-		er = repos.NewExtensionsRepo(s.logger, s.config, 1*time.Second)
-		extensionRetriever = extensions.NewLookerUpper(er)
-	} else {
-		etcdClient, err := clientv3.New(clientv3.Config{
-			Endpoints: []string{s.config.SchemaProviderURL},
-		})
-		if err != nil {
-			return err
-		}
-		er = repos.NewEtcdExtensionRepo(etcdClient, s.logger, s.config)
-		extensionRetriever = extensions.NewLookerUpper(er)
-	}
+	// ExtensionsStorageMode == "weaviate" is now a default storage option
+	er = repos.NewExtensionsRepo(s.logger, s.config, 1*time.Second)
+	extensionRetriever = extensions.NewLookerUpper(er)
 
 	compoundSplitter, err := s.initCompoundSplitter()
 	if err != nil {
