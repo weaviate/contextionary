@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 
-	"github.com/coreos/etcd/clientv3"
 	pb "github.com/semi-technologies/contextionary/contextionary"
 	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/semi-technologies/contextionary/extensions"
@@ -46,9 +45,6 @@ type server struct {
 	config *config.Config
 
 	logger logrus.FieldLogger
-
-	// clients and repos
-	etcdClient *clientv3.Client
 
 	// ucs
 	extensionStorer      *extensions.Storer
