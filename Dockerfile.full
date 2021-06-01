@@ -16,8 +16,9 @@ RUN go mod download
 
 COPY . .
 ARG VERSION
+ARG TARGETARCH
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ./contextionary-server -a -tags netgo -ldflags "-w -extldflags '-static' -X main.Version=$VERSION" ./server
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=$TARGETARCH go build -o ./contextionary-server -a -tags netgo -ldflags "-w -extldflags '-static' -X main.Version=$VERSION" ./server
 
 RUN tools/dev/gen_simple_contextionary.sh
 RUN mkdir -p ./data

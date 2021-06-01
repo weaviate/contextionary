@@ -4,9 +4,6 @@ env:
   global:
   - DOCKER_ORG: semitechnologies
   - DOCKER_REPO: contextionary
-  - VERSION: 0.16.0-v1.0.2
-  - MODEL_VERSION: 0.16.0
-  - DIMENSIONS: 300 # set to dimensions of underlying db because the test suite needs to know what to expect
   - GO111MODULE: true
   - secure: eZlMg64iN674fL8nGPjtHD6g8xuad+LtEejud7TeiAm6vl5H53dbuVqqncPalRzqIAOlJqq7c1IHbI62mgekZF2ufHNDCYlXqNL/zUYkUUlaQLmxvdO0HvLbxQEBGF3NLa5DNQ81hw93BTvIL8rGqYsWEaFs6LgLvlpTMhfkXWXSwLiN8hx7s+rVP6OH39kmpJXL2TmLgv/CA82uWJeJSIQUK2vRWhYeQi3m7evf+gr9QAlz2diWkIrrThVcAK+tCb7o1Iv7hsCJqzFGPPKm3IozTW5A8m5kpiVTiXyqSbb2OzA51A8tqoUCgO3f7PyPYdBmt8EmnnhURTUhOR6/TUUU3ueZF9fQIsjbgcTooo4xrt5uWjc2bS79EuYjJAExAvwtNJO+ufHZknFuOisbtB6mRWEwsu5K8kl2hb5WL4bYE5rhoiqillDvcu2H50rpPadP39kysbt/gg2cbwX3a/3o69oEWM5LOlESJbqxjuuXL7HcVXr92vCDlsgMju04W79PiDa8qwdxHWDTYSTkFZQdg0t7yCCosWcxXzKCawNdH7Qfc8z3hy5aTme5oSkYzG1IdklTCAcx16MIsuMWv5BN386nuaTuD3+z+NjSiYVVLyfLlWHj2b6IpVUqdsscLkkP2O/grdoGQHNWpFWxvlhTwYIIT55I90TuWSNv7Ys=
   - secure: psVFAEtnr13KSfqXnW0jxai1RagBrtcZzlAl1SoSaPDb0QCFv0iuVMwe7Jon97yZG1fcstONSn7fTkDRsREhv6JV2pakj4RqQ1nnsr3czcxt3hSknbkTtRt7GKhgLtM29nMBTiiG7gT83TPbrWnk3A84puNjRW4H97SLQ1bL8ItOOrQJFMoZEuZT35N1in/25oNr+oGabvy9UJ07e2VzWvO/lyD0khIzFtfYvNL8zZAUXatxc9I7Zj5vrGsFI7Sj1EqugM2/1+Wr9ETGMeAOQiHVyiLVqyZnADaEU5WR2yWqO3lnFBYHcxcOIn43TNkxK1bTGe03leI8jzm3UxxPMm/a/b74Bh6ErocU45GEM+03VMgti8ny3r9hE/R6Nkb+LcZ0Dv+qhBNP8Tg6gryUvvziZuY6fY23Z5ZvFr5lasb+az0E3nz0ZY3J9bewnNWoFWTEnw2PPKi7L9FPYzmoumdiOcWsEe/IOWDJ0UU49TlMOYm4PMILpZtBtj51uQvtrNnt4Hi1KY2cmRB/8xQXrfvoAq/4eDna6CQsqeiJyEPK2eGsBEOqS/IioW90hSTUMhKsSC83DDPBTYjDiT8z7pJtENDnM1k0KedLpIjXh1C2gkYIoDuK1c+ceu79y7IsixR4J6hwp3mgEkHHlVqkkX+2pDnyUPP8KPqZXmchErw=
@@ -16,11 +13,23 @@ language: docker
 jobs:
   include:
     - stage: verify
-      name: "Build en and run journey tests against"
+      name: "Build en (0.16.0) and run journey tests against"
       env:
-        - LANGUAGES="en"
+        - LANGUAGES="en" MODEL_VERSION="0.16.0" DIMENSIONS=300 SOFTWARE_VERSION="localtest"
       script:
         - set -e
+        - ./prepare_docker_buildx.sh
+        - docker buildx version
+        - ./build.sh
+        - ./test/journey.sh
+    - stage: verify
+      name: "Build en (0.14.0) and run journey tests against"
+      env:
+        - LANGUAGES="en" MODEL_VERSION="0.14.0" DIMENSIONS=600 SOFTWARE_VERSION="localtest"
+      script:
+        - set -e
+        - ./prepare_docker_buildx.sh
+        - docker buildx version
         - ./build.sh
         - ./test/journey.sh
 
@@ -73,3 +82,17 @@ jobs:
     #     - set -e
     #     - ./build.sh
     #     - travis_wait 90 ./docker_push.sh
+
+before_install: 
+  # install a newer docker version which supports buildx
+  - sudo rm -rf /var/lib/apt/lists/*
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
+  - sudo apt-get update
+  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+  - mkdir -vp ~/.docker/cli-plugins/
+  - curl --silent -L "https://github.com/docker/buildx/releases/download/v0.3.0/buildx-v0.3.0.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
+  - chmod a+x ~/.docker/cli-plugins/docker-buildx
+
+# currently the latest available - so we can install the latest docker
+dist: bionic

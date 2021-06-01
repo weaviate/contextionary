@@ -16,13 +16,25 @@ then
   DOCKER_REPO=contextionary
 fi
 
-if [ -z "$VERSION" ]
+if [ -z "$SOFTWARE_VERSION" ]
 then
-  VERSION=local
+  SOFTWARE_VERSION=local
 fi
 
-docker tag "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal" c11y-local-journeytest-minimal
-docker tag "$DOCKER_ORG/$DOCKER_REPO:en$VERSION" c11y-local-journeytest-full
+if [ -z "$MODEL_VERSION" ]
+then
+  MODEL_VERSION=0.16.0
+fi
+
+if [ -z "$LANGUAGE" ]
+then
+  LANGUAGE=en
+fi
+
+VERSION="${MODEL_VERSION}-${SOFTWARE_VERSION}"
+
+docker tag "$DOCKER_ORG/$DOCKER_REPO:${LANGUAGE}$VERSION-minimal" c11y-local-journeytest-minimal
+docker tag "$DOCKER_ORG/$DOCKER_REPO:${LANGUAGE}$VERSION" c11y-local-journeytest-full
 
 echo "Cleaning up from previous runs"
 docker-compose -f ./test/journey/docker-compose.yml down

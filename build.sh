@@ -13,10 +13,22 @@ then
   DOCKER_REPO=contextionary
 fi
 
-if [ -z "$VERSION" ]
+if [ -z "$SOFTWARE_VERSION" ]
 then
-  VERSION=local
+  SOFTWARE_VERSION=local
 fi
+
+if [ -z "$MODEL_VERSION" ]
+then
+  MODEL_VERSION=0.16.0
+fi
+
+if [ -z "$LANGUAGE" ]
+then
+  LANGUAGE=en
+fi
+
+VERSION="${MODEL_VERSION}-${SOFTWARE_VERSION}"
 
 if [ -z "$FULL_VERSION_DOCKERFILE" ]
 then
@@ -27,12 +39,12 @@ echo "Build minimal version (english only)"
 docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal" .
 
 echo "Build full versions"
-for lang in $LANGUAGES; do
-  echo "Build $lang:"
-  full_version="${lang}${VERSION}" 
-  docker build -f "$FULL_VERSION_DOCKERFILE" \
-    --build-arg VERSION="$full_version" \
-    --build-arg MODEL_VERSION="$MODEL_VERSION" \
-    --build-arg LANGUAGE="$lang" \
-    -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .
-done
+echo "Build $LANGUAGE:"
+full_version="${LANGUAGE}${VERSION}" 
+docker buildx build --platform=linux/amd64,linux/arm64 \
+  --load \
+  -f "$FULL_VERSION_DOCKERFILE" \
+  --build-arg VERSION="$full_version" \
+  --build-arg MODEL_VERSION="$MODEL_VERSION" \
+  --build-arg LANGUAGE="$LANGUAGE" \
+  -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .

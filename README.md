@@ -24,6 +24,12 @@ Currently available languages include:
 
 Other languages coming soon.
 
+## Docker Requirements
+
+The build pipeline makes use of Docker's `buildx` for multi-arch builds. Make
+sure you run a Docker version which supports `buildx` and have run `docker
+buildx create --use` at least once.
+
 ## How to build and test project
 
 1. Regenerate schema:
@@ -35,11 +41,11 @@ Other languages coming soon.
 2. Build image:
 
 ```bash
-LANGUAGES=en MODEL_VERSION=0.16.0 ./build.sh
+LANGUAGE=en MODEL_VERSION=0.16.0 ./build.sh
 ```
 
 3. Run journey tests:
 
 ```bash
-LANGUAGES=en MODEL_VERSION=0.16.0 ./build.sh && DIMENSIONS=300 ./test/journey.sh
+LANGUAGE=en MODEL_VERSION=0.16.0 ./build.sh && DIMENSIONS=300 ./test/journey.sh
 ```
