@@ -15,73 +15,90 @@ jobs:
     - stage: verify
       name: "Build en (0.16.0) and run journey tests against"
       env:
-        - LANGUAGES="en" MODEL_VERSION="0.16.0" DIMENSIONS=300 SOFTWARE_VERSION="localtest"
+        - LANGUAGE="en" MODEL_VERSION="0.16.0" DIMENSIONS=300 SOFTWARE_VERSION="localtest"
       script:
         - set -e
-        - ./prepare_docker_buildx.sh
-        - docker buildx version
         - ./build.sh
         - ./test/journey.sh
     - stage: verify
       name: "Build en (0.14.0) and run journey tests against"
       env:
-        - LANGUAGES="en" MODEL_VERSION="0.14.0" DIMENSIONS=600 SOFTWARE_VERSION="localtest"
+        - LANGUAGE="en" MODEL_VERSION="0.14.0" DIMENSIONS=600 SOFTWARE_VERSION="localtest"
       script:
         - set -e
-        - ./prepare_docker_buildx.sh
         - docker buildx version
         - ./build.sh
         - ./test/journey.sh
 
     - stage: buildanddeploy
       if: tag IS present
-      name: "Build and deploy: en"
+      name: "Build and deploy: en0.16.0"
       env:
-        - LANGUAGES="en"
+        - LANGUAGE="en" MODEL_VERSION="0.16.0" SOFTWARE_VERSION="$TRAVIS_TAG"
       script:
         - set -e
-        - ./build.sh
-        - travis_wait 90 ./docker_push.sh
-
-    # - stage: buildanddeploy
-    #   if: tag IS present
-    #   name: "Build and deploy: de"
-    #   env:
-    #     - LANGUAGES="de"
-    #   script:
-    #     - set -e
-    #     - ./build.sh
-    #     - travis_wait 90 ./docker_push.sh
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
 
     - stage: buildanddeploy
       if: tag IS present
-      name: "Build and deploy: nl"
+      name: "Build and deploy: nl0.16.0"
       env:
-        - LANGUAGES="nl"
+        - LANGUAGE="nl" MODEL_VERSION="0.16.0" SOFTWARE_VERSION="$TRAVIS_TAG"
       script:
         - set -e
-        - ./build.sh
-        - travis_wait 90 ./docker_push.sh
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
 
-    # - stage: buildanddeploy
-    #   if: tag IS present
-    #   name: "Build and deploy: it"
-    #   env:
-    #     - LANGUAGES="it"
-    #   script:
-    #     - set -e
-    #     - ./build.sh
-    #     - travis_wait 90 ./docker_push.sh
+    - stage: buildanddeploy
+      if: tag IS present
+      name: "Build and deploy: en0.14.0"
+      env:
+        - LANGUAGE="en" MODEL_VERSION="0.14.0" SOFTWARE_VERSION="$TRAVIS_TAG"
+      script:
+        - set -e
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
 
-    # - stage: buildanddeploy
-    #   if: tag IS present
-    #   name: "Build and deploy: cs"
-    #   env:
-    #     - LANGUAGES="cs"
-    #   script:
-    #     - set -e
-    #     - ./build.sh
-    #     - travis_wait 90 ./docker_push.sh
+    - stage: buildanddeploy
+      if: tag IS present
+      name: "Build and deploy: nl0.14.0"
+      env:
+        - LANGUAGE="nl" MODEL_VERSION="0.14.0" SOFTWARE_VERSION="$TRAVIS_TAG"
+      script:
+        - set -e
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
+
+    - stage: buildanddeploy
+      if: tag IS present
+      name: "Build and deploy: de0.14.0"
+      env:
+        - LANGUAGE="de" MODEL_VERSION="0.14.0" SOFTWARE_VERSION="$TRAVIS_TAG"
+      script:
+        - set -e
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
+
+    - stage: buildanddeploy
+      if: tag IS present
+      name: "Build and deploy: cs0.14.0"
+      env:
+        - LANGUAGE="cs" MODEL_VERSION="0.14.0" SOFTWARE_VERSION="$TRAVIS_TAG"
+      script:
+        - set -e
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
+
+    - stage: buildanddeploy
+      if: tag IS present
+      name: "Build and deploy: it0.14.0"
+      env:
+        - LANGUAGE="it" MODEL_VERSION="0.14.0" SOFTWARE_VERSION="$TRAVIS_TAG"
+      script:
+        - set -e
+        - ./prepare_docker_buildx.sh
+        - PUSH_MULTIARCH=1 ./build.sh
 
 before_install: 
   # install a newer docker version which supports buildx
@@ -93,6 +110,11 @@ before_install:
   - mkdir -vp ~/.docker/cli-plugins/
   - curl --silent -L "https://github.com/docker/buildx/releases/download/v0.3.0/buildx-v0.3.0.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
   - chmod a+x ~/.docker/cli-plugins/docker-buildx
+
+before_script:
+  # login to docker at the very beginning, so we don't run into rate-limiting
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
 
 # currently the latest available - so we can install the latest docker
 dist: bionic

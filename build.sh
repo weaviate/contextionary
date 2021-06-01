@@ -35,16 +35,30 @@ then
   FULL_VERSION_DOCKERFILE=Dockerfile.full
 fi
 
-echo "Build minimal version (english only)"
-docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal" .
+if [ "$PUSH_MULTIARCH" = "1" ]; then
+  echo "Build and push multi-arch full version"
+  echo "Build $LANGUAGE:"
+  full_version="${LANGUAGE}${VERSION}" 
+  docker buildx build --platform=linux/amd64,linux/arm64 \
+    --push \
+    -f "$FULL_VERSION_DOCKERFILE" \
+    --build-arg VERSION="$full_version" \
+    --build-arg MODEL_VERSION="$MODEL_VERSION" \
+    --build-arg LANGUAGE="$LANGUAGE" \
+    -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .
+else
+  echo "Build minimal version (english only)"
+  docker build -f Dockerfile.minimal --build-arg VERSION="$VERSION-minimal" -t "$DOCKER_ORG/$DOCKER_REPO:en$VERSION-minimal" .
 
-echo "Build full versions"
-echo "Build $LANGUAGE:"
-full_version="${LANGUAGE}${VERSION}" 
-docker buildx build --platform=linux/amd64,linux/arm64 \
-  --load \
-  -f "$FULL_VERSION_DOCKERFILE" \
-  --build-arg VERSION="$full_version" \
-  --build-arg MODEL_VERSION="$MODEL_VERSION" \
-  --build-arg LANGUAGE="$LANGUAGE" \
-  -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .
+  echo "Build single-arch full version"
+  echo "Build $LANGUAGE:"
+  full_version="${LANGUAGE}${VERSION}" 
+  docker build \
+    -f "$FULL_VERSION_DOCKERFILE" \
+    --build-arg VERSION="$full_version" \
+    --build-arg MODEL_VERSION="$MODEL_VERSION" \
+    --build-arg LANGUAGE="$LANGUAGE" \
+    -t "$DOCKER_ORG/$DOCKER_REPO:$full_version" .
+fi
+
+
