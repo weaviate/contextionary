@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/semi-technologies/contextionary/errors"
+	"github.com/weaviate/contextionary/errors"
 )
 
 type CombinedIndex struct {

@@ -1,4 +1,4 @@
-module github.com/semi-technologies/contextionary
+module github.com/weaviate/contextionary
 
 go 1.13
 

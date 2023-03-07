@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"os"
 
-	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
+	contextionary "github.com/weaviate/contextionary/contextionary/core"
 )
 
 func fatal(err error) {

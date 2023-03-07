@@ -14,9 +14,9 @@ import (
 	"errors"
 	"testing"
 
-	pb "github.com/semi-technologies/contextionary/contextionary"
-	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/stretchr/testify/assert"
+	pb "github.com/weaviate/contextionary/contextionary"
+	contextionary "github.com/weaviate/contextionary/contextionary/core"
 )
 
 func Test__SchemaSearch_Classes(t *testing.T) {

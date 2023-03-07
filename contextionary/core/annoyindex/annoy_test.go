@@ -31,7 +31,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/semi-technologies/contextionary/contextionary/core/annoyindex"
+	"github.com/weaviate/contextionary/contextionary/core/annoyindex"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

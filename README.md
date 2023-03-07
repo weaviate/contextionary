@@ -1,9 +1,9 @@
-# Weaviate Contextionary <img alt='Weaviate logo' src='https://raw.githubusercontent.com/semi-technologies/weaviate/19de0956c69b66c5552447e84d016f4fe29d12c9/docs/assets/weaviate-logo.png' width='180' align='right' />
+# Weaviate Contextionary <img alt='Weaviate logo' src='https://raw.githubusercontent.com/weaviate/weaviate/19de0956c69b66c5552447e84d016f4fe29d12c9/docs/assets/weaviate-logo.png' width='180' align='right' />
 
 > The contextionary powers the semantic, context-based searches in Weaviate.
 
 Not intended for stand-alone use. Used by [Weaviate - the ML-first vector
-searcg engine](https://github.com/semi-technologies/weaviate).
+searcg engine](https://github.com/weaviate/weaviate).
 
 ## Versioning
 

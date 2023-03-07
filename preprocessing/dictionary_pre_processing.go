@@ -15,10 +15,11 @@ type PreprocessDict struct {
 }
 
 // GenerateSplittingDictFile from
-//  contextionaryIndexFile binary .idx file containing the words for the specific language
-//  languageDictionaryFile a hunspell .dic file for the specific language
-//  languageAffixesFile a hunspell .aff file for the specific language
-//  to reduce file- and hunspell dependencies for the splitter
+//
+//	contextionaryIndexFile binary .idx file containing the words for the specific language
+//	languageDictionaryFile a hunspell .dic file for the specific language
+//	languageAffixesFile a hunspell .aff file for the specific language
+//	to reduce file- and hunspell dependencies for the splitter
 func GenerateSplittingDictFile(contextionaryIndexFile string, languageDictionaryFile string, languageAffixesFile string, outputFile string) error {
 	dict := NewPreprocessDict(contextionaryIndexFile, languageDictionaryFile, languageAffixesFile)
 	out, err := os.Create(outputFile)
@@ -38,9 +39,10 @@ func GenerateSplittingDictFile(contextionaryIndexFile string, languageDictionary
 }
 
 // NewPreprocessDict from
-//  contextionaryIndexFile binary .idx file containing the words for the specific language
-//  languageDictionaryFile a hunspell .dic file for the specific language
-//  languageAffixesFile a hunspell .aff file for the specific language
+//
+//	contextionaryIndexFile binary .idx file containing the words for the specific language
+//	languageDictionaryFile a hunspell .dic file for the specific language
+//	languageAffixesFile a hunspell .aff file for the specific language
 func NewPreprocessDict(contextionaryIndexFile string, languageDictionaryFile string, languageAffixesFile string) *PreprocessDict {
 	dict := &PreprocessDict{
 		dict: make(map[string]int, 1200000),
@@ -62,7 +64,7 @@ func (cd *PreprocessDict) loadContextionary(path string, filter *Hunhandle) erro
 	}
 
 	// File format:
-	// https://github.com/semi-technologies/weaviate-vector-generator#wordlist-file-format
+	// https://github.com/weaviate/weaviate-vector-generator#wordlist-file-format
 	nrWordsBytes := data[0:8]
 	//vectorLengthBytes := data[8:16]
 	metaDataLengthBytes := data[16:24]

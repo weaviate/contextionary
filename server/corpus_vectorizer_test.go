@@ -5,15 +5,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/semi-technologies/contextionary/compoundsplitting"
+	"github.com/weaviate/contextionary/compoundsplitting"
 
-	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
-	"github.com/semi-technologies/contextionary/extensions"
-	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	contextionary "github.com/weaviate/contextionary/contextionary/core"
+	"github.com/weaviate/contextionary/extensions"
+	"github.com/weaviate/contextionary/server/config"
 )
 
 func Test_CorpusVectorizing_WithLogWeighting(t *testing.T) {

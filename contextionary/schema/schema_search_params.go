@@ -14,7 +14,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/camelcase"
-	pb "github.com/semi-technologies/contextionary/contextionary"
+	pb "github.com/weaviate/contextionary/contextionary"
 )
 
 // SearchType to search for either class names or property names

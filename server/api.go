@@ -6,10 +6,10 @@ import (
 	"strings"
 	"sync"
 
-	pb "github.com/semi-technologies/contextionary/contextionary"
-	core "github.com/semi-technologies/contextionary/contextionary/core"
-	schema "github.com/semi-technologies/contextionary/contextionary/schema"
-	"github.com/semi-technologies/contextionary/extensions"
+	pb "github.com/weaviate/contextionary/contextionary"
+	core "github.com/weaviate/contextionary/contextionary/core"
+	schema "github.com/weaviate/contextionary/contextionary/schema"
+	"github.com/weaviate/contextionary/extensions"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

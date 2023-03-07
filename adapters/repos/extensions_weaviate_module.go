@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/semi-technologies/contextionary/extensions"
-	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus"
+	"github.com/weaviate/contextionary/extensions"
+	"github.com/weaviate/contextionary/server/config"
 )
 
 type ModuleExtensionRepo struct {

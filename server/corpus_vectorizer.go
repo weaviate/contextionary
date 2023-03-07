@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	core "github.com/semi-technologies/contextionary/contextionary/core"
-	errortypes "github.com/semi-technologies/contextionary/errors"
-	"github.com/semi-technologies/contextionary/extensions"
-	"github.com/semi-technologies/contextionary/server/config"
 	"github.com/sirupsen/logrus"
+	core "github.com/weaviate/contextionary/contextionary/core"
+	errortypes "github.com/weaviate/contextionary/errors"
+	"github.com/weaviate/contextionary/extensions"
+	"github.com/weaviate/contextionary/server/config"
 )
 
 type Vectorizer struct {

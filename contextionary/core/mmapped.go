@@ -19,7 +19,7 @@ import (
 	"os"
 	"syscall"
 
-	annoy "github.com/semi-technologies/contextionary/contextionary/core/annoyindex"
+	annoy "github.com/weaviate/contextionary/contextionary/core/annoyindex"
 )
 
 type mmappedIndex struct {

@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"sort"
 
-	annoy "github.com/semi-technologies/contextionary/contextionary/core/annoyindex"
+	annoy "github.com/weaviate/contextionary/contextionary/core/annoyindex"
 )
 
 type MemoryIndex struct {

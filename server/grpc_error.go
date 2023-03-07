@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/semi-technologies/contextionary/errors"
+	"github.com/weaviate/contextionary/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

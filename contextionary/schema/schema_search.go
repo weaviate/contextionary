@@ -16,9 +16,9 @@ import (
 	"strings"
 
 	"github.com/fatih/camelcase"
-	pb "github.com/semi-technologies/contextionary/contextionary"
-	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
-	"github.com/semi-technologies/contextionary/errors"
+	pb "github.com/weaviate/contextionary/contextionary"
+	contextionary "github.com/weaviate/contextionary/contextionary/core"
+	"github.com/weaviate/contextionary/errors"
 )
 
 // SearchResult is a single search result. See wrapping Search Results for the Type

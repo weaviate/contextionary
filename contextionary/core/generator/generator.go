@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
-	annoy "github.com/semi-technologies/contextionary/contextionary/core/annoyindex"
 	"github.com/syndtr/goleveldb/leveldb"
+	annoy "github.com/weaviate/contextionary/contextionary/core/annoyindex"
 )
 
 type Options struct {

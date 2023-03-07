@@ -17,7 +17,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/semi-technologies/contextionary/contextionary/core/generator"
+	"github.com/weaviate/contextionary/contextionary/core/generator"
 )
 
 // Test data

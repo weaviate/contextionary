@@ -15,7 +15,7 @@ import (
 	"os"
 
 	flags "github.com/jessevdk/go-flags"
-	"github.com/semi-technologies/contextionary/contextionary/core/generator"
+	"github.com/weaviate/contextionary/contextionary/core/generator"
 )
 
 func main() {

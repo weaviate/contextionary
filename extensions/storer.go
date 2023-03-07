@@ -6,9 +6,9 @@ import (
 	"strings"
 	"unicode"
 
-	core "github.com/semi-technologies/contextionary/contextionary/core"
-	"github.com/semi-technologies/contextionary/errors"
 	"github.com/sirupsen/logrus"
+	core "github.com/weaviate/contextionary/contextionary/core"
+	"github.com/weaviate/contextionary/errors"
 )
 
 type Vectorizer interface {

@@ -10,7 +10,7 @@
  * CONTACT: hello@semi.technology
  */package schema
 
-import contextionary "github.com/semi-technologies/contextionary/contextionary/core"
+import contextionary "github.com/weaviate/contextionary/contextionary/core"
 
 // Contextionary composes a regular contextionary with additional
 // schema-related query methods

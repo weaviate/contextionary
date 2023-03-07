@@ -14,8 +14,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/semi-technologies/contextionary/contextionary"
 	"github.com/stretchr/testify/assert"
+	"github.com/weaviate/contextionary/contextionary"
 )
 
 func Test__SchemaSearch_Validation(t *testing.T) {

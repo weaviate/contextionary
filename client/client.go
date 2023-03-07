@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/semi-technologies/contextionary/contextionary"
+	pb "github.com/weaviate/contextionary/contextionary"
 	grpc "google.golang.org/grpc"
 )
 
