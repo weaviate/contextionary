@@ -5,12 +5,12 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/weaviate/weaviate/blob/master/LICENSE
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
  * CONTACT: hello@semi.technology
  */package schema
 
-import "github.com/semi-technologies/contextionary/contextionary/core"
+import contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 
 // Contextionary composes a regular contextionary with additional
 // schema-related query methods
