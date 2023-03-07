@@ -15,18 +15,18 @@ jobs:
         include:
           - language: en
             model_version: 0.16.0
-          # - language: nl
-          #   model_version: 0.16.0
-          # - language: en
-          #   model_version: 0.14.0
-          # - language: nl
-          #   model_version: 0.14.0
-          # - language: de
-          #   model_version: 0.14.0
-          # - language: cs
-          #   model_version: 0.14.0
-          # - language: it
-          #   model_version: 0.14.0
+          - language: nl
+            model_version: 0.16.0
+          - language: en
+            model_version: 0.14.0
+          - language: nl
+            model_version: 0.14.0
+          - language: de
+            model_version: 0.14.0
+          - language: cs
+            model_version: 0.14.0
+          - language: it
+            model_version: 0.14.0
     env:
       DOCKER_ORG: semitechnologies
       DOCKER_REPO: contextionary
