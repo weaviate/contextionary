@@ -1,0 +1,4 @@
+# Ci related folders
+/.github/ @weaviate/core
+build.sh @weaviate/core
+prepare_docker_buildx.sh @weaviate/core
