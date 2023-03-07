@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/semi-technologies/contextionary/preprocessing"
 	"os"
+
+	"github.com/weaviate/contextionary/preprocessing"
 )
 
 func main() {
@@ -17,5 +18,3 @@ func main() {
 		panic(err.Error())
 	}
 }
-
-

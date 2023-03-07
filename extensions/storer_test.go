@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	core "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	core "github.com/weaviate/contextionary/contextionary/core"
 )
 
 func Test_Storer(t *testing.T) {

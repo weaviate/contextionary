@@ -2,11 +2,12 @@ package preprocessing
 
 import (
 	"bufio"
-	"github.com/semi-technologies/contextionary/compoundsplitting"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/weaviate/contextionary/compoundsplitting"
 )
 
 func TestPreprocessorSplitterDictFile(t *testing.T) {

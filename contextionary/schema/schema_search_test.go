@@ -5,18 +5,18 @@
  *  \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
  *
  * Copyright © 2016 - 2019 Weaviate. All rights reserved.
- * LICENSE: https://github.com/semi-technologies/weaviate/blob/develop/LICENSE.md
+ * LICENSE: https://github.com/weaviate/weaviate/blob/master/LICENSE
  * DESIGN & CONCEPT: Bob van Luijt (@bobvanluijt)
- * CONTACT: hello@semi.technology
+ * CONTACT: hello@weaviate.io
  */package schema
 
 import (
 	"errors"
 	"testing"
 
-	pb "github.com/semi-technologies/contextionary/contextionary"
-	contextionary "github.com/semi-technologies/contextionary/contextionary/core"
 	"github.com/stretchr/testify/assert"
+	pb "github.com/weaviate/contextionary/contextionary"
+	contextionary "github.com/weaviate/contextionary/contextionary/core"
 )
 
 func Test__SchemaSearch_Classes(t *testing.T) {

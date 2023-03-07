@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"testing"
 
-	pb "github.com/semi-technologies/contextionary/contextionary"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	pb "github.com/weaviate/contextionary/contextionary"
 	"google.golang.org/grpc"
 )
 

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/semi-technologies/contextionary/compoundsplitting"
+	"github.com/weaviate/contextionary/compoundsplitting"
 
-	"github.com/semi-technologies/contextionary/adapters/repos"
-	core "github.com/semi-technologies/contextionary/contextionary/core"
-	"github.com/semi-technologies/contextionary/contextionary/core/stopwords"
-	"github.com/semi-technologies/contextionary/extensions"
+	"github.com/weaviate/contextionary/adapters/repos"
+	core "github.com/weaviate/contextionary/contextionary/core"
+	"github.com/weaviate/contextionary/contextionary/core/stopwords"
+	"github.com/weaviate/contextionary/extensions"
 )
 
 func (s *server) init() error {
