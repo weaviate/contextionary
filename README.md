@@ -3,7 +3,7 @@
 > The contextionary powers the semantic, context-based searches in Weaviate.
 
 Not intended for stand-alone use. Used by [Weaviate - the ML-first vector
-searcg engine](https://github.com/weaviate/weaviate).
+search engine](https://github.com/weaviate/weaviate).
 
 ## Versioning
 
