@@ -101,7 +101,7 @@ func (w *Wordlist) FindIndexByWord(_needle string) ItemIndex {
 	var bytes_needle = []byte(needle)
 
 	var low ItemIndex = 0
-	var high ItemIndex = ItemIndex(w.numberOfWords)
+	var high ItemIndex = ItemIndex(w.numberOfWords) - 1
 
 	for low <= high {
 		var midpoint ItemIndex = (low + high) / 2
