@@ -6,7 +6,7 @@ MODEL_VERSION=0.16.0
 ./tools/download_contextionary.sh "$LANGUAGE" "$MODEL_VERSION"
 
 #Build the server
-VERSION=local
+VERSION=1.2.0
 CGO_ENABLED=1 go build -o ./contextionary-server -a -tags netgo -ldflags "-w -X main.Version=$VERSION" ./server
 
 #Generate contextionary
