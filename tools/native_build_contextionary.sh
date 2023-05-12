@@ -13,7 +13,7 @@ CGO_ENABLED=1 go build -o ./contextionary-server -a -tags netgo -ldflags "-w -X 
 tools/dev/gen_simple_contextionary.sh
 
 #Preprocess splitter dictionary
-/bin/bash ./tools/preprocess_splitter_dict.sh "$LANGUAGE" "./data/contextionary.idx"
+/bin/bash ./tools/preprocess_splitter_dict_native_build.sh "$LANGUAGE" "./data/contextionary.idx"
 
 #Copy files to Alpine image
 cp ./contextionary-server $PWD
