@@ -861,7 +861,7 @@ protected:
       } else {
         T margin = D::margin(nd, v, _f);
 				unsigned int c1 = nd->children[1];
-        unsigned int c2 = nd->children[1];
+        unsigned int c2 = nd->children[0];
         q.push(make_pair(D::pq_distance(d, margin, 1), c1));
         q.push(make_pair(D::pq_distance(d, margin, 0), c2));
       }
