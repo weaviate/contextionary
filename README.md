@@ -48,4 +48,16 @@ LANGUAGE=en MODEL_VERSION=0.16.0 ./build.sh
 
 ```bash
 LANGUAGE=en MODEL_VERSION=0.16.0 ./build.sh && DIMENSIONS=300 ./test/journey.sh
+
+## Without docker
+
+Contextionary can build and run without Docker.  First, run
+
+    tools/native_build_contextionary.sh
+
+to prepare the data files, then
+
+    tools/run.sh
+
+to start contextionary.
 ```
