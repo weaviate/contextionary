@@ -1,5 +1,7 @@
 #!/bin/sh
 
+#Prepares the data files and runs contextionary.  After this, you can just use tools/run.sh
+
 #Download contextionary
 LANGUAGE=en
 MODEL_VERSION=0.16.0
